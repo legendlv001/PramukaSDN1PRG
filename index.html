@@ -16,9 +16,11 @@
                         pramuka: {
                             50: '#f0fdf4',
                             100: '#dcfce7',
+                            500: '#22c55e',
                             600: '#15803d',
                             700: '#166534',
                             800: '#14532d',
+                            900: '#0f3d20',
                         }
                     },
                     keyframes: {
@@ -40,9 +42,9 @@
 
     <header class="bg-pramuka-700 text-white shadow-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-            <!-- Brand Logo -->
+            <!-- Brand Logo & Title -->
             <div onclick="switchTab('dashboard')" class="flex items-center space-x-3 cursor-pointer group">
-                <div class="bg-white text-pramuka-700 p-2 rounded-xl shadow-inner group-hover:scale-105 transition">
+                <div class="bg-white text-pramuka-700 p-2 rounded-xl shadow-inner group-hover:scale-105 transition duration-200">
                     <i class="fa-solid fa-tent text-xl"></i>
                 </div>
                 <div>
@@ -50,13 +52,15 @@
                 </div>
             </div>
             
-            <div class="flex items-center space-x-2">
-                <button id="mobile-menu-btn" class="text-white p-2.5 rounded-lg hover:bg-pramuka-800 focus:outline-none transition md:hidden">
+            <!-- Mobile Menu Toggle Button -->
+            <div class="flex items-center space-x-2 md:hidden">
+                <button id="mobile-menu-btn" class="text-white p-2.5 rounded-lg hover:bg-pramuka-800 focus:outline-none transition">
                     <i class="fa-solid fa-bars text-xl"></i>
                 </button>
             </div>
 
-            <nav id="desktop-nav" class="hidden md:flex space-x-1">
+            <!-- Desktop Navigation Links -->
+            <nav id="desktop-nav" class="hidden md:flex items-center space-x-1">
                 <button onclick="switchTab('dashboard')" id="nav-btn-dashboard" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2 bg-pramuka-800">
                     <i class="fa-solid fa-house"></i> <span>Dashboard</span>
                 </button>
@@ -75,41 +79,48 @@
                 <button onclick="switchTab('settings')" id="nav-btn-settings" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2 nav-pembina-only">
                     <i class="fa-solid fa-gear"></i> <span>Pengaturan Pembina</span>
                 </button>
+                
+                <!-- Desktop Auth / Login Pembina Button -->
+                <button id="desktop-auth-btn" onclick="handleAuthClick()" class="ml-2 bg-amber-500 hover:bg-amber-600 text-gray-900 px-2 py-1.5 rounded-lg text-xs font-bold shadow-sm transition flex items-center space-x-1.5 active:scale-95">
+                    <i id="desktop-auth-icon" class="fa-solid fa-right-to-bracket text-xs"></i>
+                    <span id="desktop-btn-mode-text">Login Pembina</span>
+                </button>
             </nav>
         </div>
+
         <!-- Mobile Dropdown Menu -->
         <div id="mobile-menu" class="hidden bg-pramuka-800 border-t border-pramuka-600 px-4 pt-2 pb-4 space-y-1 shadow-lg md:hidden">
             <div class="space-y-1 border-b border-pramuka-600 pb-2 mb-2">
-                <button onclick="switchTab('dashboard'); toggleMobileMenu()" class="w-full text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3">
+                <button onclick="switchTab('dashboard'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3">
                     <i class="fa-solid fa-house w-6"></i> <span>Dashboard</span>
                 </button>
-                <button onclick="switchTab('siswa'); toggleMobileMenu()" class="w-full text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3">
+                <button onclick="switchTab('siswa'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3">
                     <i class="fa-solid fa-users w-6"></i> <span>Data Siswa</span>
                 </button>
-                <button onclick="switchTab('absen'); toggleMobileMenu()" class="w-full text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3 nav-pembina-only">
+                <button onclick="switchTab('absen'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3 nav-pembina-only">
                     <i class="fa-solid fa-clipboard-user w-6"></i> <span>Absen Pramuka</span>
                 </button>
-                <button onclick="switchTab('nilai'); toggleMobileMenu()" class="w-full text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3 nav-pembina-only">
+                <button onclick="switchTab('nilai'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3 nav-pembina-only">
                     <i class="fa-solid fa-award w-6"></i> <span>Penilaian Materi</span>
                 </button>
-                <button onclick="switchTab('rekap'); toggleMobileMenu()" class="w-full text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3">
+                <button onclick="switchTab('rekap'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3">
                     <i class="fa-solid fa-chart-pie w-6"></i> <span>Rekap Kehadiran</span>
                 </button>
-                <button onclick="switchTab('settings'); toggleMobileMenu()" class="w-full text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3 nav-pembina-only">
+                <button onclick="switchTab('settings'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3 nav-pembina-only">
                     <i class="fa-solid fa-gear w-6"></i> <span>Pengaturan Pembina</span>
                 </button>
             </div>
-            <!-- Auth Button inside Mobile Menu -->
-            <button id="auth-action-btn" onclick="handleAuthClick(); toggleMobileMenu()" class="w-full text-left px-3 py-3 rounded-lg text-base font-semibold hover:bg-pramuka-700 flex items-center space-x-3 transition">
-                <i id="auth-icon" class="fa-solid fa-right-to-bracket w-6"></i>
+            <!-- Mobile Auth Button -->
+            <button id="auth-action-btn" onclick="handleAuthClick(); toggleMobileMenu()" class="w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold bg-amber-500 text-gray-900 hover:bg-amber-600 flex items-center space-x-2 transition">
+                <i id="auth-icon" class="fa-solid fa-right-to-bracket w-4 text-xs"></i>
                 <span id="btn-mode-text">Login Pembina</span>
             </button>
         </div>
     </header>
 
     <div id="login-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden p-6 text-center space-y-4">
-            <div class="bg-pramuka-100 text-pramuka-700 w-16 h-16 rounded-full flex items-center justify-center mx-auto text-2xl">
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden p-6 text-center space-y-4 animate-fade-in">
+            <div class="bg-pramuka-100 text-pramuka-700 w-16 h-16 rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner">
                 <i class="fa-solid fa-lock"></i>
             </div>
             <h3 id="login-modal-title" class="font-bold text-xl text-gray-800">Login Pembina</h3>
@@ -133,7 +144,7 @@
         <!-- DASHBOARD TAB -->
         <section id="tab-dashboard" class="tab-content space-y-6">
             <!-- Welcome Banner -->
-            <div class="bg-gradient-to-r from-pramuka-700 to-pramuka-800 text-white p-6 sm:p-8 rounded-2xl shadow-sm relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="bg-gradient-to-r from-pramuka-700 to-pramuka-800 text-white p-6 sm:p-8 rounded-2xl shadow-md relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6">
                 <div class="space-y-2 z-10 text-center md:text-left">
                     <span class="inline-block bg-white/20 text-pramuka-50 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-1">
                         <i class="fa-solid fa-star text-amber-300 mr-1"></i> Salam Pramuka!
@@ -393,7 +404,7 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-800">Pengaturan Pembina</h2>
-                    <p class="text-sm text-gray-500">Sinkronisasi data Google Sheets dan filter kelas aktif. Pengaturan ini otomatis tersimpan di perangkat Anda.</p>
+                    <p class="text-sm text-gray-500">Sinkronisasi data Google Sheets dan filter kelas aktif. Pengaturan tersimpan secara terpusat.</p>
                 </div>
             </div>
 
@@ -465,13 +476,12 @@
 
     </main>
 
-    <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-5 right-5 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center space-x-3 text-sm">
         <i id="toast-icon" class="fa-solid fa-circle-check text-green-400 text-lg"></i>
         <span id="toast-message">Data berhasil disinkronkan!</span>
     </div>
 
-    <!-- Export / Copy Fallback Modal -->
+    <!-- Export Fallback Modal -->
     <div id="export-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden p-6 space-y-4">
             <div class="flex justify-between items-center border-b pb-3">
@@ -583,12 +593,12 @@
                     if(activeBtn) activeBtn.classList.add('bg-pramuka-800');
                     initClassCheckboxes();
                 } else {
-                    showToast('Kode Admin salah (Gunakan: 123)!', 'error');
+                    showToast('Kode salah, Coba lagi!', 'error');
                     document.getElementById('input-password').value = '';
                     document.getElementById('input-password').focus();
                 }
             } else {
-                if(pass === '103132') {
+                if(pass === '3132') {
                     userRole = 'pembina';
                     localStorage.setItem('pramuka_user_role', 'pembina');
                     closeLoginModal();
@@ -608,19 +618,34 @@
             const btnText = document.getElementById('btn-mode-text');
             const authIcon = document.getElementById('auth-icon');
             const authBtn = document.getElementById('auth-action-btn');
+            
+            const dBtnText = document.getElementById('desktop-btn-mode-text');
+            const dAuthIcon = document.getElementById('desktop-auth-icon');
+            const dAuthBtn = document.getElementById('desktop-auth-btn');
+
             const pembinaElements = document.querySelectorAll('.nav-pembina-only');
 
             setDynamicGreeting();
 
             if(userRole === 'pembina') {
                 btnText.textContent = "Logout Pembina";
-                authIcon.className = "fa-solid fa-right-from-bracket w-6 text-red-300";
-                authBtn.className = "w-full text-left px-3 py-3 rounded-lg text-base font-semibold hover:bg-pramuka-700 text-red-200 flex items-center space-x-3 transition";
+                authIcon.className = "fa-solid fa-right-from-bracket w-4 text-xs text-red-200";
+                authBtn.className = "w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold bg-red-600 text-white hover:bg-red-700 flex items-center space-x-2 transition";
+
+                dBtnText.textContent = "Logout Pembina";
+                dAuthIcon.className = "fa-solid fa-right-from-bracket text-xs";
+                dAuthBtn.className = "ml-2 bg-red-600 hover:bg-red-700 text-white px-2 py-1.5 rounded-lg text-xs font-bold shadow-sm transition flex items-center space-x-1.5 active:scale-95";
+
                 pembinaElements.forEach(el => el.style.display = 'flex');
             } else {
                 btnText.textContent = "Login Pembina";
-                authIcon.className = "fa-solid fa-right-to-bracket w-6";
-                authBtn.className = "w-full text-left px-3 py-3 rounded-lg text-base font-semibold hover:bg-pramuka-700 flex items-center space-x-3 transition";
+                authIcon.className = "fa-solid fa-right-to-bracket w-4 text-xs";
+                authBtn.className = "w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold bg-amber-500 text-gray-900 hover:bg-amber-600 flex items-center space-x-2 transition";
+
+                dBtnText.textContent = "Login Pembina";
+                dAuthIcon.className = "fa-solid fa-right-to-bracket text-xs";
+                dAuthBtn.className = "ml-2 bg-amber-500 hover:bg-amber-600 text-gray-900 px-2 py-1.5 rounded-lg text-xs font-bold shadow-sm transition flex items-center space-x-1.5 active:scale-95";
+
                 pembinaElements.forEach(el => el.style.display = 'none');
             }
         }
