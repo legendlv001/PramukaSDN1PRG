@@ -87,7 +87,7 @@
                 </button>
                 
                 <!-- Desktop Auth / Login Pembina Button -->
-                <button id="desktop-auth-btn" onclick="handleAuthClick()" class="ml-2 bg-amber-500 hover:bg-amber-600 text-gray-900 px-2 py-1.5 rounded-lg text-xs font-bold shadow-sm transition flex items-center space-x-1.5 active:scale-95">
+                <button id="desktop-auth-btn" onclick="handleAuthClick()" class="ml-2 bg-amber-500 hover:bg-amber-600 text-gray-900 px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition flex items-center space-x-1.5 active:scale-95">
                     <i id="desktop-auth-icon" class="fa-solid fa-right-to-bracket text-xs"></i>
                     <span id="desktop-btn-mode-text">Login Pembina</span>
                 </button>
@@ -228,7 +228,7 @@
                         <i class="fa-solid fa-square-poll-vertical text-lg"></i>
                         <span>Hasil</span>
                     </button>
-                    <!-- Tombol Masuk Group WhatsApp -->
+                    <!-- WhatsApp Community Button -->
                     <a href="https://chat.whatsapp.com/IdzSApCpsbD3u9jzeb7uue?s=cl&p=a&mlu=4" target="_blank" class="p-4 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 col-span-1 sm:col-span-2 md:col-span-3 border border-green-200">
                         <i class="fa-brands fa-whatsapp text-xl text-green-600"></i>
                         <span>Gabung Grup WhatsApp Pramuka</span>
@@ -342,6 +342,14 @@
                         <i class="fa-solid fa-play"></i>
                         <span>Mulai Beri Nilai</span>
                     </button>
+                </div>
+                <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-xs text-amber-900 flex flex-wrap items-center gap-x-4 gap-y-1 font-semibold">
+                    <span class="text-amber-800 font-bold"><i class="fa-solid fa-circle-info mr-1"></i> Keterangan Rentang Nilai:</span>
+                    <span>A = 100-71</span>
+                    <span>B = 70-41</span>
+                    <span>C = 40-11</span>
+                    <span>D = 10-1</span>
+                    <span>E = 0</span>
                 </div>
             </div>
 
@@ -476,7 +484,7 @@
                 </button>
             </div>
 
-            <!-- Informasi Rumus Nilai Gabungan (Tampil untuk semua mode / umum) -->
+            <!-- Formula Info Banner -->
             <div class="bg-pramuka-50 border border-pramuka-100 p-4 rounded-xl flex items-start space-x-3 text-xs text-pramuka-900">
                 <i class="fa-solid fa-circle-info text-pramuka-600 text-base mt-0.5"></i>
                 <div>
@@ -931,7 +939,6 @@
                 }
             }
 
-            // Load Rekap Nilai sheet if available
             let fetchedNilaiMap = {};
             let sourceNilaiRows = rowsRekapNilai || rowsNilaiFallback;
             if(sourceNilaiRows && sourceNilaiRows.length > 1) {
@@ -954,12 +961,12 @@
             }
 
             let defaultSiswa = [
-            { id: 1, nama: "Ahmad Fauzan", kelas: "Kelas 4", regu: "Putra", absen: "Hadir", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "A" },
-            { id: 2, nama: "Siti Rahmawati", kelas: "Kelas 4", regu: "Putri", absen: "Hadir", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "A" },
-            { id: 3, nama: "Budi Santoso", kelas: "Kelas 5", regu: "Putra", absen: "Hadir", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "A" },
-            { id: 4, nama: "Dewi Lestari", kelas: "Kelas 5", regu: "Putri", absen: "Hadir", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "A" },
-            { id: 5, nama: "Reza Pratama", kelas: "Kelas 6", regu: "Putra", absen: "Hadir", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "A" },
-            { id: 6, nama: "Rini Anggraini", kelas: "Kelas 6", regu: "Putri", absen: "Hadir", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "A" }
+            { id: 1, nama: "Ahmad Fauzan", kelas: "Kelas 4", regu: "Putra", absen: "Alpa", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "E" },
+            { id: 2, nama: "Siti Rahmawati", kelas: "Kelas 4", regu: "Putri", absen: "Alpa", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "E" },
+            { id: 3, nama: "Budi Santoso", kelas: "Kelas 5", regu: "Putra", absen: "Alpa", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "E" },
+            { id: 4, nama: "Dewi Lestari", kelas: "Kelas 5", regu: "Putri", absen: "Alpa", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "E" },
+            { id: 5, nama: "Reza Pratama", kelas: "Kelas 6", regu: "Putra", absen: "Alpa", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "E" },
+            { id: 6, nama: "Rini Anggraini", kelas: "Kelas 6", regu: "Putri", absen: "Alpa", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "E" }
         ];
 
         if(rowsSiswa && rowsSiswa.length > 1) {
@@ -972,7 +979,7 @@
                 
                 if(nama) {
                     let existing = siswaList.find(s => s.nama.toLowerCase() === nama.toLowerCase());
-                    let gradeVal = 'A';
+                    let gradeVal = 'E';
                     if(fetchedNilaiMap[nama.toLowerCase()]) {
                         let val = fetchedNilaiMap[nama.toLowerCase()];
                         if(Array.isArray(val)) {
@@ -989,7 +996,7 @@
                         nama: nama,
                         kelas: kelas,
                         regu: regu,
-                        absen: existing ? (existing.absen || 'Hadir') : 'Hadir',
+                        absen: existing ? (existing.absen || 'Alpa') : 'Alpa',
                         hadirCount: existing ? (existing.hadirCount || 0) : 0,
                         sakitCount: existing ? (existing.sakitCount || 0) : 0,
                         alpaCount: existing ? (existing.alpaCount || 0) : 0,
@@ -1014,78 +1021,27 @@
             if(!isAuto) showToast('Data berhasil dimuat!');
         }
 
-        function calculateAverageGrade(gradesArray) {
-            if(!gradesArray || gradesArray.length === 0) return 'A';
-            const gradeMap = { 'A': 5, 'B': 4, 'C': 3, 'D': 2, 'E': 1 };
-            const revMap = { 5: 'A', 4: 'B', 3: 'C', 2: 'D', 1: 'E' };
-            
-            let sum = 0;
-            let count = 0;
-            gradesArray.forEach(g => {
-                let score = gradeMap[String(g).toUpperCase()] || 5;
-                sum += score;
-                count++;
-            });
-            let avg = Math.round(sum / count);
-            return revMap[avg] || 'A';
-        }
-
+        // Helper rendering functions defined before invocation
         function renderSiswa() {
             const tbody = document.getElementById('siswa-table-body');
-            tbody.innerHTML = '';
-            const search = document.getElementById('search-siswa').value.toLowerCase();
-            const filtered = getFilteredSiswaList().filter(s => s.nama.toLowerCase().includes(search));
-
-            if(filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Tidak ada data siswa untuk kelas aktif ini.</td></tr>`;
-                return;
-            }
-
-            filtered.forEach((s, index) => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="p-4 font-medium text-gray-500">${index + 1}</td>
-                        <td class="p-4 font-semibold text-gray-800">${s.nama}</td>
-                        <td class="p-4 text-center text-gray-600">${s.kelas}</td>
-                        <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-xs font-semibold">${s.regu}</span></td>
-                    </tr>
-                `;
-            });
-        }
-
-        function renderRekapNilai() {
-            const tbody = document.getElementById('rekap-nilai-table-body');
             if(!tbody) return;
             tbody.innerHTML = '';
-            const search = document.getElementById('search-rekap-nilai').value.toLowerCase();
+            const searchInput = document.getElementById('search-siswa');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
             const filtered = getFilteredSiswaList().filter(s => s.nama.toLowerCase().includes(search));
 
             if(filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">Belum ada rekap nilai untuk kelas aktif.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Tidak ada data siswa untuk kelas aktif.</td></tr>`;
                 return;
             }
 
             filtered.forEach((s, index) => {
-                let riwayat = s.riwayatNilai || {};
-                let countMateri = Object.keys(riwayat).length;
-                let grades = Object.values(riwayat);
-                let avgGrade = grades.length > 0 ? calculateAverageGrade(grades) : (s.nilai || 'A');
-
-                let badgeColor = "bg-green-100 text-green-700";
-                if(avgGrade === 'B') badgeColor = "bg-blue-100 text-blue-700";
-                if(avgGrade === 'C') badgeColor = "bg-amber-100 text-amber-700";
-                if(avgGrade === 'D' || avgGrade === 'E') badgeColor = "bg-red-100 text-red-700";
-
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50 transition">
                         <td class="p-4 font-medium text-gray-500">${index + 1}</td>
                         <td class="p-4 font-semibold text-gray-800">${s.nama}</td>
                         <td class="p-4 text-center text-gray-600">${s.kelas}</td>
                         <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-xs font-semibold">${s.regu}</span></td>
-                        <td class="p-4 text-center font-medium text-gray-600">${countMateri > 0 ? countMateri + ' Materi' : '1 (Default)'}</td>
-                        <td class="p-4 text-center">
-                            <span class="inline-block px-3 py-1 rounded-lg font-bold text-sm ${badgeColor}">${avgGrade}</span>
-                        </td>
                     </tr>
                 `;
             });
@@ -1093,12 +1049,14 @@
 
         function renderRekapKehadiran() {
             const tbody = document.getElementById('rekap-table-body');
+            if(!tbody) return;
             tbody.innerHTML = '';
-            const search = document.getElementById('search-rekap').value.toLowerCase();
+            const searchInput = document.getElementById('search-rekap');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
             const filtered = getFilteredSiswaList().filter(s => s.nama.toLowerCase().includes(search));
 
             if(filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">Belum ada data rekap kehadiran.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">Tidak ada data rekap untuk kelas aktif.</td></tr>`;
                 return;
             }
 
@@ -1121,6 +1079,53 @@
             });
         }
 
+        function renderRekapNilai() {
+            const tbody = document.getElementById('rekap-nilai-table-body');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            const searchInput = document.getElementById('search-rekap-nilai');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
+            const filtered = getFilteredSiswaList().filter(s => s.nama.toLowerCase().includes(search));
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">Tidak ada data rekap nilai untuk kelas aktif.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach((s, index) => {
+                let riwayat = s.riwayatNilai || {};
+                let jumlahPenilaian = Object.keys(riwayat).length;
+                let avgNilai = s.nilai || 'A';
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-4 font-medium text-gray-500">${index + 1}</td>
+                        <td class="p-4 font-semibold text-gray-800">${s.nama}</td>
+                        <td class="p-4 text-center text-gray-600">${s.kelas}</td>
+                        <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-xs font-semibold">${s.regu}</span></td>
+                        <td class="p-4 text-center text-gray-700 font-semibold">${jumlahPenilaian} Materi</td>
+                        <td class="p-4 text-center font-extrabold text-pramuka-700 text-base">${avgNilai}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function calculateAverageGrade(gradesArray) {
+            if(!gradesArray || gradesArray.length === 0) return 'A';
+            const gradeMap = { 'A': 5, 'B': 4, 'C': 3, 'D': 2, 'E': 1 };
+            const revMap = { 5: 'A', 4: 'B', 3: 'C', 2: 'D', 1: 'E' };
+            
+            let sum = 0;
+            let count = 0;
+            gradesArray.forEach(g => {
+                let score = gradeMap[String(g).toUpperCase()] || 5;
+                sum += score;
+                count++;
+            });
+            let avg = Math.round(sum / count);
+            return revMap[avg] || 'A';
+        }
+
         function calculateFinalScore(siswa) {
             let totalMeetings = Math.max(pertemuanList.length, (siswa.hadirCount || 0) + (siswa.sakitCount || 0) + (siswa.alpaCount || 0), 1);
             let hadir = siswa.hadirCount || 0;
@@ -1129,7 +1134,7 @@
             
             let attendanceScore = Math.min(100, Math.round(((hadir * 100) + (sakit * 50) + (alpa * 0)) / totalMeetings));
 
-            let gradeMapNum = { 'A': 100, 'B': 80, 'C': 70, 'D': 60, 'E': 50 };
+            let gradeMapNum = { 'A': 85, 'B': 55, 'C': 25, 'D': 5, 'E': 0 };
             let riwayat = siswa.riwayatNilai || {};
             let grades = Object.values(riwayat);
             let avgGradeScore = 85;
@@ -1229,6 +1234,8 @@
             }
 
             filteredSiswa.forEach(s => {
+                // Default ke "Alpa" jika belum terset
+                if(!s.absen) s.absen = 'Alpa';
                 const isDisabled = userRole === 'tamu' ? 'disabled' : '';
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50 transition">
@@ -1239,7 +1246,7 @@
                             <select onchange="updateAbsenStatus(${s.id}, this.value)" ${isDisabled} class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-pramuka-600 ${userRole === 'tamu' ? 'bg-gray-100 cursor-not-allowed' : ''}">
                                 <option value="Hadir" ${s.absen === 'Hadir' ? 'selected' : ''}>Hadir</option>
                                 <option value="Sakit/Izin" ${s.absen === 'Sakit/Izin' ? 'selected' : ''}>Sakit/Izin</option>
-                                <option value="Alpa" ${s.absen === 'Alpa' ? 'selected' : ''}>Alpa</option>
+                                <option value="Alpa" ${s.absen === 'Alpa' || !s.absen ? 'selected' : ''}>Alpa</option>
                             </select>
                         </td>
                     </tr>
@@ -1353,6 +1360,8 @@
             }
 
             filteredSiswa.forEach(s => {
+                // Default ke "E" jika belum terset
+                if(!s.nilai) s.nilai = 'E';
                 const isDisabled = userRole === 'tamu' ? 'disabled' : '';
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50 transition">
@@ -1361,11 +1370,11 @@
                         <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-xs font-semibold">${s.regu}</span></td>
                         <td class="p-4 text-center">
                             <select onchange="updateNilaiSiswa(${s.id}, this.value)" ${isDisabled} class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-bold text-pramuka-700 focus:outline-none focus:ring-2 focus:ring-pramuka-600 ${userRole === 'tamu' ? 'bg-gray-100 cursor-not-allowed' : ''}">
-                                <option value="A" ${s.nilai === 'A' ? 'selected' : ''}>A (Paling Bagus)</option>
-                                <option value="B" ${s.nilai === 'B' ? 'selected' : ''}>B (Bagus)</option>
-                                <option value="C" ${s.nilai === 'C' ? 'selected' : ''}>C (Cukup)</option>
-                                <option value="D" ${s.nilai === 'D' ? 'selected' : ''}>D (Kurang)</option>
-                                <option value="E" ${s.nilai === 'E' ? 'selected' : ''}>E (Sangat Kurang)</option>
+                                <option value="A" ${s.nilai === 'A' ? 'selected' : ''}>A (100-71)</option>
+                                <option value="B" ${s.nilai === 'B' ? 'selected' : ''}>B (70-41)</option>
+                                <option value="C" ${s.nilai === 'C' ? 'selected' : ''}>C (40-11)</option>
+                                <option value="D" ${s.nilai === 'D' ? 'selected' : ''}>D (10-1)</option>
+                                <option value="E" ${s.nilai === 'E' || !s.nilai ? 'selected' : ''}>E (0)</option>
                             </select>
                         </td>
                     </tr>
