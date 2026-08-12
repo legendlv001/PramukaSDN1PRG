@@ -76,6 +76,12 @@
                 <button onclick="switchTab('rekap')" id="nav-btn-rekap" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2">
                     <i class="fa-solid fa-chart-pie"></i> <span>Rekap Kehadiran</span>
                 </button>
+                <button onclick="switchTab('rekap-nilai')" id="nav-btn-rekap-nilai" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-chart-line"></i> <span>Rekap Nilai</span>
+                </button>
+                <button onclick="switchTab('hasil')" id="nav-btn-hasil" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-square-poll-vertical"></i> <span>Hasil</span>
+                </button>
                 <button onclick="switchTab('settings')" id="nav-btn-settings" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2 nav-pembina-only">
                     <i class="fa-solid fa-gear"></i> <span>Pengaturan Pembina</span>
                 </button>
@@ -105,6 +111,12 @@
                 </button>
                 <button onclick="switchTab('rekap'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3">
                     <i class="fa-solid fa-chart-pie w-6"></i> <span>Rekap Kehadiran</span>
+                </button>
+                <button onclick="switchTab('rekap-nilai'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3">
+                    <i class="fa-solid fa-chart-line w-6"></i> <span>Rekap Nilai</span>
+                </button>
+                <button onclick="switchTab('hasil'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3">
+                    <i class="fa-solid fa-square-poll-vertical w-6"></i> <span>Hasil</span>
                 </button>
                 <button onclick="switchTab('settings'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3 nav-pembina-only">
                     <i class="fa-solid fa-gear w-6"></i> <span>Pengaturan Pembina</span>
@@ -191,22 +203,30 @@
             <!-- Quick Navigation Cards -->
             <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
                 <h3 class="text-base font-bold text-gray-800 mb-4">Menu Pintas</h3>
-                <div id="quick-menu-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                <div id="quick-menu-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     <button onclick="switchTab('siswa')" class="p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95">
                         <i class="fa-solid fa-users text-lg"></i>
                         <span>Data Siswa</span>
                     </button>
-                    <button id="quick-btn-absen" onclick="switchTab('absen')" class="p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 nav-pembina-only">
+                    <button onclick="switchTab('absen')" class="quick-pembina-only p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95">
                         <i class="fa-solid fa-clipboard-user text-lg"></i>
                         <span>Absen Pramuka</span>
                     </button>
-                    <button id="quick-btn-nilai" onclick="switchTab('nilai')" class="p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 nav-pembina-only">
+                    <button onclick="switchTab('nilai')" class="quick-pembina-only p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95">
                         <i class="fa-solid fa-award text-lg"></i>
                         <span>Penilaian Materi</span>
                     </button>
                     <button onclick="switchTab('rekap')" class="p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95">
                         <i class="fa-solid fa-chart-pie text-lg"></i>
                         <span>Rekap Kehadiran</span>
+                    </button>
+                    <button onclick="switchTab('rekap-nilai')" class="p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95">
+                        <i class="fa-solid fa-chart-line text-lg"></i>
+                        <span>Rekap Nilai</span>
+                    </button>
+                    <button onclick="switchTab('hasil')" class="p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95">
+                        <i class="fa-solid fa-square-poll-vertical text-lg"></i>
+                        <span>Hasil</span>
                     </button>
                 </div>
             </div>
@@ -399,6 +419,88 @@
             </div>
         </section>
 
+        <!-- REKAP NILAI TAB -->
+        <section id="tab-rekap-nilai" class="tab-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">Rekap Nilai Anggota Pramuka</h2>
+                    <p class="text-sm text-gray-500">Menampilkan rata-rata nilai dari sheet Rekap Nilai / Nilai untuk setiap siswa.</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="search-rekap-nilai" oninput="renderRekapNilai()" placeholder="Cari nama siswa untuk rekap nilai..." class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pramuka-600 text-sm">
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-600 text-xs uppercase tracking-wider">
+                                <th class="p-4 font-semibold">No</th>
+                                <th class="p-4 font-semibold">Nama Siswa</th>
+                                <th class="p-4 font-semibold text-center">Kelas</th>
+                                <th class="p-4 font-semibold text-center">Regu</th>
+                                <th class="p-4 font-semibold text-center">Jumlah Penilaian</th>
+                                <th class="p-4 font-semibold text-center text-pramuka-700">Nilai Rata-rata</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rekap-nilai-table-body" class="divide-y divide-gray-100 text-sm">
+                            <!-- JS Generated -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- HASIL TAB -->
+        <section id="tab-hasil" class="tab-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">Hasil Akhir Anggota Pramuka</h2>
+                    <p class="text-sm text-gray-500">Perhitungan nilai gabungan (70% Rekap Absen + 30% Rekap Nilai Materi).</p>
+                </div>
+                <button onclick="syncAndRenderHasil()" class="bg-pramuka-700 hover:bg-pramuka-800 text-white px-4 py-2.5 rounded-xl font-semibold text-xs shadow transition flex items-center space-x-2">
+                    <i class="fa-solid fa-rotate"></i>
+                    <span>Muat Ulang Hasil</span>
+                </button>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="search-hasil" oninput="renderHasil()" placeholder="Cari nama siswa untuk melihat hasil akhir..." class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pramuka-600 text-sm">
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-600 text-xs uppercase tracking-wider">
+                                <th class="p-4 font-semibold">No</th>
+                                <th class="p-4 font-semibold">Nama Siswa</th>
+                                <th class="p-4 font-semibold text-center">Kelas</th>
+                                <th class="p-4 font-semibold text-center">Regu</th>
+                                <th class="p-4 font-semibold text-center text-pramuka-700">Hasil Akhir (Skor)</th>
+                                <th class="p-4 font-semibold text-center">Predikat</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hasil-table-body" class="divide-y divide-gray-100 text-sm">
+                            <!-- JS Generated -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
         <!-- PENGATURAN PEMBINA TAB -->
         <section id="tab-settings" class="tab-content hidden space-y-6">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -519,6 +621,8 @@
         
         let siswaList = JSON.parse(localStorage.getItem('pramuka_app_siswa')) || [];
         let pertemuanList = JSON.parse(localStorage.getItem('pramuka_app_pertemuan')) || [];
+        let rekapNilaiList = JSON.parse(localStorage.getItem('pramuka_app_rekap_nilai')) || [];
+        let hasilSheetList = [];
         let userRole = localStorage.getItem('pramuka_user_role') || 'tamu'; 
         let settingsUnlocked = false; 
 
@@ -623,7 +727,7 @@
             const dAuthIcon = document.getElementById('desktop-auth-icon');
             const dAuthBtn = document.getElementById('desktop-auth-btn');
 
-            const pembinaElements = document.querySelectorAll('.nav-pembina-only');
+            const pembinaElements = document.querySelectorAll('.nav-pembina-only, .quick-pembina-only');
 
             setDynamicGreeting();
 
@@ -731,7 +835,9 @@
 
             if(tabId === 'dashboard') updateDashboard();
             if(tabId === 'siswa') renderSiswa();
+            if(tabId === 'rekap-nilai') renderRekapNilai();
             if(tabId === 'rekap') renderRekapKehadiran();
+            if(tabId === 'hasil') renderHasil();
             if(tabId === 'settings') initClassCheckboxes();
         }
 
@@ -780,8 +886,23 @@
 
         async function loadAllData(isAuto = false) {
             const rowsSiswa = await fetchDataFromSheet('Data Siswa', isAuto);
+            const rowsRekapNilai = await fetchDataFromSheet('Rekap Nilai', true);
+            const rowsNilaiFallback = !rowsRekapNilai ? await fetchDataFromSheet('Nilai', true) : null;
+            const rowsHasil = await fetchDataFromSheet('Hasil', true);
             const rowsPengaturan = await fetchDataFromSheet('Pengaturan', true);
             
+            if(rowsHasil && rowsHasil.length > 1) {
+                hasilSheetList = [];
+                for(let i = 1; i < rowsHasil.length; i++) {
+                    let r = rowsHasil[i];
+                    let nama = r.c && r.c[0] ? r.c[0].v : '';
+                    let kelas = r.c && r.c[1] ? r.c[1].v : '';
+                    let regu = r.c && r.c[2] ? r.c[2].v : '';
+                    let skor = r.c && r.c[3] ? r.c[3].v : '';
+                    if(nama) hasilSheetList.push({ nama, kelas, regu, skor });
+                }
+            }
+
             if(rowsPengaturan && rowsPengaturan.length > 1) {
                 for(let i = 1; i < rowsPengaturan.length; i++) {
                     let r = rowsPengaturan[i];
@@ -792,6 +913,28 @@
                             activeClasses = JSON.parse(val);
                             localStorage.setItem('pramuka_active_classes', JSON.stringify(activeClasses));
                         } catch(e) {}
+                    }
+                }
+            }
+
+            // Load Rekap Nilai sheet if available
+            let fetchedNilaiMap = {};
+            let sourceNilaiRows = rowsRekapNilai || rowsNilaiFallback;
+            if(sourceNilaiRows && sourceNilaiRows.length > 1) {
+                for(let i = 1; i < sourceNilaiRows.length; i++) {
+                    let r = sourceNilaiRows[i];
+                    if(rowsRekapNilai) {
+                        let nama = r.c && r.c[0] ? r.c[0].v : '';
+                        let nilaiAvg = r.c && r.c[3] ? r.c[3].v : (r.c && r.c[1] ? r.c[1].v : 'A');
+                        if(nama) fetchedNilaiMap[nama.toLowerCase()] = nilaiAvg;
+                    } else if(rowsNilaiFallback) {
+                        let nama = r.c && r.c[1] ? r.c[1].v : '';
+                        let val = r.c && r.c[4] ? r.c[4].v : 'A';
+                        if(nama) {
+                            let key = nama.toLowerCase();
+                            if(!fetchedNilaiMap[key]) fetchedNilaiMap[key] = [];
+                            fetchedNilaiMap[key].push(val);
+                        }
                     }
                 }
             }
@@ -815,6 +958,18 @@
                     
                     if(nama) {
                         let existing = siswaList.find(s => s.nama.toLowerCase() === nama.toLowerCase());
+                        let gradeVal = 'A';
+                        if(fetchedNilaiMap[nama.toLowerCase()]) {
+                            let val = fetchedNilaiMap[nama.toLowerCase()];
+                            if(Array.isArray(val)) {
+                                gradeVal = calculateAverageGrade(val);
+                            } else {
+                                gradeVal = val;
+                            }
+                        } else if(existing && existing.nilai) {
+                            gradeVal = existing.nilai;
+                        }
+
                         newSiswaList.push({
                             id: newSiswaList.length + 1,
                             nama: nama,
@@ -824,7 +979,8 @@
                             hadirCount: existing ? (existing.hadirCount || 0) : 0,
                             sakitCount: existing ? (existing.sakitCount || 0) : 0,
                             alpaCount: existing ? (existing.alpaCount || 0) : 0,
-                            nilai: existing ? existing.nilai : 'A'
+                            nilai: gradeVal,
+                            riwayatNilai: existing ? existing.riwayatNilai : {}
                         });
                     }
                 }
@@ -838,8 +994,26 @@
             localStorage.setItem('pramuka_app_siswa', JSON.stringify(siswaList));
             updateDashboard();
             renderSiswa();
+            renderRekapNilai();
             renderRekapKehadiran();
+            renderHasil();
             if(!isAuto) showToast('Data berhasil dimuat!');
+        }
+
+        function calculateAverageGrade(gradesArray) {
+            if(!gradesArray || gradesArray.length === 0) return 'A';
+            const gradeMap = { 'A': 5, 'B': 4, 'C': 3, 'D': 2, 'E': 1 };
+            const revMap = { 5: 'A', 4: 'B', 3: 'C', 2: 'D', 1: 'E' };
+            
+            let sum = 0;
+            let count = 0;
+            gradesArray.forEach(g => {
+                let score = gradeMap[String(g).toUpperCase()] || 5;
+                sum += score;
+                count++;
+            });
+            let avg = Math.round(sum / count);
+            return revMap[avg] || 'A';
         }
 
         function renderSiswa() {
@@ -860,6 +1034,44 @@
                         <td class="p-4 font-semibold text-gray-800">${s.nama}</td>
                         <td class="p-4 text-center text-gray-600">${s.kelas}</td>
                         <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-xs font-semibold">${s.regu}</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderRekapNilai() {
+            const tbody = document.getElementById('rekap-nilai-table-body');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            const search = document.getElementById('search-rekap-nilai').value.toLowerCase();
+            const filtered = getFilteredSiswaList().filter(s => s.nama.toLowerCase().includes(search));
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">Belum ada rekap nilai untuk kelas aktif.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach((s, index) => {
+                let riwayat = s.riwayatNilai || {};
+                let countMateri = Object.keys(riwayat).length;
+                let grades = Object.values(riwayat);
+                let avgGrade = grades.length > 0 ? calculateAverageGrade(grades) : (s.nilai || 'A');
+
+                let badgeColor = "bg-green-100 text-green-700";
+                if(avgGrade === 'B') badgeColor = "bg-blue-100 text-blue-700";
+                if(avgGrade === 'C') badgeColor = "bg-amber-100 text-amber-700";
+                if(avgGrade === 'D' || avgGrade === 'E') badgeColor = "bg-red-100 text-red-700";
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-4 font-medium text-gray-500">${index + 1}</td>
+                        <td class="p-4 font-semibold text-gray-800">${s.nama}</td>
+                        <td class="p-4 text-center text-gray-600">${s.kelas}</td>
+                        <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-xs font-semibold">${s.regu}</span></td>
+                        <td class="p-4 text-center font-medium text-gray-600">${countMateri > 0 ? countMateri + ' Materi' : '1 (Default)'}</td>
+                        <td class="p-4 text-center">
+                            <span class="inline-block px-3 py-1 rounded-lg font-bold text-sm ${badgeColor}">${avgGrade}</span>
+                        </td>
                     </tr>
                 `;
             });
@@ -893,6 +1105,90 @@
                     </tr>
                 `;
             });
+        }
+
+        function calculateFinalScore(siswa) {
+            let totalMeetings = Math.max(pertemuanList.length, (siswa.hadirCount || 0) + (siswa.sakitCount || 0) + (siswa.alpaCount || 0), 1);
+            let hadir = siswa.hadirCount || 0;
+            let sakit = siswa.sakitCount || 0;
+            let alpa = siswa.alpaCount || 0;
+            
+            let attendanceScore = Math.min(100, Math.round(((hadir * 100) + (sakit * 50) + (alpa * 0)) / totalMeetings));
+
+            let gradeMapNum = { 'A': 100, 'B': 80, 'C': 70, 'D': 60, 'E': 50 };
+            let riwayat = siswa.riwayatNilai || {};
+            let grades = Object.values(riwayat);
+            let avgGradeScore = 85;
+            if(grades.length > 0) {
+                let sum = 0;
+                grades.forEach(g => {
+                    sum += gradeMapNum[String(g).toUpperCase()] || 85;
+                });
+                avgGradeScore = Math.round(sum / grades.length);
+            } else {
+                avgGradeScore = gradeMapNum[String(siswa.nilai || 'A').toUpperCase()] || 85;
+            }
+
+            let finalScore = Math.round((0.7 * attendanceScore) + (0.3 * avgGradeScore));
+            return finalScore;
+        }
+
+        function getPredikat(score) {
+            if(score >= 88) return { label: 'Sangat Baik (A)', color: 'bg-green-100 text-green-700' };
+            if(score >= 78) return { label: 'Baik (B)', color: 'bg-blue-100 text-blue-700' };
+            if(score >= 68) return { label: 'Cukup (C)', color: 'bg-amber-100 text-amber-700' };
+            return { label: 'Perlu Bimbingan (D/E)', color: 'bg-red-100 text-red-700' };
+        }
+
+        function renderHasil() {
+            const tbody = document.getElementById('hasil-table-body');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            const search = document.getElementById('search-hasil').value.toLowerCase();
+            const filtered = getFilteredSiswaList().filter(s => s.nama.toLowerCase().includes(search));
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">Tidak ada data hasil untuk kelas aktif.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach((s, index) => {
+                let sheetMatch = hasilSheetList.find(item => item.nama.toLowerCase() === s.nama.toLowerCase());
+                let finalScore = sheetMatch ? Number(sheetMatch.skor) : calculateFinalScore(s);
+                let pred = getPredikat(finalScore);
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-4 font-medium text-gray-500">${index + 1}</td>
+                        <td class="p-4 font-semibold text-gray-800">${s.nama}</td>
+                        <td class="p-4 text-center text-gray-600">${s.kelas}</td>
+                        <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-xs font-semibold">${s.regu}</span></td>
+                        <td class="p-4 text-center font-extrabold text-pramuka-800 text-base">${finalScore}</td>
+                        <td class="p-4 text-center">
+                            <span class="inline-block px-3 py-1 rounded-lg font-bold text-xs ${pred.color}">${pred.label}</span>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function syncAndRenderHasil() {
+            const rowsHasil = await fetchDataFromSheet('Hasil', false);
+            if(rowsHasil && rowsHasil.length > 1) {
+                hasilSheetList = [];
+                for(let i = 1; i < rowsHasil.length; i++) {
+                    let r = rowsHasil[i];
+                    let nama = r.c && r.c[0] ? r.c[0].v : '';
+                    let kelas = r.c && r.c[1] ? r.c[1].v : '';
+                    let regu = r.c && r.c[2] ? r.c[2].v : '';
+                    let skor = r.c && r.c[3] ? r.c[3].v : '';
+                    if(nama) hasilSheetList.push({ nama, kelas, regu, skor });
+                }
+                showToast('Data Hasil berhasil disinkronkan dari Google Sheets!');
+            } else {
+                showToast('Menggunakan perhitungan otomatis (70% absen + 30% nilai).', 'info');
+            }
+            renderHasil();
         }
 
         function mulaiAbsen() {
@@ -1088,17 +1384,27 @@
             filteredSiswa.forEach(s => {
                 if(!s.riwayatNilai) s.riwayatNilai = {};
                 s.riwayatNilai[materi] = s.nilai || 'A';
-                exportRows.push(`${materi}\t${s.nama}\t${s.kelas}\t${s.regu}\t${s.nilai || 'A'}`);
+                
+                let grades = Object.values(s.riwayatNilai);
+                s.nilai = calculateAverageGrade(grades);
+
+                exportRows.push(`${materi}\t${s.nama}\t${s.kelas}\t${s.regu}\t${s.riwayatNilai[materi]}`);
                 payloadRows.push({
                     sheet: 'Nilai',
-                    values: [materi, s.nama, s.kelas, s.regu, s.nilai || 'A']
+                    values: [materi, s.nama, s.kelas, s.regu, s.riwayatNilai[materi]]
+                });
+
+                payloadRows.push({
+                    sheet: 'Rekap Nilai',
+                    values: [s.nama, s.kelas, s.regu, s.nilai]
                 });
             });
 
             localStorage.setItem('pramuka_app_siswa', JSON.stringify(siswaList));
+            renderRekapNilai();
 
             if(appsScriptUrl) {
-                sendDataToAppsScript(payloadRows, `Nilai materi "${materi}" berhasil disimpan & dikirim otomatis ke Spreadsheet!`);
+                sendDataToAppsScript(payloadRows, `Nilai materi "${materi}" & rekap rata-rata berhasil dikirim otomatis ke Spreadsheet!`);
             } else {
                 showToast(`Nilai materi "${materi}" berhasil disimpan!`);
                 showExportModal(exportRows.join('\n'));
