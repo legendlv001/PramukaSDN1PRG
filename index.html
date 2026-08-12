@@ -228,6 +228,11 @@
                         <i class="fa-solid fa-square-poll-vertical text-lg"></i>
                         <span>Hasil</span>
                     </button>
+                    <!-- Tombol Masuk Group WhatsApp -->
+                    <a href="https://chat.whatsapp.com/IdzSApCpsbD3u9jzeb7uue?s=cl&p=a&mlu=4" target="_blank" class="p-4 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 col-span-1 sm:col-span-2 md:col-span-3 border border-green-200">
+                        <i class="fa-brands fa-whatsapp text-xl text-green-600"></i>
+                        <span>Gabung Grup WhatsApp Pramuka</span>
+                    </a>
                 </div>
             </div>
         </section>
@@ -469,6 +474,15 @@
                     <i class="fa-solid fa-rotate"></i>
                     <span>Muat Ulang Hasil</span>
                 </button>
+            </div>
+
+            <!-- Informasi Rumus Nilai Gabungan (Tampil untuk semua mode / umum) -->
+            <div class="bg-pramuka-50 border border-pramuka-100 p-4 rounded-xl flex items-start space-x-3 text-xs text-pramuka-900">
+                <i class="fa-solid fa-circle-info text-pramuka-600 text-base mt-0.5"></i>
+                <div>
+                    <span class="font-bold block mb-0.5">Keterangan Penilaian:</span>
+                    Nilai akhir dihitung secara transparan menggunakan rumus gabungan: <strong>70% dari Skor Kehadiran</strong> ditambah <strong>30% dari Rata-rata Nilai Materi Latihan</strong>.
+                </div>
             </div>
 
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
@@ -940,58 +954,58 @@
             }
 
             let defaultSiswa = [
-                { id: 1, nama: "Ahmad Fauzan", kelas: "Kelas 4", regu: "Putra", absen: "Hadir", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "A" },
-                { id: 2, nama: "Siti Rahmawati", kelas: "Kelas 4", regu: "Putri", absen: "Hadir", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "A" },
-                { id: 3, nama: "Budi Santoso", kelas: "Kelas 5", regu: "Putra", absen: "Hadir", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "B" },
-                { id: 4, nama: "Dewi Lestari", kelas: "Kelas 5", regu: "Putri", absen: "Hadir", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "A" },
-                { id: 5, nama: "Reza Pratama", kelas: "Kelas 6", regu: "Putra", absen: "Hadir", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "A" },
-                { id: 6, nama: "Rini Anggraini", kelas: "Kelas 6", regu: "Putri", absen: "Hadir", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "B" }
-            ];
+            { id: 1, nama: "Ahmad Fauzan", kelas: "Kelas 4", regu: "Putra", absen: "Hadir", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "A" },
+            { id: 2, nama: "Siti Rahmawati", kelas: "Kelas 4", regu: "Putri", absen: "Hadir", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "A" },
+            { id: 3, nama: "Budi Santoso", kelas: "Kelas 5", regu: "Putra", absen: "Hadir", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "A" },
+            { id: 4, nama: "Dewi Lestari", kelas: "Kelas 5", regu: "Putri", absen: "Hadir", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "A" },
+            { id: 5, nama: "Reza Pratama", kelas: "Kelas 6", regu: "Putra", absen: "Hadir", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "A" },
+            { id: 6, nama: "Rini Anggraini", kelas: "Kelas 6", regu: "Putri", absen: "Hadir", hadirCount: 0, sakitCount: 0, alpaCount: 0, nilai: "A" }
+        ];
 
-            if(rowsSiswa && rowsSiswa.length > 1) {
-                let newSiswaList = [];
-                for(let i = 1; i < rowsSiswa.length; i++) {
-                    let r = rowsSiswa[i];
-                    const nama = r.c && r.c[0] ? r.c[0].v : '';
-                    const kelas = r.c && r.c[1] ? r.c[1].v : 'Kelas 4';
-                    const regu = r.c && r.c[2] ? r.c[2].v : 'Putra';
-                    
-                    if(nama) {
-                        let existing = siswaList.find(s => s.nama.toLowerCase() === nama.toLowerCase());
-                        let gradeVal = 'A';
-                        if(fetchedNilaiMap[nama.toLowerCase()]) {
-                            let val = fetchedNilaiMap[nama.toLowerCase()];
-                            if(Array.isArray(val)) {
-                                gradeVal = calculateAverageGrade(val);
-                            } else {
-                                gradeVal = val;
-                            }
-                        } else if(existing && existing.nilai) {
-                            gradeVal = existing.nilai;
+        if(rowsSiswa && rowsSiswa.length > 1) {
+            let newSiswaList = [];
+            for(let i = 1; i < rowsSiswa.length; i++) {
+                let r = rowsSiswa[i];
+                const nama = r.c && r.c[0] ? r.c[0].v : '';
+                const kelas = r.c && r.c[1] ? r.c[1].v : 'Kelas 4';
+                const regu = r.c && r.c[2] ? r.c[2].v : 'Putra';
+                
+                if(nama) {
+                    let existing = siswaList.find(s => s.nama.toLowerCase() === nama.toLowerCase());
+                    let gradeVal = 'A';
+                    if(fetchedNilaiMap[nama.toLowerCase()]) {
+                        let val = fetchedNilaiMap[nama.toLowerCase()];
+                        if(Array.isArray(val)) {
+                            gradeVal = calculateAverageGrade(val);
+                        } else {
+                            gradeVal = val;
                         }
-
-                        newSiswaList.push({
-                            id: newSiswaList.length + 1,
-                            nama: nama,
-                            kelas: kelas,
-                            regu: regu,
-                            absen: 'Hadir',
-                            hadirCount: existing ? (existing.hadirCount || 0) : 0,
-                            sakitCount: existing ? (existing.sakitCount || 0) : 0,
-                            alpaCount: existing ? (existing.alpaCount || 0) : 0,
-                            nilai: gradeVal,
-                            riwayatNilai: existing ? existing.riwayatNilai : {}
-                        });
+                    } else if(existing && existing.nilai) {
+                        gradeVal = existing.nilai;
                     }
-                }
-                if(newSiswaList.length > 0) {
-                    siswaList = newSiswaList;
-                }
-            } else if(siswaList.length === 0) {
-                siswaList = defaultSiswa;
-            }
 
-            localStorage.setItem('pramuka_app_siswa', JSON.stringify(siswaList));
+                    newSiswaList.push({
+                        id: newSiswaList.length + 1,
+                        nama: nama,
+                        kelas: kelas,
+                        regu: regu,
+                        absen: existing ? (existing.absen || 'Hadir') : 'Hadir',
+                        hadirCount: existing ? (existing.hadirCount || 0) : 0,
+                        sakitCount: existing ? (existing.sakitCount || 0) : 0,
+                        alpaCount: existing ? (existing.alpaCount || 0) : 0,
+                        nilai: gradeVal,
+                        riwayatNilai: existing ? existing.riwayatNilai : {}
+                    });
+                }
+            }
+            if(newSiswaList.length > 0) {
+                siswaList = newSiswaList;
+            }
+        } else if(siswaList.length === 0) {
+            siswaList = defaultSiswa;
+        }
+
+        localStorage.setItem('pramuka_app_siswa', JSON.stringify(siswaList));
             updateDashboard();
             renderSiswa();
             renderRekapNilai();
