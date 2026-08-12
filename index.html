@@ -140,6 +140,12 @@
             
             <div class="space-y-3 pt-2">
                 <input type="password" id="input-password" placeholder="Masukkan Password" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pramuka-600 text-sm text-center font-bold tracking-widest">
+                
+                <div id="remember-me-container" class="flex items-center space-x-2 text-left px-1">
+                    <input type="checkbox" id="remember-me-checkbox" class="w-4 h-4 text-pramuka-600 rounded focus:ring-pramuka-500 cursor-pointer">
+                    <label for="remember-me-checkbox" class="text-xs text-gray-600 font-medium cursor-pointer select-none">Ingat Saya (Simpan Sesi Login)</label>
+                </div>
+
                 <button onclick="verifyLogin()" class="w-full bg-pramuka-700 hover:bg-pramuka-800 text-white py-3 rounded-xl font-bold shadow transition flex items-center justify-center space-x-2">
                     <i class="fa-solid fa-right-to-bracket"></i>
                     <span>Masuk</span>
@@ -645,6 +651,7 @@
         let pertemuanList = JSON.parse(localStorage.getItem('pramuka_app_pertemuan')) || [];
         let rekapNilaiList = JSON.parse(localStorage.getItem('pramuka_app_rekap_nilai')) || [];
         let hasilSheetList = [];
+        
         let userRole = localStorage.getItem('pramuka_user_role') || 'tamu'; 
         let settingsUnlocked = false; 
 
@@ -682,6 +689,7 @@
                 userRole = 'tamu';
                 settingsUnlocked = false;
                 localStorage.setItem('pramuka_user_role', 'tamu');
+                localStorage.removeItem('pramuka_pembina_remembered');
                 applyRoleUI();
                 showToast('Berhasil keluar dari Mode Pembina (Kembali ke Tamu)', 'info');
                 const activeTab = document.querySelector('.tab-content:not(.hidden)').id;
@@ -692,6 +700,9 @@
                 document.getElementById('login-modal-title').textContent = "Login Pembina";
                 document.getElementById('login-modal-desc').textContent = "Masukkan password khusus pembina untuk mengakses fitur ubah dan simpan data.";
                 document.getElementById('input-password').value = '';
+                const rememberCb = document.getElementById('remember-me-checkbox');
+                if(rememberCb) rememberCb.checked = (localStorage.getItem('pramuka_pembina_remembered') === 'true');
+                
                 document.getElementById('login-modal').classList.remove('hidden');
                 document.getElementById('login-modal').classList.add('flex');
                 document.getElementById('input-password').focus();
@@ -727,6 +738,14 @@
                 if(pass === '3132') {
                     userRole = 'pembina';
                     localStorage.setItem('pramuka_user_role', 'pembina');
+                    
+                    const rememberCb = document.getElementById('remember-me-checkbox');
+                    if(rememberCb && rememberCb.checked) {
+                        localStorage.setItem('pramuka_pembina_remembered', 'true');
+                    } else {
+                        localStorage.removeItem('pramuka_pembina_remembered');
+                    }
+
                     closeLoginModal();
                     applyRoleUI();
                     showToast('Login berhasil! Masuk ke Mode Pembina.', 'success');
@@ -1481,8 +1500,14 @@
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
-            userRole = 'tamu';
-            localStorage.setItem('pramuka_user_role', 'tamu');
+            const remembered = localStorage.getItem('pramuka_pembina_remembered');
+            if (remembered === 'true') {
+                userRole = 'pembina';
+                localStorage.setItem('pramuka_user_role', 'pembina');
+            } else {
+                userRole = 'tamu';
+                localStorage.setItem('pramuka_user_role', 'tamu');
+            }
             checkRole();
             await loadAllData(true);
         });
