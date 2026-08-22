@@ -659,26 +659,7 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-800">Pengaturan Pembina</h2>
-                    <p class="text-sm text-gray-500">Sinkronisasi data Google Sheets dan filter kelas aktif.</p>
-                </div>
-            </div>
-
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-                <div class="flex items-center space-x-3">
-                    <div class="bg-green-100 text-green-700 p-3 rounded-xl text-xl">
-                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-gray-800">Koneksi Otomatis ke Google Spreadsheet</h3>
-                        <p class="text-xs text-gray-500">Masukkan Web App URL Apps Script agar Absensi, Nilai & Pengaturan tersinkron.</p>
-                    </div>
-                </div>
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <input type="text" id="input-apps-script-url" placeholder="https://script.google.com/macros/s/.../exec" class="flex-grow px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pramuka-600 text-xs">
-                    <button onclick="saveAppsScriptUrl()" class="bg-pramuka-700 hover:bg-pramuka-800 text-white px-5 py-3 rounded-xl font-semibold text-sm shadow transition flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-floppy-disk"></i>
-                        <span>Simpan URL</span>
-                    </button>
+                    <p class="text-sm text-gray-500">Filter kelas aktif tersimpan bersama untuk semua pengguna.</p>
                 </div>
             </div>
 
@@ -760,10 +741,14 @@
 
     <script>
         let spreadsheetId = "1Xw-_rPopukH0bWP5BF959A_oNE-3OsvctuMHYLMjPD8";
-        let appsScriptUrl = localStorage.getItem('pramuka_apps_script_url') || "https://script.google.com/macros/s/AKfycbwhrS4RqQAXIgNGJEUx65KboQySM2AYlMARopDGqrW7MEt1md-LgwVDm6x0DNFrZuZDbg/exec";
+        let appsScriptUrl = "";
+        let cloudTanggalList = [];
+        let cloudMateriMap = {};
         
         let siswaList = JSON.parse(localStorage.getItem('pramuka_app_siswa')) || [];
         let pertemuanList = [];
+        let remotePertemuanList = [];
+        let remoteMateriList = [];
         let rekapNilaiList = JSON.parse(localStorage.getItem('pramuka_app_rekap_nilai')) || [];
         let hasilSheetList = [];
         
@@ -934,51 +919,11 @@
         function bukaCekAbsen() {
             const tbody = document.getElementById('cek-absen-tbody');
             tbody.innerHTML = '';
-            
-            let tanggalSet = new Set();
-            pertemuanList.forEach(tgl => {
-                const normalized = normalizeMeetingDate(tgl);
-                if(normalized) tanggalSet.add(normalized);
-            });
-            siswaList.forEach(s => {
-                if(s.riwayatAbsen) {
-                    Object.keys(s.riwayatAbsen).forEach(tgl => {
-                        const normalized = normalizeMeetingDate(tgl);
-                        if(normalized) tanggalSet.add(normalized);
-                    });
-                }
-            });
-
-            let tglArray = Array.from(tanggalSet).sort((a, b) => new Date(b) - new Date(a));
+            const tglArray = Array.from(new Set(cloudTanggalList)).filter(t => /^\d{4}-\d{2}-\d{2}$/.test(String(t).trim())).sort((a,b) => new Date(b)-new Date(a));
             document.getElementById('cek-absen-total').textContent = `Total Pertemuan: ${tglArray.length}`;
-
-            if(tglArray.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-gray-400">Belum ada catatan tanggal kegiatan absen.</td></tr>`;
-            } else {
-                tglArray.forEach((tgl, idx) => {
-                    let displayDate = tgl;
-                    try {
-                        let d = new Date(tgl);
-                        if(!isNaN(d)) {
-                            displayDate = d.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                        }
-                    } catch(e) {}
-
-                    tbody.innerHTML += `
-                        <tr class="hover:bg-gray-50">
-                            <td class="p-3 font-medium text-gray-500">${idx + 1}</td>
-                            <td class="p-3 font-bold text-gray-800">${displayDate}</td>
-                            <td class="p-3 text-center">
-                                <span class="px-2.5 py-1 bg-green-100 text-green-800 rounded-full text-[11px] font-bold">Tercatat Aktif</span>
-                            </td>
-                        </tr>
-                    `;
-                });
-            }
-
-            const modal = document.getElementById('modal-cek-absen');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            if(tglArray.length === 0) tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-gray-400">Belum ada catatan tanggal kegiatan absen.</td></tr>`;
+            else tglArray.forEach((tgl,idx)=>{ const d=new Date(tgl+'T00:00:00'); const display=!isNaN(d)?d.toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'}):tgl; tbody.innerHTML += `<tr><td class="p-3">${idx+1}</td><td class="p-3 font-bold">${display}</td><td class="p-3 text-center"><span class="px-2.5 py-1 bg-green-100 text-green-800 rounded-full text-[11px] font-bold">Tercatat Aktif</span></td></tr>`; });
+            const modal=document.getElementById('modal-cek-absen'); modal.classList.remove('hidden'); modal.classList.add('flex');
         }
 
         function closeCekAbsenModal() {
@@ -989,41 +934,12 @@
 
         // FUNGSI UNTUK MENCEK MATERI PENILAIAN
         function bukaCekMateri() {
-            const tbody = document.getElementById('cek-materi-tbody');
-            tbody.innerHTML = '';
-            
-            let materiMap = {};
-            siswaList.forEach(s => {
-                if(s.riwayatNilai) {
-                    Object.entries(s.riwayatNilai).forEach(([mat, val]) => {
-                        if(!materiMap[mat]) materiMap[mat] = 0;
-                        materiMap[mat]++;
-                    });
-                }
-            });
-
-            let materiArray = Object.entries(materiMap);
-            document.getElementById('cek-materi-total').textContent = `Total Materi: ${materiArray.length}`;
-
-            if(materiArray.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-gray-400">Belum ada materi latihan yang dinilai.</td></tr>`;
-            } else {
-                materiArray.forEach(([mat, count], idx) => {
-                    tbody.innerHTML += `
-                        <tr class="hover:bg-gray-50">
-                            <td class="p-3 font-medium text-gray-500">${idx + 1}</td>
-                            <td class="p-3 font-bold text-gray-800">${mat}</td>
-                            <td class="p-3 text-center">
-                                <span class="px-2.5 py-1 bg-pramuka-100 text-pramuka-800 rounded-full text-[11px] font-bold">${count} Siswa</span>
-                            </td>
-                        </tr>
-                    `;
-                });
-            }
-
-            const modal = document.getElementById('modal-cek-materi');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            const tbody=document.getElementById('cek-materi-tbody'); tbody.innerHTML='';
+            const materiArray=Object.entries(cloudMateriMap).sort((a,b)=>a[0].localeCompare(b[0],'id'));
+            document.getElementById('cek-materi-total').textContent=`Total Materi: ${materiArray.length}`;
+            if(materiArray.length===0) tbody.innerHTML=`<tr><td colspan="3" class="p-4 text-center text-gray-400">Belum ada materi latihan yang dinilai.</td></tr>`;
+            else materiArray.forEach(([mat,count],idx)=>tbody.innerHTML += `<tr><td class="p-3">${idx+1}</td><td class="p-3 font-bold">${mat}</td><td class="p-3 text-center"><span class="px-2.5 py-1 bg-pramuka-100 text-pramuka-800 rounded-full text-[11px] font-bold">${count} Siswa</span></td></tr>`);
+            const modal=document.getElementById('modal-cek-materi'); modal.classList.remove('hidden'); modal.classList.add('flex');
         }
 
         function closeCekMateriModal() {
@@ -1037,7 +953,6 @@
             checkboxes.forEach(cb => {
                 cb.checked = activeClasses.includes(cb.value);
             });
-            document.getElementById('input-apps-script-url').value = appsScriptUrl;
         }
 
         async function saveClassFilters() {
@@ -1164,7 +1079,24 @@
             }
         }
 
+        async function loadAppsScriptUrlFromC2() {
+            try {
+                const rows = await fetchDataFromSheet('Pengaturan', true);
+                if(rows && rows.length >= 2) {
+                    const c2 = rows[1]?.c?.[2]?.v || '';
+                    const value = String(c2).trim();
+                    if(/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(value)) {
+                        appsScriptUrl = value;
+                        return true;
+                    }
+                }
+            } catch(e) { console.error('Gagal membaca Pengaturan!C2', e); }
+            appsScriptUrl = '';
+            return false;
+        }
+
         async function loadAllData(isAuto = false) {
+            await loadAppsScriptUrlFromC2();
             const rowsSiswa = await fetchDataFromSheet('Data Siswa', isAuto);
             const rowsRekapAbsen = await fetchDataFromSheet('Rekap Absensi', true);
             const rowsLogAbsen = await fetchDataFromSheet('Log Absensi', true);
@@ -1208,9 +1140,23 @@
 
             // Perbarui daftar pertemuan HANYA dari tanggal valid pada Log Absensi.
             // activeClasses / Pengaturan tidak pernah masuk ke daftar pertemuan.
-            pertemuanList = Array.from(tempPertemuanSet)
+            remotePertemuanList = Array.from(tempPertemuanSet)
                 .map(normalizeMeetingDate)
                 .filter(Boolean);
+            pertemuanList = [...remotePertemuanList];
+
+            // Daftar materi untuk menu 'Cek Materi' hanya berasal dari Spreadsheet Nilai.
+            remoteMateriList = [];
+            let remoteMateriSet = new Set();
+            if(rowsNilaiDetail && rowsNilaiDetail.length > 1) {
+                for(let i = 1; i < rowsNilaiDetail.length; i++) {
+                    let r = rowsNilaiDetail[i];
+                    let materi = r.c && r.c[1] ? String(r.c[1].v || '').trim() : '';
+                    let nama = r.c && r.c[2] ? String(r.c[2].v || '').trim() : '';
+                    if(materi && nama) remoteMateriSet.add(materi);
+                }
+            }
+            remoteMateriList = Array.from(remoteMateriSet);
 
             let logNilaiMap = {};
             if(rowsNilaiDetail && rowsNilaiDetail.length > 1) {
@@ -1224,6 +1170,15 @@
                         if(!logNilaiMap[keyNama]) logNilaiMap[keyNama] = {};
                         logNilaiMap[keyNama][materi] = val;
                     }
+                }
+            }
+
+            cloudMateriMap = {};
+            if(rowsNilaiDetail && rowsNilaiDetail.length > 1) {
+                for(let i = 1; i < rowsNilaiDetail.length; i++) {
+                    const r = rowsNilaiDetail[i];
+                    const materi = r.c?.[1]?.v ? String(r.c[1].v).trim() : '';
+                    if(materi) cloudMateriMap[materi] = (cloudMateriMap[materi] || 0) + 1;
                 }
             }
 
@@ -1358,6 +1313,7 @@
             renderRekapNilai();
             renderRekapKehadiran();
             renderHasil();
+            initClassCheckboxes();
             if(!isAuto) showToast('Data berhasil dimuat!');
         }
 
@@ -1805,7 +1761,7 @@
 
             const tbody = document.getElementById('nilai-table-body');
             tbody.innerHTML = '';
-            const filtered = getFilteredSiswaList();
+            const filtered = siswaList;
 
             filtered.forEach((s) => {
                 let currentVal = (s.riwayatNilai && s.riwayatNilai[materi]) ? s.riwayatNilai[materi] : 'A';
@@ -1865,40 +1821,12 @@
             renderRekapNilai();
         }
 
-        function saveAppsScriptUrl() {
-            const url = document.getElementById('input-apps-script-url').value.trim();
-            if(!url) {
-                showToast('URL Apps Script tidak boleh kosong!', 'error');
-                return;
-            }
-            appsScriptUrl = url;
-            localStorage.setItem('pramuka_apps_script_url', url);
-            showToast('URL Google Apps Script berhasil disimpan!', 'success');
-        }
-
         async function sendDataToAppsScript(rowsData, successMessage) {
-            if(!Array.isArray(rowsData) || rowsData.length === 0) {
-                showToast('Tidak ada data yang dikirim.', 'warning');
-                return false;
-            }
-            if(!appsScriptUrl) {
-                showToast(successMessage);
-                return false;
-            }
+            if(!appsScriptUrl) { showToast('Koneksi Spreadsheet belum tersedia. Pastikan URL Web App ada di Pengaturan!C2.', 'warning'); return; }
             try {
-                await fetch(appsScriptUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ rows: rowsData })
-                });
+                await fetch(appsScriptUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({rows:rowsData})});
                 showToast(successMessage);
-                return true;
-            } catch (error) {
-                console.error("Gagal kirim ke Apps Script:", error);
-                showToast(successMessage + ' (Disimpan lokal, sinkronisasi cloud tertunda)', 'warning');
-                return false;
-            }
+            } catch(error) { console.error('Gagal kirim ke Apps Script:',error); showToast('Gagal mengirim data ke Spreadsheet.','warning'); }
         }
 
         window.onload = function() {
