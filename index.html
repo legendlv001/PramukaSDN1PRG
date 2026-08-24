@@ -816,6 +816,21 @@
 
         const VALID_CLASS_NAMES = ["Kelas 3", "Kelas 4", "Kelas 5", "Kelas 6"];
 
+
+        // =========================================================
+        // FILTER KELAS AKTIF
+        // Data Siswa, Absensi, dan Nilai hanya menampilkan kelas
+        // yang dicentang di Pengaturan.
+        // =========================================================
+        function isActiveClass(kelas) {
+            const k = String(kelas || '').trim();
+            return activeClasses.includes(k);
+        }
+
+        function getActiveSiswaList() {
+            return siswaList.filter(s => isActiveClass(s.kelas));
+        }
+
         function isValidMeetingDate(value) {
             if (value === null || value === undefined) return false;
             const str = String(value).trim();
@@ -1096,7 +1111,7 @@
         }
 
         function getFilteredSiswaList() {
-            return siswaList.filter(s => activeClasses.includes(s.kelas));
+            return siswaList.filter(s => isActiveClass(s.kelas));
         }
 
         function getNextSaturday() {
@@ -1883,7 +1898,7 @@
                     s.alpaCount = alpa;
 
                     payloadLog.push({
-                        sheet: 'Log Absensi',
+                        sheet: 'Absensi',
                         values: [new Date().toISOString(), s.nama, s.kelas, s.regu, status, tglVal]
                     });
                 }
