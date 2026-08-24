@@ -133,11 +133,16 @@
             <p id="login-modal-desc" class="text-xs text-gray-500">Masukkan password khusus pembina untuk mengakses fitur ubah dan simpan data.</p>
             
             <div class="space-y-3 pt-2">
-                <input type="password" id="input-password" placeholder="Masukkan Password" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pramuka-600 text-sm text-center font-bold tracking-widest">
+                <div class="relative">
+                    <input type="password" id="input-password" placeholder="Masukkan Password" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pramuka-600 text-sm text-center font-bold tracking-widest">
+                    <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-3 text-gray-400 hover:text-gray-600 text-sm">
+                        <i id="eye-icon" class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
                 
                 <div id="remember-me-container" class="flex items-center space-x-2 text-left px-1">
                     <input type="checkbox" id="remember-me-checkbox" class="w-4 h-4 text-pramuka-600 rounded focus:ring-pramuka-500 cursor-pointer">
-                    <label for="remember-me-checkbox" class="text-xs text-gray-600 font-medium cursor-pointer select-none">Ingat Saya (Simpan Sesi Login)</label>
+                    <label for="remember-me-checkbox" class="text-xs text-gray-600 font-medium cursor-pointer select-none">Ingat Saya (Simpan Password)</label>
                 </div>
 
                 <button onclick="verifyLogin()" class="w-full bg-pramuka-700 hover:bg-pramuka-800 text-white py-3 rounded-xl font-bold shadow transition flex items-center justify-center space-x-2">
@@ -659,10 +664,54 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-800">Pengaturan Pembina</h2>
-                    <p class="text-sm text-gray-500">Filter kelas aktif tersimpan bersama untuk semua pengguna.</p>
+                    <p class="text-sm text-gray-500">Kelola filter kelas aktif, reset memori, dan ubah password keamanan.</p>
                 </div>
             </div>
 
+            <!-- KARTU UBAH & SIMPAN PASSWORD -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+                <div class="flex items-center space-x-3 border-b pb-3">
+                    <div class="bg-amber-100 text-amber-700 p-3 rounded-xl text-xl">
+                        <i class="fa-solid fa-key"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-800">Simpan & Ubah Password Pembina</h3>
+                        <p class="text-xs text-gray-500">Atur password login Pembina dan Kode Akses Pengaturan Admin sesuai keinginan Anda.</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-gray-700">Password Pembina (Default: 3132)</label>
+                        <div class="relative">
+                            <input type="password" id="setting-pembina-pass" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pramuka-600 text-sm font-semibold">
+                            <button type="button" onclick="togglePassInput('setting-pembina-pass', this)" class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 text-sm">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-gray-700">Kode Admin Pengaturan (Default: 123)</label>
+                        <div class="relative">
+                            <input type="password" id="setting-admin-pass" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pramuka-600 text-sm font-semibold">
+                            <button type="button" onclick="togglePassInput('setting-admin-pass', this)" class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 text-sm">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                    <label class="flex items-center space-x-2 text-xs text-gray-600 font-medium cursor-pointer">
+                        <input type="checkbox" id="auto-remember-cb" class="w-4 h-4 text-pramuka-600 rounded focus:ring-pramuka-500 cursor-pointer">
+                        <span>Selalu otomatis isi password saat login (Ingat Saya)</span>
+                    </label>
+                    <button onclick="savePasswordSettings()" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-gray-900 px-5 py-2.5 rounded-xl font-bold text-xs shadow-sm transition flex items-center justify-center space-x-2 active:scale-95">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Simpan Password Baru</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- KARTU FILTER KELAS -->
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
                 <div class="flex items-center space-x-3">
                     <div class="bg-pramuka-100 text-pramuka-700 p-3 rounded-xl text-xl">
@@ -755,11 +804,13 @@
         let userRole = localStorage.getItem('pramuka_user_role') || 'tamu'; 
         let settingsUnlocked = false; 
 
+        // Password & Security settings
+        let pembinaPassword = localStorage.getItem('pramuka_pembina_password') || '3132';
+        let adminPassword = localStorage.getItem('pramuka_admin_password') || '123';
+
         let activeClasses = JSON.parse(localStorage.getItem('pramuka_active_classes')) || ["Kelas 3", "Kelas 4", "Kelas 5", "Kelas 6"];
         let activeClassesUpdatedAt = Number(localStorage.getItem('pramuka_active_classes_updated_at') || 0);
 
-        // Data siswa WAJIB berasal dari Google Spreadsheet.
-        // Tidak ada lagi data siswa contoh/fallback.
         let siswaLoadFailed = false;
         let siswaSheetLoaded = false;
 
@@ -769,7 +820,6 @@
             if (value === null || value === undefined) return false;
             const str = String(value).trim();
             if (!str || str === 'activeClasses') return false;
-            // Hanya izinkan format tanggal yang umum dipakai aplikasi.
             return /^\d{4}-\d{2}-\d{2}$/.test(str) ||
                    /^\d{2}\/\d{2}\/\d{4}$/.test(str) ||
                    /^\d{4}-\d{2}-\d{2}T/.test(str);
@@ -784,6 +834,30 @@
                 return `${y}-${m}-${d}`;
             }
             return str;
+        }
+
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById('input-password');
+            const eyeIcon = document.getElementById('eye-icon');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                eyeIcon.className = 'fa-solid fa-eye-slash';
+            } else {
+                passInput.type = 'password';
+                eyeIcon.className = 'fa-solid fa-eye';
+            }
+        }
+
+        function togglePassInput(inputId, btnEl) {
+            const input = document.getElementById(inputId);
+            const icon = btnEl.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye';
+            }
         }
 
         function checkRole() {
@@ -819,9 +893,12 @@
             } else {
                 document.getElementById('login-modal-title').textContent = "Login Pembina";
                 document.getElementById('login-modal-desc').textContent = "Masukkan password khusus pembina untuk mengakses fitur ubah dan simpan data.";
-                document.getElementById('input-password').value = '';
+                
                 const rememberCb = document.getElementById('remember-me-checkbox');
-                if(rememberCb) rememberCb.checked = (localStorage.getItem('pramuka_pembina_remembered') === 'true');
+                const isRemembered = localStorage.getItem('pramuka_pembina_remembered') === 'true';
+                if(rememberCb) rememberCb.checked = isRemembered;
+                
+                document.getElementById('input-password').value = isRemembered ? pembinaPassword : '';
                 
                 document.getElementById('login-modal').classList.remove('hidden');
                 document.getElementById('login-modal').classList.add('flex');
@@ -837,10 +914,15 @@
         }
 
         function verifyLogin() {
-            const pass = document.getElementById('input-password').value;
+            const pass = document.getElementById('input-password').value.trim();
+            const rememberCb = document.getElementById('remember-me-checkbox');
+
             if (window.pendingLoginTarget === 'settings') {
-                if (pass === '123') {
+                if (pass === adminPassword) {
                     settingsUnlocked = true;
+                    if(rememberCb && rememberCb.checked) {
+                        localStorage.setItem('pramuka_admin_remembered', 'true');
+                    }
                     closeLoginModal();
                     showToast('Pengaturan dibuka!', 'success');
                     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -848,18 +930,17 @@
                     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('bg-pramuka-800'));
                     const activeBtn = document.getElementById('nav-btn-settings');
                     if(activeBtn) activeBtn.classList.add('bg-pramuka-800');
-                    initClassCheckboxes();
+                    initSettingsForm();
                 } else {
-                    showToast('Kode salah, Coba lagi!', 'error');
+                    showToast('Kode Admin salah, Coba lagi!', 'error');
                     document.getElementById('input-password').value = '';
                     document.getElementById('input-password').focus();
                 }
             } else {
-                if(pass === '3132') {
+                if(pass === pembinaPassword) {
                     userRole = 'pembina';
                     localStorage.setItem('pramuka_user_role', 'pembina');
                     
-                    const rememberCb = document.getElementById('remember-me-checkbox');
                     if(rememberCb && rememberCb.checked) {
                         localStorage.setItem('pramuka_pembina_remembered', 'true');
                     } else {
@@ -877,6 +958,42 @@
                     document.getElementById('input-password').focus();
                 }
             }
+        }
+
+        function savePasswordSettings() {
+            const newPembinaPass = document.getElementById('setting-pembina-pass').value.trim();
+            const newAdminPass = document.getElementById('setting-admin-pass').value.trim();
+            const autoRemember = document.getElementById('auto-remember-cb').checked;
+
+            if(!newPembinaPass || !newAdminPass) {
+                showToast('Password Pembina dan Kode Admin tidak boleh kosong!', 'warning');
+                return;
+            }
+
+            pembinaPassword = newPembinaPass;
+            adminPassword = newAdminPass;
+
+            localStorage.setItem('pramuka_pembina_password', pembinaPassword);
+            localStorage.setItem('pramuka_admin_password', adminPassword);
+
+            if(autoRemember) {
+                localStorage.setItem('pramuka_pembina_remembered', 'true');
+            } else {
+                localStorage.removeItem('pramuka_pembina_remembered');
+            }
+
+            showToast('Password baru berhasil disimpan di memori!', 'success');
+        }
+
+        function initSettingsForm() {
+            initClassCheckboxes();
+            const pembinaInput = document.getElementById('setting-pembina-pass');
+            const adminInput = document.getElementById('setting-admin-pass');
+            const autoRememberCb = document.getElementById('auto-remember-cb');
+
+            if(pembinaInput) pembinaInput.value = pembinaPassword;
+            if(adminInput) adminInput.value = adminPassword;
+            if(autoRememberCb) autoRememberCb.checked = (localStorage.getItem('pramuka_pembina_remembered') === 'true');
         }
 
         function applyRoleUI() {
@@ -915,7 +1032,6 @@
             }
         }
 
-        // FUNGSI UNTUK MENCEK TANGGAL ABSENSI
         function bukaCekAbsen() {
             const tbody = document.getElementById('cek-absen-tbody');
             tbody.innerHTML = '';
@@ -932,7 +1048,6 @@
             modal.classList.remove('flex');
         }
 
-        // FUNGSI UNTUK MENCEK MATERI PENILAIAN
         function bukaCekMateri() {
             const tbody=document.getElementById('cek-materi-tbody'); tbody.innerHTML='';
             const materiArray=Object.entries(cloudMateriMap).sort((a,b)=>a[0].localeCompare(b[0],'id'));
@@ -1012,7 +1127,10 @@
             if(tabId === 'settings' && !settingsUnlocked) {
                 document.getElementById('login-modal-title').textContent = "Masukkan Kode Admin";
                 document.getElementById('login-modal-desc').textContent = "Masukkan Kode Admin untuk mengakses pengaturan pembina.";
-                document.getElementById('input-password').value = '';
+                
+                const isAdminRemembered = localStorage.getItem('pramuka_admin_remembered') === 'true';
+                document.getElementById('input-password').value = isAdminRemembered ? adminPassword : '';
+                
                 document.getElementById('login-modal').classList.remove('hidden');
                 document.getElementById('login-modal').classList.add('flex');
                 document.getElementById('input-password').focus();
@@ -1033,7 +1151,7 @@
             if(tabId === 'rekap-nilai') renderRekapNilai();
             if(tabId === 'rekap') renderRekapKehadiran();
             if(tabId === 'hasil') renderHasil();
-            if(tabId === 'settings') initClassCheckboxes();
+            if(tabId === 'settings') initSettingsForm();
         }
 
         function showToast(message, type = 'success') {
@@ -1062,7 +1180,6 @@
             document.getElementById('stat-pertemuan').textContent = pertemuanList.length;
         }
 
-        // FUNGSI FETCH DENGAN ANTI-CACHE TIMESTAMP AGAR SELALU UPDATE DARI SPREADSHEET
         async function fetchDataFromSheet(sheetName, isAuto = false) {
             try {
                 const timestamp = new Date().getTime();
@@ -1138,14 +1255,11 @@
                 }
             }
 
-            // Perbarui daftar pertemuan HANYA dari tanggal valid pada Log Absensi.
-            // activeClasses / Pengaturan tidak pernah masuk ke daftar pertemuan.
             remotePertemuanList = Array.from(tempPertemuanSet)
                 .map(normalizeMeetingDate)
                 .filter(Boolean);
             pertemuanList = [...remotePertemuanList];
 
-            // Daftar materi untuk menu 'Cek Materi' hanya berasal dari Spreadsheet Nilai.
             remoteMateriList = [];
             let remoteMateriSet = new Set();
             if(rowsNilaiDetail && rowsNilaiDetail.length > 1) {
@@ -1194,7 +1308,6 @@
                 }
             }
 
-            // Ambil activeClasses dari Spreadsheet hanya jika data remote tidak lebih lama dari lokal.
             let remoteActiveClasses = null;
             let remoteActiveClassesUpdatedAt = 0;
             if(rowsPengaturan && rowsPengaturan.length > 1) {
@@ -1221,7 +1334,7 @@
                 localStorage.setItem('pramuka_active_classes_updated_at', String(activeClassesUpdatedAt));
             }
 
-            initClassCheckboxes();
+            initSettingsForm();
 
             let fetchedNilaiMap = {};
             let sourceNilaiRows = rowsRekapNilai || (rowsNilaiDetail && rowsNilaiDetail.length > 1 ? rowsNilaiDetail : null);
@@ -1302,7 +1415,6 @@
                 }
                 siswaList = newSiswaList;
             } else {
-                // Spreadsheet tidak terbaca/kosong: JANGAN gunakan data contoh atau cache lama.
                 siswaList = [];
             }
 
@@ -1313,7 +1425,7 @@
             renderRekapNilai();
             renderRekapKehadiran();
             renderHasil();
-            initClassCheckboxes();
+            initSettingsForm();
             if(!isAuto) showToast('Data berhasil dimuat!');
         }
 
