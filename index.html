@@ -1259,6 +1259,7 @@
                 .map(normalizeMeetingDate)
                 .filter(Boolean);
             pertemuanList = [...remotePertemuanList];
+            cloudTanggalList = [...pertemuanList];
 
             remoteMateriList = [];
             let remoteMateriSet = new Set();
@@ -1680,57 +1681,55 @@
         function calculateFinalScore(siswa) {
             let totalMeetings = Math.max(pertemuanList.length, (siswa.hadirCount || 0) + (siswa.sakitCount || 0) + (siswa.alpaCount || 0), 1);
             let hadir = siswa.hadirCount !== undefined ? siswa.hadirCount : 0;
-            let sakit = siswa.sakitCount || 0;
-            let alpa = siswa.alpaCount || 0;
-            
-            let attendanceScore = Math.min(100, Math.round(((hadir * 100) + (sakit * 50) + (alpa * 0)) / totalMeetings));
+            let sakit = siswa.sakitCount !== undefined ? siswa.sakitCount : 0;
 
-            let gradeMapNum = { 'A': 90, 'B': 75, 'C': 60, 'D': 40, 'E': 0 };
+            let attendanceScore = ((hadir + (sakit * 0.5)) / totalMeetings) * 100;
+            if (attendanceScore > 100) attendanceScore = 100;
+
+            const gradeScoreMap = { 'A': 100, 'B': 80, 'C': 60, 'D': 40, 'E': 20 };
             let riwayat = siswa.riwayatNilai || {};
-            let grades = Object.values(riwayat);
-            let avgGradeScore = 90;
-            if(grades.length > 0) {
-                let sum = 0;
-                grades.forEach(g => { sum += gradeMapNum[String(g).toUpperCase()] || 90; });
-                avgGradeScore = Math.round(sum / grades.length);
-            } else {
-                avgGradeScore = gradeMapNum[String(siswa.nilai || 'A').toUpperCase()] || 90;
+            let materialScores = Object.values(riwayat).map(g => gradeScoreMap[g] || 100);
+
+            let avgMaterialScore = 100;
+            if (materialScores.length > 0) {
+                avgMaterialScore = materialScores.reduce((a, b) => a + b, 0) / materialScores.length;
+            } else if (siswa.nilai) {
+                avgMaterialScore = gradeScoreMap[siswa.nilai] || 100;
             }
 
-            let finalScore = Math.round((0.7 * attendanceScore) + (0.3 * avgGradeScore));
-            return finalScore;
-        }
-
-        function getPredikat(score) {
-            if(score >= 88) return { label: 'Sangat Baik (A)', color: 'bg-green-100 text-green-700' };
-            if(score >= 78) return { label: 'Baik (B)', color: 'bg-blue-100 text-blue-700' };
-            if(score >= 68) return { label: 'Cukup (C)', color: 'bg-amber-100 text-amber-700' };
-            return { label: 'Perlu Bimbingan (D/E)', color: 'bg-red-100 text-red-700' };
+            let finalScore = (attendanceScore * 0.7) + (avgMaterialScore * 0.3);
+            return Math.round(finalScore);
         }
 
         function renderHasil() {
             const tbody = document.getElementById('hasil-table-body');
             if(!tbody) return;
             tbody.innerHTML = '';
-            const search = document.getElementById('search-hasil').value.toLowerCase();
+            const searchInput = document.getElementById('search-hasil');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
             const filtered = getFilteredSiswaList().filter(s => s.nama.toLowerCase().includes(search));
 
             if(filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">Tidak ada hasil akhir untuk kelas aktif.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">Tidak ada data hasil untuk kelas aktif.</td></tr>`;
                 return;
             }
 
             filtered.forEach((s, index) => {
-                let finalScore = calculateFinalScore(s);
-                let pred = getPredikat(finalScore);
+                let score = calculateFinalScore(s);
 
-                if(hasilSheetList.length > 0) {
-                    let match = hasilSheetList.find(h => h.nama.toLowerCase() === s.nama.toLowerCase());
-                    if(match && !isNaN(Number(match.skor))) {
-                        finalScore = Number(match.skor);
-                        pred = getPredikat(finalScore);
-                    }
+                let sheetMatch = hasilSheetList.find(h => h.nama.toLowerCase() === s.nama.toLowerCase());
+                if (sheetMatch && sheetMatch.skor) {
+                    let parsedSkor = parseFloat(sheetMatch.skor);
+                    if (!isNaN(parsedSkor)) score = Math.round(parsedSkor);
                 }
+
+                let predikat = "Sangat Baik";
+                let badgeClass = "bg-green-100 text-green-800";
+                if(score >= 85) { predikat = "Sangat Baik (A)"; badgeClass = "bg-green-100 text-green-800"; }
+                else if(score >= 70) { predikat = "Baik (B)"; badgeClass = "bg-blue-100 text-blue-800"; }
+                else if(score >= 55) { predikat = "Cukup (C)"; badgeClass = "bg-amber-100 text-amber-800"; }
+                else if(score >= 40) { predikat = "Kurang (D)"; badgeClass = "bg-orange-100 text-orange-800"; }
+                else { predikat = "Sangat Kurang (E)"; badgeClass = "bg-red-100 text-red-800"; }
 
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50 transition">
@@ -1738,214 +1737,271 @@
                         <td class="p-4 font-semibold text-gray-800">${s.nama}</td>
                         <td class="p-4 text-center text-gray-600">${s.kelas}</td>
                         <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-xs font-semibold">${s.regu}</span></td>
-                        <td class="p-4 text-center font-extrabold text-pramuka-700 text-base">${finalScore}</td>
-                        <td class="p-4 text-center">
-                            <span class="px-3 py-1 rounded-full font-bold text-xs ${pred.color}">${pred.label}</span>
-                        </td>
+                        <td class="p-4 text-center font-extrabold text-pramuka-700 text-base">${score}</td>
+                        <td class="p-4 text-center"><span class="px-3 py-1.5 rounded-full text-xs font-bold ${badgeClass}">${predikat}</span></td>
                     </tr>
                 `;
             });
         }
 
         function syncAndRenderHasil() {
-            loadAllData(false);
-            showToast('Hasil akhir diperbarui!');
+            loadAllData(false).then(() => {
+                renderHasil();
+                showToast('Data Hasil berhasil diperbarui dari Spreadsheet!');
+            });
         }
 
         function mulaiAbsen() {
-            const tglInput = document.getElementById('tanggal-sabtu').value;
-            if(!tglInput) {
-                showToast('Silakan pilih tanggal terlebih dahulu!', 'warning');
+            const tglVal = document.getElementById('tanggal-sabtu').value;
+            if(!tglVal) {
+                showToast('Pilih tanggal kegiatan terlebih dahulu!', 'warning');
                 return;
             }
 
-            document.getElementById('display-tanggal-absen').textContent = tglInput;
-            document.getElementById('section-tabel-absen').classList.remove('hidden');
+            const section = document.getElementById('section-tabel-absen');
+            const displayTgl = document.getElementById('display-tanggal-absen');
+            
+            try {
+                let d = new Date(tglVal + 'T00:00:00');
+                displayTgl.textContent = d.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            } catch(e) {
+                displayTgl.textContent = tglVal;
+            }
+
+            section.classList.remove('hidden');
 
             const tbody = document.getElementById('absen-table-body');
             tbody.innerHTML = '';
-            const filtered = siswaList;
-
-            if(filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-red-500 font-semibold">Siswa gagal dimuat. Data Absen tidak dapat ditampilkan.</td></tr>`;
-                updateAbsenCount();
+            
+            const filteredSiswa = getFilteredSiswaList();
+            if(filteredSiswa.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Tidak ada siswa untuk kelas aktif.</td></tr>`;
+                updateAbsenCounts();
                 return;
             }
 
-            filtered.forEach((s, index) => {
-                let currentStatus = (s.riwayatAbsen && s.riwayatAbsen[tglInput]) ? s.riwayatAbsen[tglInput] : 'Hadir';
+            filteredSiswa.forEach(s => {
+                let statusVal = 'Hadir';
+                if (s.riwayatAbsen && s.riwayatAbsen[tglVal]) {
+                    statusVal = s.riwayatAbsen[tglVal];
+                }
 
                 tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition" data-id="${s.id}" data-nama="${s.nama}">
+                    <tr class="hover:bg-gray-50 transition" data-siswa-id="${s.id}">
                         <td class="p-4 font-semibold text-gray-800">${s.nama}</td>
                         <td class="p-4 text-center text-gray-600">${s.kelas}</td>
                         <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-xs font-semibold">${s.regu}</span></td>
                         <td class="p-4 text-center">
-                            <select class="absen-select px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pramuka-600" onchange="updateAbsenCount()">
-                                <option value="Hadir" ${currentStatus === 'Hadir' ? 'selected' : ''}>Hadir</option>
-                                <option value="Sakit/Izin" ${currentStatus === 'Sakit/Izin' ? 'selected' : ''}>Sakit/Izin</option>
-                                <option value="Alpa" ${currentStatus === 'Alpa' ? 'selected' : ''}>Alpa</option>
+                            <select onchange="updateAbsenCounts()" class="absen-status-select px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-pramuka-600 bg-white">
+                                <option value="Hadir" ${statusVal === 'Hadir' ? 'selected' : ''}>Hadir</option>
+                                <option value="Sakit/Izin" ${statusVal === 'Sakit/Izin' ? 'selected' : ''}>Sakit / Izin</option>
+                                <option value="Alpa" ${statusVal === 'Alpa' ? 'selected' : ''}>Alpa</option>
                             </select>
                         </td>
                     </tr>
                 `;
             });
-            updateAbsenCount();
-            showToast('Daftar absen dimuat untuk tanggal ' + tglInput, 'info');
+
+            updateAbsenCounts();
         }
 
-        function updateAbsenCount() {
-            const selects = document.querySelectorAll('.absen-select');
+        function updateAbsenCounts() {
+            const selects = document.querySelectorAll('.absen-status-select');
             let hadir = 0, sakit = 0, alpa = 0;
-            selects.forEach(sel => {
-                if(sel.value === 'Hadir') hadir++;
-                else if(sel.value === 'Sakit/Izin') sakit++;
-                else if(sel.value === 'Alpa') alpa++;
+            selects.forEach(s => {
+                if(s.value === 'Hadir') hadir++;
+                else if(s.value === 'Sakit/Izin') sakit++;
+                else if(s.value === 'Alpa') alpa++;
             });
             document.getElementById('count-hadir').textContent = hadir;
             document.getElementById('count-sakit').textContent = sakit;
             document.getElementById('count-alpa').textContent = alpa;
         }
 
-        function simpanAbsen() {
-            const tglInput = normalizeMeetingDate(document.getElementById('tanggal-sabtu').value);
-            if(!tglInput) {
-                showToast('Tanggal kegiatan tidak valid!', 'warning');
+        async function sendDataToAppsScript(payload, successMessage) {
+            if(!appsScriptUrl) {
+                showToast(successMessage + ' (Tersimpan Lokal - Webhook belum dikonfigurasi)', 'info');
                 return;
             }
-            if(!pertemuanList.includes(tglInput)) {
-                pertemuanList.push(tglInput);
+
+            try {
+                showToast('Mengirim data ke Google Spreadsheet...', 'info');
+                await fetch(appsScriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                showToast(successMessage, 'success');
+            } catch(error) {
+                console.error('Gagal mengirim ke Apps Script:', error);
+                showToast('Berhasil simpan lokal, namun gagal sync ke cloud.', 'warning');
+            }
+        }
+
+        async function simpanAbsen() {
+            if(userRole !== 'pembina') {
+                showToast('Hanya pembina yang dapat menyimpan absensi!', 'warning');
+                return;
             }
 
-            const rows = document.querySelectorAll('#absen-table-body tr');
-            let payloadRows = [];
+            const tglVal = document.getElementById('tanggal-sabtu').value;
+            if(!tglVal) {
+                showToast('Tanggal tidak valid!', 'warning');
+                return;
+            }
 
-            rows.forEach(row => {
-                const id = row.getAttribute('data-id');
-                const select = row.querySelector('.absen-select');
-                const status = select.value;
+            const rows = document.querySelectorAll('#absen-table-body tr[data-siswa-id]');
+            let payloadLog = [];
 
-                let siswa = siswaList.find(s => s.id == id);
-                if(siswa) {
-                    if(!siswa.riwayatAbsen) siswa.riwayatAbsen = {};
-                    siswa.riwayatAbsen[tglInput] = status;
+            if (!pertemuanList.includes(tglVal)) {
+                pertemuanList.push(tglVal);
+                localStorage.setItem('pramuka_app_pertemuan', JSON.stringify(pertemuanList));
+            }
+            if(!cloudTanggalList.includes(tglVal)) {
+                cloudTanggalList.push(tglVal);
+            }
+
+            rows.forEach(tr => {
+                let id = parseInt(tr.getAttribute('data-siswa-id'));
+                let s = siswaList.find(item => item.id === id);
+                if(s) {
+                    let select = tr.querySelector('.absen-status-select');
+                    let status = select ? select.value : 'Hadir';
+
+                    if(!s.riwayatAbsen) s.riwayatAbsen = {};
+                    s.riwayatAbsen[tglVal] = status;
 
                     let hadir = 0, sakit = 0, alpa = 0;
-                    Object.values(siswa.riwayatAbsen).forEach(st => {
+                    Object.values(s.riwayatAbsen).forEach(st => {
                         if(st === 'Hadir') hadir++;
                         else if(st === 'Sakit/Izin') sakit++;
                         else if(st === 'Alpa') alpa++;
                     });
-                    siswa.hadirCount = hadir;
-                    siswa.sakitCount = sakit;
-                    siswa.alpaCount = alpa;
+                    s.hadirCount = hadir;
+                    s.sakitCount = sakit;
+                    s.alpaCount = alpa;
 
-                    payloadRows.push({
+                    payloadLog.push({
                         sheet: 'Log Absensi',
-                        values: [new Date().toISOString(), siswa.nama, siswa.kelas, siswa.regu, status, tglInput]
+                        values: [new Date().toISOString(), s.nama, s.kelas, s.regu, status, tglVal]
                     });
                 }
             });
 
             localStorage.setItem('pramuka_app_siswa', JSON.stringify(siswaList));
-            localStorage.setItem('pramuka_app_pertemuan', JSON.stringify(pertemuanList));
 
-            if(appsScriptUrl) {
-                sendDataToAppsScript(payloadRows, 'Absensi tanggal ' + tglInput + ' berhasil disimpan & dikirim!');
-            } else {
-                showToast('Absensi berhasil disimpan secara lokal!');
-            }
+            let payloadRekap = getFilteredSiswaList().map(s => ({
+                sheet: 'Rekap Absensi',
+                values: [s.nama, s.kelas, s.regu, s.hadirCount || 0, s.sakitCount || 0, s.alpaCount || 0]
+            }));
+
             updateDashboard();
+            renderRekapKehadiran();
+
+            await sendDataToAppsScript([...payloadLog, ...payloadRekap], 'Absensi berhasil disimpan & dikirim!');
         }
 
         function mulaiPenilaianMateri() {
-            const materi = document.getElementById('input-materi-uji').value.trim();
-            if(!materi) {
-                showToast('Silakan masukkan nama materi latihan terlebih dahulu!', 'warning');
-                document.getElementById('input-materi-uji').focus();
+            const materiVal = document.getElementById('input-materi-uji').value.trim();
+            if(!materiVal) {
+                showToast('Masukkan nama materi latihan terlebih dahulu!', 'warning');
                 return;
             }
 
-            document.getElementById('display-nama-materi').textContent = materi;
-            const nowStr = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-            document.getElementById('display-tanggal-input').textContent = nowStr;
-            document.getElementById('section-tabel-nilai').classList.remove('hidden');
+            const section = document.getElementById('section-tabel-nilai');
+            document.getElementById('display-nama-materi').textContent = materiVal;
+            document.getElementById('display-tanggal-input').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            section.classList.remove('hidden');
 
             const tbody = document.getElementById('nilai-table-body');
             tbody.innerHTML = '';
-            const filtered = siswaList;
+            
+            const filteredSiswa = getFilteredSiswaList();
+            if(filteredSiswa.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Tidak ada siswa untuk kelas aktif.</td></tr>`;
+                return;
+            }
 
-            filtered.forEach((s) => {
-                let currentVal = (s.riwayatNilai && s.riwayatNilai[materi]) ? s.riwayatNilai[materi] : 'A';
+            filteredSiswa.forEach(s => {
+                let currentGrade = 'A';
+                if (s.riwayatNilai && s.riwayatNilai[materiVal]) {
+                    currentGrade = s.riwayatNilai[materiVal];
+                }
 
                 tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition" data-id="${s.id}" data-nama="${s.nama}">
+                    <tr class="hover:bg-gray-50 transition" data-siswa-id="${s.id}">
                         <td class="p-4 font-semibold text-gray-800">${s.nama}</td>
                         <td class="p-4 text-center text-gray-600">${s.kelas}</td>
                         <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-xs font-semibold">${s.regu}</span></td>
                         <td class="p-4 text-center">
-                            <select class="nilai-select px-4 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-pramuka-700 focus:outline-none focus:ring-2 focus:ring-pramuka-600">
-                                <option value="A" ${currentVal === 'A' ? 'selected' : ''}>A (Sangat Baik)</option>
-                                <option value="B" ${currentVal === 'B' ? 'selected' : ''}>B (Baik)</option>
-                                <option value="C" ${currentVal === 'C' ? 'selected' : ''}>C (Cukup)</option>
-                                <option value="D" ${currentVal === 'D' ? 'selected' : ''}>D (Kurang)</option>
-                                <option value="E" ${currentVal === 'E' ? 'selected' : ''}>E (Sangat Kurang)</option>
+                            <select class="nilai-status-select px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-pramuka-600 bg-white">
+                                <option value="A" ${currentGrade === 'A' ? 'selected' : ''}>A (100 - 71)</option>
+                                <option value="B" ${currentGrade === 'B' ? 'selected' : ''}>B (70 - 41)</option>
+                                <option value="C" ${currentGrade === 'C' ? 'selected' : ''}>C (40 - 11)</option>
+                                <option value="D" ${currentGrade === 'D' ? 'selected' : ''}>D (10 - 1)</option>
+                                <option value="E" ${currentGrade === 'E' ? 'selected' : ''}>E (0)</option>
                             </select>
                         </td>
                     </tr>
                 `;
             });
-            showToast('Form penilaian materi ' + materi + ' dimuat!', 'info');
         }
 
-        function simpanDataNilai() {
-            const materi = document.getElementById('display-nama-materi').textContent;
-            const rows = document.querySelectorAll('#nilai-table-body tr');
-            let payloadRows = [];
+        async function simpanDataNilai() {
+            if(userRole !== 'pembina') {
+                showToast('Hanya pembina yang dapat menyimpan nilai!', 'warning');
+                return;
+            }
 
-            rows.forEach(row => {
-                const id = row.getAttribute('data-id');
-                const select = row.querySelector('.nilai-select');
-                const val = select.value;
+            const materiVal = document.getElementById('input-materi-uji').value.trim();
+            if(!materiVal) {
+                showToast('Nama materi tidak valid!', 'warning');
+                return;
+            }
 
-                let siswa = siswaList.find(s => s.id == id);
-                if(siswa) {
-                    if(!siswa.riwayatNilai) siswa.riwayatNilai = {};
-                    siswa.riwayatNilai[materi] = val;
+            const rows = document.querySelectorAll('#nilai-table-body tr[data-siswa-id]');
+            let payloadNilai = [];
 
-                    let allGrades = Object.values(siswa.riwayatNilai);
-                    siswa.nilai = calculateAverageGrade(allGrades);
+            rows.forEach(tr => {
+                let id = parseInt(tr.getAttribute('data-siswa-id'));
+                let s = siswaList.find(item => item.id === id);
+                if(s) {
+                    let select = tr.querySelector('.nilai-status-select');
+                    let grade = select ? select.value : 'A';
 
-                    payloadRows.push({
+                    if(!s.riwayatNilai) s.riwayatNilai = {};
+                    s.riwayatNilai[materiVal] = grade;
+
+                    let allGrades = Object.values(s.riwayatNilai);
+                    s.nilai = calculateAverageGrade(allGrades);
+
+                    payloadNilai.push({
                         sheet: 'Nilai',
-                        values: [new Date().toISOString(), materi, siswa.nama, siswa.kelas, siswa.regu, val]
+                        values: [new Date().toISOString(), materiVal, s.nama, s.kelas, s.regu, grade]
                     });
                 }
             });
 
+            if (!cloudMateriMap[materiVal]) {
+                cloudMateriMap[materiVal] = rows.length;
+            }
+
             localStorage.setItem('pramuka_app_siswa', JSON.stringify(siswaList));
 
-            if(appsScriptUrl) {
-                sendDataToAppsScript(payloadRows, 'Nilai materi ' + materi + ' berhasil disimpan & dikirim!');
-            } else {
-                showToast('Nilai materi berhasil disimpan secara lokal!');
-            }
-            renderRekapNilai();
-        }
+            let payloadRekapNilai = getFilteredSiswaList().map(s => ({
+                sheet: 'Rekap Nilai',
+                values: [s.nama, s.kelas, s.regu, s.nilai || 'A']
+            }));
 
-        async function sendDataToAppsScript(rowsData, successMessage) {
-            if(!appsScriptUrl) { showToast('Koneksi Spreadsheet belum tersedia. Pastikan URL Web App ada di Pengaturan!C2.', 'warning'); return; }
-            try {
-                await fetch(appsScriptUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({rows:rowsData})});
-                showToast(successMessage);
-            } catch(error) { console.error('Gagal kirim ke Apps Script:',error); showToast('Gagal mengirim data ke Spreadsheet.','warning'); }
+            renderRekapNilai();
+            renderHasil();
+
+            await sendDataToAppsScript([...payloadNilai, ...payloadRekapNilai], 'Data Nilai berhasil disimpan & dikirim!');
         }
 
         window.onload = function() {
-            if(localStorage.getItem('pramuka_pembina_remembered') === 'true') {
-                userRole = 'pembina';
-                localStorage.setItem('pramuka_user_role', 'pembina');
-            }
             checkRole();
             loadAllData(true);
         };
