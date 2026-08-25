@@ -57,7 +57,7 @@
                 </button>
             </div>
 
-            <nav id="desktop-nav" class="hidden md:flex items-center space-x-1">
+            <nav id="desktop-nav" class="hidden md:flex items-center space-x-1 flex-wrap">
                 <button onclick="switchTab('dashboard')" id="nav-btn-dashboard" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2 bg-pramuka-800">
                     <i class="fa-solid fa-house"></i> <span>Dashboard</span>
                 </button>
@@ -68,7 +68,7 @@
                     <i class="fa-solid fa-clipboard-user"></i> <span>Absen Pramuka</span>
                 </button>
                 <button onclick="switchTab('nilai')" id="nav-btn-nilai" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2 nav-pembina-only">
-                    <i class="fa-solid fa-award"></i> <span>Penilaian Materi</span>
+                    <i class="fa-solid fa-award"></i> <span>Penilaian Latihan</span>
                 </button>
                 <button onclick="switchTab('rekap')" id="nav-btn-rekap" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2">
                     <i class="fa-solid fa-chart-pie"></i> <span>Rekap Kehadiran</span>
@@ -76,11 +76,17 @@
                 <button onclick="switchTab('rekap-nilai')" id="nav-btn-rekap-nilai" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2">
                     <i class="fa-solid fa-chart-line"></i> <span>Rekap Nilai</span>
                 </button>
+                <button onclick="switchTab('prestasi')" id="nav-btn-prestasi" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-trophy"></i> <span>Prestasi</span>
+                </button>
+                <button onclick="switchTab('informasi')" id="nav-btn-informasi" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-bullhorn"></i> <span>Informasi</span>
+                </button>
                 <button onclick="switchTab('hasil')" id="nav-btn-hasil" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2">
                     <i class="fa-solid fa-square-poll-vertical"></i> <span>Hasil</span>
                 </button>
                 <button onclick="switchTab('settings')" id="nav-btn-settings" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2 nav-pembina-only">
-                    <i class="fa-solid fa-gear"></i> <span>Pengaturan Pembina</span>
+                    <i class="fa-solid fa-gear"></i> <span>Pengaturan</span>
                 </button>
                 
                 <button id="desktop-auth-btn" onclick="handleAuthClick()" class="ml-2 bg-amber-500 hover:bg-amber-600 text-gray-900 px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition flex items-center space-x-1.5 active:scale-95">
@@ -92,29 +98,35 @@
 
         <div id="mobile-menu" class="hidden bg-pramuka-800 border-t border-pramuka-600 px-4 pt-2 pb-4 space-y-1 shadow-lg md:hidden">
             <div class="space-y-1 border-b border-pramuka-600 pb-2 mb-2">
-                <button onclick="switchTab('dashboard'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3">
-                    <i class="fa-solid fa-house w-6"></i> <span>Dashboard</span>
+                <button onclick="switchTab('dashboard'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3">
+                    <i class="fa-solid fa-house w-5"></i> <span>Dashboard</span>
                 </button>
-                <button onclick="switchTab('siswa'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3">
-                    <i class="fa-solid fa-users w-6"></i> <span>Data Siswa</span>
+                <button onclick="switchTab('siswa'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3">
+                    <i class="fa-solid fa-users w-5"></i> <span>Data Siswa</span>
                 </button>
-                <button onclick="switchTab('absen'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3 nav-pembina-only">
-                    <i class="fa-solid fa-clipboard-user w-6"></i> <span>Absen Pramuka</span>
+                <button onclick="switchTab('absen'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3 nav-pembina-only">
+                    <i class="fa-solid fa-clipboard-user w-5"></i> <span>Absen Pramuka</span>
                 </button>
-                <button onclick="switchTab('nilai'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3 nav-pembina-only">
-                    <i class="fa-solid fa-award w-6"></i> <span>Penilaian Materi</span>
+                <button onclick="switchTab('nilai'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3 nav-pembina-only">
+                    <i class="fa-solid fa-award w-5"></i> <span>Penilaian Latihan</span>
                 </button>
-                <button onclick="switchTab('rekap'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3">
-                    <i class="fa-solid fa-chart-pie w-6"></i> <span>Rekap Kehadiran</span>
+                <button onclick="switchTab('rekap'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3">
+                    <i class="fa-solid fa-chart-pie w-5"></i> <span>Rekap Kehadiran</span>
                 </button>
-                <button onclick="switchTab('rekap-nilai'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3">
-                    <i class="fa-solid fa-chart-line w-6"></i> <span>Rekap Nilai</span>
+                <button onclick="switchTab('rekap-nilai'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3">
+                    <i class="fa-solid fa-chart-line w-5"></i> <span>Rekap Nilai</span>
                 </button>
-                <button onclick="switchTab('hasil'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3">
-                    <i class="fa-solid fa-square-poll-vertical w-6"></i> <span>Hasil</span>
+                <button onclick="switchTab('prestasi'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3">
+                    <i class="fa-solid fa-trophy w-5"></i> <span>Prestasi</span>
                 </button>
-                <button onclick="switchTab('settings'); toggleMobileMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-base font-medium hover:bg-pramuka-700 flex items-center space-x-3 nav-pembina-only">
-                    <i class="fa-solid fa-gear w-6"></i> <span>Pengaturan Pembina</span>
+                <button onclick="switchTab('informasi'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3">
+                    <i class="fa-solid fa-bullhorn w-5"></i> <span>Informasi</span>
+                </button>
+                <button onclick="switchTab('hasil'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3">
+                    <i class="fa-solid fa-square-poll-vertical w-5"></i> <span>Hasil</span>
+                </button>
+                <button onclick="switchTab('settings'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3 nav-pembina-only">
+                    <i class="fa-solid fa-gear w-5"></i> <span>Pengaturan</span>
                 </button>
             </div>
             <button id="auth-action-btn" onclick="handleAuthClick(); toggleMobileMenu()" class="w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold bg-amber-500 text-gray-900 hover:bg-amber-600 flex items-center space-x-2 transition">
@@ -124,6 +136,7 @@
         </div>
     </header>
 
+    <!-- MODAL LOGIN -->
     <div id="login-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden p-6 text-center space-y-4 animate-fade-in">
             <div class="bg-pramuka-100 text-pramuka-700 w-16 h-16 rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner">
@@ -151,6 +164,85 @@
                 </button>
                 <button onclick="closeLoginModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl font-semibold transition text-xs">
                     Batal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH PRESTASI (PEMBINA ONLY) -->
+    <div id="modal-tambah-prestasi" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden p-6 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-lg text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-amber-500"></i> Tambah Data Prestasi Siswa
+                </h3>
+                <button onclick="closeModalPrestasi()" class="text-gray-400 hover:text-gray-600 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Pilih Siswa (Bisa Beberapa)</label>
+                    <select id="select-siswa-prestasi" multiple class="w-full p-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pramuka-600 h-32">
+                        <!-- Populated by JS -->
+                    </select>
+                    <p class="text-[11px] text-gray-400 mt-1">*Tekan Ctrl (Windows) / Cmd (Mac) untuk memilih lebih dari 1 siswa</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Nama Prestasi / Kejuaraan</label>
+                    <input type="text" id="input-nama-prestasi" placeholder="Contoh: Juara 1 Lomba LBB Putra SD" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pramuka-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Tingkat / Kategori</label>
+                    <input type="text" id="input-tingkat-prestasi" placeholder="Contoh: Tingkat Kecamatan / Kabupaten" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pramuka-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Tanggal / Tahun</label>
+                    <input type="date" id="input-tanggal-prestasi" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pramuka-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Keterangan Tambahan</label>
+                    <textarea id="input-ket-prestasi" rows="2" placeholder="Detail penghargaan..." class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pramuka-600"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2 border-t">
+                <button onclick="closeModalPrestasi()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-xs font-semibold">Batal</button>
+                <button onclick="simpanPrestasi()" class="px-5 py-2 bg-pramuka-700 hover:bg-pramuka-800 text-white rounded-xl text-xs font-bold shadow flex items-center gap-1.5">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan Prestasi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH INFORMASI (PEMBINA ONLY) -->
+    <div id="modal-tambah-informasi" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden p-6 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-lg text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-bullhorn text-pramuka-600"></i> Tambah Informasi Baru
+                </h3>
+                <button onclick="closeModalInformasi()" class="text-gray-400 hover:text-gray-600 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Judul Pengumuman / Informasi</label>
+                    <input type="text" id="input-judul-info" placeholder="Contoh: Jadwal Kemah Sabtu Minggu" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pramuka-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Tanggal</label>
+                    <input type="date" id="input-tanggal-info" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pramuka-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Isi Pesan / Informasi</label>
+                    <textarea id="input-isi-info" rows="4" placeholder="Tulis rincian informasi di sini..." class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pramuka-600"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2 border-t">
+                <button onclick="closeModalInformasi()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-xs font-semibold">Batal</button>
+                <button onclick="simpanInformasi()" class="px-5 py-2 bg-pramuka-700 hover:bg-pramuka-800 text-white rounded-xl text-xs font-bold shadow flex items-center gap-1.5">
+                    <i class="fa-solid fa-paper-plane"></i> Publikasikan
                 </button>
             </div>
         </div>
@@ -221,7 +313,7 @@
         </div>
     </div>
 
-    <!-- MODAL CEK TANGGAL ABSENSI (MENU ABSEN) -->
+    <!-- MODAL CEK TANGGAL ABSENSI -->
     <div id="modal-cek-absen" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-white rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden p-6 space-y-4">
             <div class="flex justify-between items-center border-b pb-3">
@@ -256,7 +348,7 @@
         </div>
     </div>
 
-    <!-- MODAL CEK MATERI PENILAIAN (MENU PENILAIAN) -->
+    <!-- MODAL CEK MATERI PENILAIAN -->
     <div id="modal-cek-materi" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-white rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden p-6 space-y-4">
             <div class="flex justify-between items-center border-b pb-3">
@@ -316,55 +408,81 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
-                    <div class="bg-pramuka-100 text-pramuka-700 p-4 rounded-2xl text-2xl">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
+                    <div class="bg-pramuka-100 text-pramuka-700 p-3.5 rounded-2xl text-xl">
                         <i class="fa-solid fa-child-reaching"></i>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-500 font-medium">Total Siswa Aktif</p>
-                        <h3 id="stat-total-siswa" class="text-3xl font-bold text-gray-800">0</h3>
+                        <p class="text-xs text-gray-500 font-medium">Siswa Aktif</p>
+                        <h3 id="stat-total-siswa" class="text-2xl font-bold text-gray-800">0</h3>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
-                    <div class="bg-green-100 text-green-700 p-4 rounded-2xl text-2xl">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
+                    <div class="bg-green-100 text-green-700 p-3.5 rounded-2xl text-xl">
                         <i class="fa-solid fa-calendar-check"></i>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-500 font-medium">Total Pertemuan Pramuka</p>
-                        <h3 id="stat-pertemuan" class="text-3xl font-bold text-gray-800">0</h3>
+                        <p class="text-xs text-gray-500 font-medium">Pertemuan</p>
+                        <h3 id="stat-pertemuan" class="text-2xl font-bold text-gray-800">0</h3>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
+                    <div class="bg-amber-100 text-amber-700 p-3.5 rounded-2xl text-xl">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 font-medium">Prestasi</p>
+                        <h3 id="stat-prestasi" class="text-2xl font-bold text-gray-800">0</h3>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
+                    <div class="bg-blue-100 text-blue-700 p-3.5 rounded-2xl text-xl">
+                        <i class="fa-solid fa-bullhorn"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 font-medium">Informasi</p>
+                        <h3 id="stat-informasi" class="text-2xl font-bold text-gray-800">0</h3>
                     </div>
                 </div>
             </div>
 
             <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
                 <h3 class="text-base font-bold text-gray-800 mb-4">Menu Pintas</h3>
-                <div id="quick-menu-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    <button onclick="switchTab('siswa')" class="p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95">
-                        <i class="fa-solid fa-users text-lg"></i>
+                <div id="quick-menu-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    <button onclick="switchTab('siswa')" class="p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 text-xs sm:text-sm">
+                        <i class="fa-solid fa-users text-base"></i>
                         <span>Data Siswa</span>
                     </button>
-                    <button onclick="switchTab('absen')" class="quick-pembina-only p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95">
-                        <i class="fa-solid fa-clipboard-user text-lg"></i>
+                    <button onclick="switchTab('absen')" class="quick-pembina-only p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 text-xs sm:text-sm">
+                        <i class="fa-solid fa-clipboard-user text-base"></i>
                         <span>Absen Pramuka</span>
                     </button>
-                    <button onclick="switchTab('nilai')" class="quick-pembina-only p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95">
-                        <i class="fa-solid fa-award text-lg"></i>
+                    <button onclick="switchTab('nilai')" class="quick-pembina-only p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 text-xs sm:text-sm">
+                        <i class="fa-solid fa-award text-base"></i>
                         <span>Penilaian Materi</span>
                     </button>
-                    <button onclick="switchTab('rekap')" class="p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95">
-                        <i class="fa-solid fa-chart-pie text-lg"></i>
+                    <button onclick="switchTab('rekap')" class="p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 text-xs sm:text-sm">
+                        <i class="fa-solid fa-chart-pie text-base"></i>
                         <span>Rekap Kehadiran</span>
                     </button>
-                    <button onclick="switchTab('rekap-nilai')" class="p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95">
-                        <i class="fa-solid fa-chart-line text-lg"></i>
+                    <button onclick="switchTab('rekap-nilai')" class="p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 text-xs sm:text-sm">
+                        <i class="fa-solid fa-chart-line text-base"></i>
                         <span>Rekap Nilai</span>
                     </button>
-                    <button onclick="switchTab('hasil')" class="p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95">
-                        <i class="fa-solid fa-square-poll-vertical text-lg"></i>
-                        <span>Hasil</span>
+                    <button onclick="switchTab('prestasi')" class="p-4 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 text-xs sm:text-sm">
+                        <i class="fa-solid fa-trophy text-base"></i>
+                        <span>Prestasi</span>
                     </button>
-                    <a href="https://chat.whatsapp.com/IdzSApCpsbD3u9jzeb7uue?s=cl&p=a&mlu=4" target="_blank" class="p-4 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 col-span-1 sm:col-span-2 md:col-span-3 border border-green-200">
+                    <button onclick="switchTab('informasi')" class="p-4 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 text-xs sm:text-sm">
+                        <i class="fa-solid fa-bullhorn text-base"></i>
+                        <span>Informasi</span>
+                    </button>
+                    <button onclick="switchTab('hasil')" class="p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 text-xs sm:text-sm">
+                        <i class="fa-solid fa-square-poll-vertical text-base"></i>
+                        <span>Hasil Akhir</span>
+                    </button>
+                    <a href="https://chat.whatsapp.com/IdzSApCpsbD3u9jzeb7uue?s=cl&p=a&mlu=4" target="_blank" class="p-4 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 col-span-2 sm:col-span-3 md:col-span-4 border border-green-200">
                         <i class="fa-brands fa-whatsapp text-xl text-green-600"></i>
                         <span>Gabung Grup WhatsApp Pramuka</span>
                     </a>
@@ -407,15 +525,14 @@
             </div>
         </section>
 
-        <!-- ABSENSI TAB (DENGAN TOMBOL CEK TANGGAL) -->
+        <!-- ABSENSI TAB -->
         <section id="tab-absen" class="tab-content hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
                         <h2 class="text-xl font-bold text-gray-800">Absen Pramuka</h2>
-                        <p class="text-sm text-gray-500">Pilih tanggal kegiatan latihan terlebih dahulu untuk menampilkan daftar absensi.</p>
+                        <p class="text-sm text-gray-500">Pilih tanggal kegiatan latihan terlebih dahulu untuk menampilkan daftar absensi (Awal: Alpa).</p>
                     </div>
-                    <!-- TAMBAHAN TOMBOL UNTUK MENCEK TANGGAL ABSEN -->
                     <button onclick="bukaCekAbsen()" class="bg-amber-500 hover:bg-amber-600 text-gray-900 px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition flex items-center space-x-2 active:scale-95">
                         <i class="fa-solid fa-calendar-check"></i>
                         <span>Cek Tanggal Absen</span>
@@ -465,15 +582,14 @@
             </div>
         </section>
 
-        <!-- PENILAIAN TAB (DENGAN TOMBOL CEK MATERI) -->
+        <!-- PENILAIAN TAB -->
         <section id="tab-nilai" class="tab-content hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
                         <h2 class="text-xl font-bold text-gray-800">Penilaian Berdasarkan Materi</h2>
-                        <p class="text-sm text-gray-500">Masukkan nama materi latihan terlebih dahulu untuk memulai penilaian.</p>
+                        <p class="text-sm text-gray-500">Masukkan nama materi latihan terlebih dahulu (Awal: Nilai E).</p>
                     </div>
-                    <!-- TAMBAHAN TOMBOL UNTUK MENCEK MATERI YANG DINILAI -->
                     <button onclick="bukaCekMateri()" class="bg-amber-500 hover:bg-amber-600 text-gray-900 px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition flex items-center space-x-2 active:scale-95">
                         <i class="fa-solid fa-award"></i>
                         <span>Cek Materi Dinilai</span>
@@ -487,7 +603,7 @@
                     </button>
                 </div>
                 <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-xs text-amber-900 flex flex-wrap items-center gap-x-4 gap-y-1 font-semibold">
-                    <span class="text-amber-800 font-bold"><i class="fa-solid fa-circle-info mr-1"></i> Keterangan Rentang Nilai:</span>
+                    <span class="text-amber-800 font-bold"><i class="fa-solid fa-circle-info mr-1"></i> Rentang Nilai:</span>
                     <span>A = 100-71</span>
                     <span>B = 70-41</span>
                     <span>C = 40-11</span>
@@ -503,7 +619,7 @@
                             <span class="text-xs font-bold uppercase text-gray-500">Materi Aktif:</span>
                             <h3 id="display-nama-materi" class="text-lg font-bold text-pramuka-800"></h3>
                         </div>
-                        <div class="text-left sm:text-left">
+                        <div>
                             <span class="text-xs font-bold uppercase text-gray-500 block">Tanggal Input:</span>
                             <p id="display-tanggal-input" class="text-sm font-bold text-gray-700"></p>
                         </div>
@@ -607,6 +723,51 @@
                         <tbody id="rekap-nilai-table-body" class="divide-y divide-gray-100 text-sm"></tbody>
                     </table>
                 </div>
+            </div>
+        </section>
+
+        <!-- TAB PRESTASI -->
+        <section id="tab-prestasi" class="tab-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">Daftar Prestasi Siswa Pramuka</h2>
+                    <p class="text-sm text-gray-500">Catatan pencapaian dan kejuaraan yang diraih siswa SD Negeri 1 Parigi.</p>
+                </div>
+                <button id="btn-tambah-prestasi" onclick="bukaModalPrestasi()" class="bg-amber-500 hover:bg-amber-600 text-gray-900 px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition flex items-center space-x-2 active:scale-95 nav-pembina-only">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Tambah Prestasi</span>
+                </button>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="search-prestasi" oninput="renderPrestasi()" placeholder="Cari nama siswa atau nama kejuaraan..." class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pramuka-600 text-sm">
+                </div>
+            </div>
+
+            <div id="prestasi-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Rendered by JS -->
+            </div>
+        </section>
+
+        <!-- TAB INFORMASI -->
+        <section id="tab-informasi" class="tab-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">Informasi & Pengumuman Pramuka</h2>
+                    <p class="text-sm text-gray-500">Pemberitahuan resmi dan agenda kegiatan Pramuka.</p>
+                </div>
+                <button id="btn-tambah-informasi" onclick="bukaModalInformasi()" class="bg-pramuka-700 hover:bg-pramuka-800 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition flex items-center space-x-2 active:scale-95 nav-pembina-only">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Tambah Informasi</span>
+                </button>
+            </div>
+
+            <div id="informasi-container" class="space-y-4">
+                <!-- Rendered by JS -->
             </div>
         </section>
 
@@ -795,6 +956,9 @@
         let cloudMateriMap = {};
         
         let siswaList = JSON.parse(localStorage.getItem('pramuka_app_siswa')) || [];
+        let prestasiList = JSON.parse(localStorage.getItem('pramuka_app_prestasi')) || [];
+        let informasiList = JSON.parse(localStorage.getItem('pramuka_app_informasi')) || [];
+
         let pertemuanList = [];
         let remotePertemuanList = [];
         let remoteMateriList = [];
@@ -816,12 +980,6 @@
 
         const VALID_CLASS_NAMES = ["Kelas 3", "Kelas 4", "Kelas 5", "Kelas 6"];
 
-
-        // =========================================================
-        // FILTER KELAS AKTIF
-        // Data Siswa, Absensi, dan Nilai hanya menampilkan kelas
-        // yang dicentang di Pengaturan.
-        // =========================================================
         function isActiveClass(kelas) {
             const k = String(kelas || '').trim();
             return activeClasses.includes(k);
@@ -1045,6 +1203,8 @@
 
                 pembinaElements.forEach(el => el.style.display = 'none');
             }
+            renderPrestasi();
+            renderInformasi();
         }
 
         function bukaCekAbsen() {
@@ -1099,6 +1259,7 @@
             updateDashboard();
             renderSiswa();
             renderRekapKehadiran();
+            renderPrestasi();
 
             if(appsScriptUrl) {
                 await sendDataToAppsScript([
@@ -1165,6 +1326,8 @@
             if(tabId === 'siswa') renderSiswa();
             if(tabId === 'rekap-nilai') renderRekapNilai();
             if(tabId === 'rekap') renderRekapKehadiran();
+            if(tabId === 'prestasi') renderPrestasi();
+            if(tabId === 'informasi') renderInformasi();
             if(tabId === 'hasil') renderHasil();
             if(tabId === 'settings') initSettingsForm();
         }
@@ -1193,6 +1356,8 @@
             const filtered = getFilteredSiswaList();
             document.getElementById('stat-total-siswa').textContent = filtered.length;
             document.getElementById('stat-pertemuan').textContent = pertemuanList.length;
+            document.getElementById('stat-prestasi').textContent = prestasiList.length;
+            document.getElementById('stat-informasi').textContent = informasiList.length;
         }
 
         async function fetchDataFromSheet(sheetName, isAuto = false) {
@@ -1227,6 +1392,25 @@
             return false;
         }
 
+        async function sendDataToAppsScript(payloadList, successMsg) {
+            if(!appsScriptUrl) {
+                showToast('Apps Script URL belum dikonfigurasi!', 'warning');
+                return;
+            }
+            try {
+                await fetch(appsScriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payloadList)
+                });
+                showToast(successMsg || 'Data berhasil disimpan!', 'success');
+            } catch(e) {
+                console.error('Error sending to Apps Script', e);
+                showToast('Gagal mengirim ke Google Sheets.', 'error');
+            }
+        }
+
         async function loadAllData(isAuto = false) {
             await loadAppsScriptUrlFromC2();
             const rowsSiswa = await fetchDataFromSheet('Data Siswa', isAuto);
@@ -1236,6 +1420,8 @@
             const rowsRekapNilai = await fetchDataFromSheet('Rekap Nilai', true);
             const rowsHasil = await fetchDataFromSheet('Hasil', true);
             const rowsPengaturan = await fetchDataFromSheet('Pengaturan', true);
+            const rowsPrestasi = await fetchDataFromSheet('Prestasi', true);
+            const rowsInformasi = await fetchDataFromSheet('Informasi', true);
             
             let fetchedAbsenMap = {};
             if(rowsRekapAbsen && rowsRekapAbsen.length > 1) {
@@ -1256,7 +1442,7 @@
                     let r = rowsLogAbsen[i];
                     let time = r.c && r.c[0] ? r.c[0].v : '';
                     let nama = r.c && r.c[1] ? r.c[1].v : '';
-                    let status = r.c && r.c[4] ? r.c[4].v : 'Hadir';
+                    let status = r.c && r.c[4] ? r.c[4].v : 'Alpa';
                     let tglCol = r.c && r.c[5] ? r.c[5].v : '';
                     
                     if(nama && (time || tglCol)) {
@@ -1294,7 +1480,7 @@
                     let r = rowsNilaiDetail[i];
                     let materi = r.c && r.c[1] ? r.c[1].v : '';
                     let nama = r.c && r.c[2] ? r.c[2].v : '';
-                    let val = r.c && r.c[5] ? r.c[5].v : 'A';
+                    let val = r.c && r.c[5] ? r.c[5].v : 'E';
                     if(nama && materi) {
                         let keyNama = nama.toLowerCase();
                         if(!logNilaiMap[keyNama]) logNilaiMap[keyNama] = {};
@@ -1322,6 +1508,40 @@
                     let skor = r.c && r.c[3] ? r.c[3].v : '';
                     if(nama) hasilSheetList.push({ nama, kelas, regu, skor });
                 }
+            }
+
+            // LOAD SHEET PRESTASI
+            if(rowsPrestasi && rowsPrestasi.length > 1) {
+                let newPrestasi = [];
+                for(let i = 1; i < rowsPrestasi.length; i++) {
+                    let r = rowsPrestasi[i];
+                    let namaSiswa = r.c && r.c[0] ? String(r.c[0].v || '') : '';
+                    let kejuaraan = r.c && r.c[1] ? String(r.c[1].v || '') : '';
+                    let tingkat = r.c && r.c[2] ? String(r.c[2].v || '') : '';
+                    let tanggal = r.c && r.c[3] ? String(r.c[3].v || '') : '';
+                    let ket = r.c && r.c[4] ? String(r.c[4].v || '') : '';
+                    if(kejuaraan || namaSiswa) {
+                        newPrestasi.push({ id: i, namaSiswa, kejuaraan, tingkat, tanggal, ket });
+                    }
+                }
+                prestasiList = newPrestasi;
+                localStorage.setItem('pramuka_app_prestasi', JSON.stringify(prestasiList));
+            }
+
+            // LOAD SHEET INFORMASI
+            if(rowsInformasi && rowsInformasi.length > 1) {
+                let newInformasi = [];
+                for(let i = 1; i < rowsInformasi.length; i++) {
+                    let r = rowsInformasi[i];
+                    let tanggal = r.c && r.c[0] ? String(r.c[0].v || '') : '';
+                    let judul = r.c && r.c[1] ? String(r.c[1].v || '') : '';
+                    let isi = r.c && r.c[2] ? String(r.c[2].v || '') : '';
+                    if(judul || isi) {
+                        newInformasi.push({ id: i, tanggal, judul, isi });
+                    }
+                }
+                informasiList = newInformasi;
+                localStorage.setItem('pramuka_app_informasi', JSON.stringify(informasiList));
             }
 
             let remoteActiveClasses = null;
@@ -1359,11 +1579,11 @@
                     let r = sourceNilaiRows[i];
                     if(rowsRekapNilai) {
                         let nama = r.c && r.c[0] ? r.c[0].v : '';
-                        let nilaiAvg = r.c && r.c[3] ? r.c[3].v : (r.c && r.c[1] ? r.c[1].v : 'A');
+                        let nilaiAvg = r.c && r.c[3] ? r.c[3].v : (r.c && r.c[1] ? r.c[1].v : 'E');
                         if(nama) fetchedNilaiMap[nama.toLowerCase()] = nilaiAvg;
                     } else if(rowsNilaiDetail) {
                         let nama = r.c && r.c[2] ? r.c[2].v : '';
-                        let val = r.c && r.c[5] ? r.c[5].v : 'A';
+                        let val = r.c && r.c[5] ? r.c[5].v : 'E';
                         if(nama) {
                             let key = nama.toLowerCase();
                             if(!fetchedNilaiMap[key]) fetchedNilaiMap[key] = [];
@@ -1402,7 +1622,7 @@
                             alpaCount = existing.alpaCount || 0;
                         }
 
-                        let gradeVal = 'A';
+                        let gradeVal = 'E';
                         if(fetchedNilaiMap[keyNama]) {
                             let val = fetchedNilaiMap[keyNama];
                             if(Array.isArray(val)) gradeVal = calculateAverageGrade(val);
@@ -1419,7 +1639,7 @@
                             nama: nama,
                             kelas: kelas,
                             regu: regu,
-                            absen: 'Hadir',
+                            absen: 'Alpa',
                             hadirCount: hadirCount,
                             sakitCount: sakitCount,
                             alpaCount: alpaCount,
@@ -1440,6 +1660,8 @@
             renderSiswa();
             renderRekapNilai();
             renderRekapKehadiran();
+            renderPrestasi();
+            renderInformasi();
             renderHasil();
             initSettingsForm();
             if(!isAuto) showToast('Data berhasil dimuat!');
@@ -1450,9 +1672,13 @@
                 localStorage.removeItem('pramuka_app_siswa');
                 localStorage.removeItem('pramuka_app_pertemuan');
                 localStorage.removeItem('pramuka_app_rekap_nilai');
+                localStorage.removeItem('pramuka_app_prestasi');
+                localStorage.removeItem('pramuka_app_informasi');
                 
                 siswaList = [];
                 pertemuanList = [];
+                prestasiList = [];
+                informasiList = [];
                 siswaLoadFailed = true;
                 hasilSheetList = [];
 
@@ -1527,47 +1753,45 @@
             });
         }
 
-        function showDetailAbsen(siswaId) {
-            const s = siswaList.find(item => item.id === siswaId);
+        function showDetailAbsen(id) {
+            const s = siswaList.find(item => item.id === id);
             if(!s) return;
 
-            document.getElementById('detail-absen-nama').textContent = `Kehadiran: ${s.nama}`;
+            document.getElementById('detail-absen-nama').textContent = `Detail Absen: ${s.nama}`;
             document.getElementById('detail-absen-sub').textContent = `${s.kelas} | Regu ${s.regu}`;
 
             const summaryEl = document.getElementById('detail-absen-summary');
+            const totalPertemuan = pertemuanList.length;
+            let h = s.hadirCount || 0;
+            let sk = s.sakitCount || 0;
+            let a = s.alpaCount || 0;
+
             summaryEl.innerHTML = `
-                <span class="text-green-700"><i class="fa-solid fa-user-check mr-1"></i> Hadir: <strong>${s.hadirCount || 0}</strong></span>
-                <span class="text-amber-600"><i class="fa-solid fa-user-clock mr-1"></i> Sakit/Izin: <strong>${s.sakitCount || 0}</strong></span>
-                <span class="text-red-600"><i class="fa-solid fa-user-xmark mr-1"></i> Alpa: <strong>${s.alpaCount || 0}</strong></span>
+                <span class="text-green-700">Hadir: ${h}</span>
+                <span class="text-amber-600">Sakit/Izin: ${sk}</span>
+                <span class="text-red-600">Alpa: ${a}</span>
+                <span class="text-gray-700">Total: ${totalPertemuan}</span>
             `;
 
             const tbody = document.getElementById('detail-absen-tbody');
             tbody.innerHTML = '';
 
-            let riwayat = s.riwayatAbsen || {};
-            let entries = Object.entries(riwayat);
-
-            if(entries.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-gray-400">Belum ada catatan absensi per tanggal.</td></tr>`;
+            if(pertemuanList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-gray-400">Belum ada tanggal kegiatan.</td></tr>`;
             } else {
-                entries.sort((a, b) => new Date(b[0]) - new Date(a[0]));
-                entries.forEach(([tgl, status]) => {
-                    let badgeClass = "bg-green-100 text-green-800";
-                    if(status === 'Sakit/Izin') badgeClass = "bg-amber-100 text-amber-800";
-                    if(status === 'Alpa') badgeClass = "bg-red-100 text-red-800";
+                pertemuanList.slice().sort((d1, d2) => new Date(d2) - new Date(d1)).forEach(tgl => {
+                    let st = s.riwayatAbsen?.[tgl] || 'Alpa';
+                    let colorClass = 'bg-red-100 text-red-800';
+                    if(st === 'Hadir') colorClass = 'bg-green-100 text-green-800';
+                    else if(st === 'Sakit/Izin') colorClass = 'bg-amber-100 text-amber-800';
 
-                    let displayDate = tgl;
-                    try {
-                        let d = new Date(tgl);
-                        if(!isNaN(d)) displayDate = d.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                    } catch(e) {}
+                    const dObj = new Date(tgl + 'T00:00:00');
+                    const displayDate = !isNaN(dObj) ? dObj.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : tgl;
 
                     tbody.innerHTML += `
-                        <tr class="hover:bg-gray-50">
-                            <td class="p-3 font-medium text-gray-700">${displayDate}</td>
-                            <td class="p-3 text-center">
-                                <span class="px-2.5 py-1 rounded-full font-bold text-[11px] ${badgeClass}">${status}</span>
-                            </td>
+                        <tr>
+                            <td class="p-3 font-semibold text-gray-800">${displayDate}</td>
+                            <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${colorClass}">${st}</span></td>
                         </tr>
                     `;
                 });
@@ -1584,6 +1808,251 @@
             modal.classList.remove('flex');
         }
 
+        function mulaiAbsen() {
+            const tglInput = document.getElementById('tanggal-sabtu').value;
+            if(!tglInput) {
+                showToast('Pilih tanggal kegiatan terlebih dahulu!', 'warning');
+                return;
+            }
+            document.getElementById('display-tanggal-absen').textContent = new Date(tglInput + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('section-tabel-absen').classList.remove('hidden');
+            renderAbsenTable();
+        }
+
+        function renderAbsenTable() {
+            const tbody = document.getElementById('absen-table-body');
+            tbody.innerHTML = '';
+            const filtered = getFilteredSiswaList();
+            const currentTgl = document.getElementById('tanggal-sabtu').value;
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Tidak ada siswa untuk kelas aktif.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(s => {
+                let statusStr = s.riwayatAbsen?.[currentTgl] || s.absen || 'Alpa';
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-4 font-semibold text-gray-800">${s.nama}</td>
+                        <td class="p-4 text-center text-gray-600">${s.kelas}</td>
+                        <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-xs font-semibold">${s.regu}</span></td>
+                        <td class="p-4 text-center">
+                            <div class="flex justify-center space-x-2">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="absen-${s.id}" value="Hadir" ${statusStr === 'Hadir' ? 'checked' : ''} onchange="updateAbsenStatus(${s.id}, 'Hadir')" class="sr-only peer">
+                                    <span class="px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200 text-gray-600 peer-checked:bg-green-600 peer-checked:text-white peer-checked:border-green-600 transition inline-block">Hadir</span>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="absen-${s.id}" value="Sakit/Izin" ${statusStr === 'Sakit/Izin' ? 'checked' : ''} onchange="updateAbsenStatus(${s.id}, 'Sakit/Izin')" class="sr-only peer">
+                                    <span class="px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200 text-gray-600 peer-checked:bg-amber-500 peer-checked:text-white peer-checked:border-amber-500 transition inline-block">Sakit/Izin</span>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="absen-${s.id}" value="Alpa" ${statusStr === 'Alpa' ? 'checked' : ''} onchange="updateAbsenStatus(${s.id}, 'Alpa')" class="sr-only peer">
+                                    <span class="px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200 text-gray-600 peer-checked:bg-red-600 peer-checked:text-white peer-checked:border-red-600 transition inline-block">Alpa</span>
+                                </label>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            updateAbsenStats();
+        }
+
+        function updateAbsenStatus(siswaId, status) {
+            const s = siswaList.find(item => item.id === siswaId);
+            if(s) {
+                s.absen = status;
+                const currentTgl = document.getElementById('tanggal-sabtu').value;
+                if(!s.riwayatAbsen) s.riwayatAbsen = {};
+                s.riwayatAbsen[currentTgl] = status;
+            }
+            updateAbsenStats();
+        }
+
+        function updateAbsenStats() {
+            let hadir = 0, sakit = 0, alpa = 0;
+            const filtered = getFilteredSiswaList();
+            const currentTgl = document.getElementById('tanggal-sabtu').value;
+
+            filtered.forEach(s => {
+                let st = s.riwayatAbsen?.[currentTgl] || s.absen || 'Alpa';
+                if(st === 'Hadir') hadir++;
+                else if(st === 'Sakit/Izin') sakit++;
+                else alpa++;
+            });
+
+            document.getElementById('count-hadir').textContent = hadir;
+            document.getElementById('count-sakit').textContent = sakit;
+            document.getElementById('count-alpa').textContent = alpa;
+        }
+
+        async function simpanAbsen() {
+            const tgl = document.getElementById('tanggal-sabtu').value;
+            if(!tgl) {
+                showToast('Tanggal kegiatan tidak valid!', 'warning');
+                return;
+            }
+
+            if(!pertemuanList.includes(tgl)) {
+                pertemuanList.push(tgl);
+                cloudTanggalList.push(tgl);
+            }
+
+            const payload = [];
+            const filtered = getFilteredSiswaList();
+
+            filtered.forEach(s => {
+                let st = s.riwayatAbsen?.[tgl] || s.absen || 'Alpa';
+                if(!s.riwayatAbsen) s.riwayatAbsen = {};
+                s.riwayatAbsen[tgl] = st;
+
+                let hCount = 0, sCount = 0, aCount = 0;
+                Object.values(s.riwayatAbsen).forEach(val => {
+                    if(val === 'Hadir') hCount++;
+                    else if(val === 'Sakit/Izin') sCount++;
+                    else aCount++;
+                });
+
+                s.hadirCount = hCount;
+                s.sakitCount = sCount;
+                s.alpaCount = aCount;
+
+                payload.push({
+                    sheet: 'Log Absensi',
+                    values: [new Date().toISOString(), s.nama, s.kelas, s.regu, st, tgl]
+                });
+            });
+
+            localStorage.setItem('pramuka_app_siswa', JSON.stringify(siswaList));
+            localStorage.setItem('pramuka_app_pertemuan', JSON.stringify(pertemuanList));
+
+            if(appsScriptUrl && payload.length > 0) {
+                await sendDataToAppsScript(payload, 'Absensi berhasil disimpan ke Google Sheets!');
+            } else {
+                showToast('Absensi berhasil disimpan secara lokal!');
+            }
+
+            updateDashboard();
+            renderRekapKehadiran();
+        }
+
+        function gradeToNumeric(grade) {
+            switch(String(grade).toUpperCase()) {
+                case 'A': return 90;
+                case 'B': return 75;
+                case 'C': return 50;
+                case 'D': return 25;
+                case 'E': return 0;
+                default: return 0;
+            }
+        }
+
+        function numericToGrade(num) {
+            if(num >= 71) return 'A';
+            if(num >= 41) return 'B';
+            if(num >= 11) return 'C';
+            if(num >= 1) return 'D';
+            return 'E';
+        }
+
+        function calculateAverageGrade(gradesArr) {
+            if(!gradesArr || gradesArr.length === 0) return 'E';
+            let sum = 0;
+            gradesArr.forEach(g => sum += gradeToNumeric(g));
+            let avg = sum / gradesArr.length;
+            return numericToGrade(avg);
+        }
+
+        function mulaiPenilaianMateri() {
+            const materi = document.getElementById('input-materi-uji').value.trim();
+            if(!materi) {
+                showToast('Masukkan nama materi latihan terlebih dahulu!', 'warning');
+                return;
+            }
+            document.getElementById('display-nama-materi').textContent = materi;
+            document.getElementById('display-tanggal-input').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('section-tabel-nilai').classList.remove('hidden');
+            renderNilaiTable();
+        }
+
+        function renderNilaiTable() {
+            const tbody = document.getElementById('nilai-table-body');
+            tbody.innerHTML = '';
+            const filtered = getFilteredSiswaList();
+            const materi = document.getElementById('input-materi-uji').value.trim();
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Tidak ada siswa untuk kelas aktif.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(s => {
+                let val = s.riwayatNilai?.[materi] || 'E';
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-4 font-semibold text-gray-800">${s.nama}</td>
+                        <td class="p-4 text-center text-gray-600">${s.kelas}</td>
+                        <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-xs font-semibold">${s.regu}</span></td>
+                        <td class="p-4 text-center">
+                            <select onchange="updateNilaiSiswa(${s.id}, this.value)" class="p-2 border border-gray-200 rounded-xl font-bold text-sm focus:ring-2 focus:ring-pramuka-600">
+                                <option value="A" ${val === 'A' ? 'selected' : ''}>A (Sangat Baik)</option>
+                                <option value="B" ${val === 'B' ? 'selected' : ''}>B (Baik)</option>
+                                <option value="C" ${val === 'C' ? 'selected' : ''}>C (Cukup)</option>
+                                <option value="D" ${val === 'D' ? 'selected' : ''}>D (Kurang)</option>
+                                <option value="E" ${val === 'E' ? 'selected' : ''}>E (Sangat Kurang)</option>
+                            </select>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function updateNilaiSiswa(id, val) {
+            const s = siswaList.find(item => item.id === id);
+            const materi = document.getElementById('input-materi-uji').value.trim();
+            if(s && materi) {
+                if(!s.riwayatNilai) s.riwayatNilai = {};
+                s.riwayatNilai[materi] = val;
+            }
+        }
+
+        async function simpanDataNilai() {
+            const materi = document.getElementById('input-materi-uji').value.trim();
+            if(!materi) {
+                showToast('Nama materi tidak valid!', 'warning');
+                return;
+            }
+
+            cloudMateriMap[materi] = (cloudMateriMap[materi] || 0) + 1;
+            const payload = [];
+            const filtered = getFilteredSiswaList();
+
+            filtered.forEach(s => {
+                let val = s.riwayatNilai?.[materi] || 'E';
+                if(!s.riwayatNilai) s.riwayatNilai = {};
+                s.riwayatNilai[materi] = val;
+
+                const grades = Object.values(s.riwayatNilai);
+                s.nilai = calculateAverageGrade(grades);
+
+                payload.push({
+                    sheet: 'Nilai',
+                    values: [new Date().toISOString(), materi, s.nama, s.kelas, s.regu, val]
+                });
+            });
+
+            localStorage.setItem('pramuka_app_siswa', JSON.stringify(siswaList));
+
+            if(appsScriptUrl && payload.length > 0) {
+                await sendDataToAppsScript(payload, 'Nilai berhasil disimpan ke Google Sheets!');
+            } else {
+                showToast('Nilai berhasil disimpan secara lokal!');
+            }
+
+            renderRekapNilai();
+        }
+
         function renderRekapNilai() {
             const tbody = document.getElementById('rekap-nilai-table-body');
             if(!tbody) return;
@@ -1598,9 +2067,15 @@
             }
 
             filtered.forEach((s, index) => {
-                let riwayat = s.riwayatNilai || {};
-                let jumlahPenilaian = Object.keys(riwayat).length || (s.nilai ? 1 : 0);
-                let avgNilai = s.nilai || 'A';
+                const grades = s.riwayatNilai ? Object.values(s.riwayatNilai) : [];
+                const countPenilaian = grades.length;
+                const avgGrade = calculateAverageGrade(grades);
+
+                let badgeClass = 'bg-red-100 text-red-800';
+                if(avgGrade === 'A') badgeClass = 'bg-green-100 text-green-800';
+                else if(avgGrade === 'B') badgeClass = 'bg-blue-100 text-blue-800';
+                else if(avgGrade === 'C') badgeClass = 'bg-amber-100 text-amber-800';
+                else if(avgGrade === 'D') badgeClass = 'bg-orange-100 text-orange-800';
 
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50 transition">
@@ -1608,12 +2083,12 @@
                         <td class="p-4 font-semibold text-gray-800">${s.nama}</td>
                         <td class="p-4 text-center text-gray-600">${s.kelas}</td>
                         <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-xs font-semibold">${s.regu}</span></td>
-                        <td class="p-4 text-center text-gray-700 font-semibold">${jumlahPenilaian} Materi</td>
-                        <td class="p-4 text-center font-extrabold text-pramuka-700 text-base">${avgNilai}</td>
+                        <td class="p-4 text-center font-bold text-gray-700">${countPenilaian} Materi</td>
+                        <td class="p-4 text-center"><span class="px-3 py-1 rounded-full text-xs font-bold ${badgeClass}">${avgGrade}</span></td>
                         <td class="p-4 text-center">
                             <button onclick="showDetailNilai(${s.id})" class="px-3 py-1.5 bg-pramuka-100 text-pramuka-800 hover:bg-pramuka-200 rounded-lg text-xs font-semibold transition flex items-center justify-center space-x-1 mx-auto">
-                                <i class="fa-solid fa-file-lines text-xs"></i>
-                                <span>Detail Materi</span>
+                                <i class="fa-solid fa-list-check text-xs"></i>
+                                <span>Detail Nilai</span>
                             </button>
                         </td>
                     </tr>
@@ -1621,46 +2096,43 @@
             });
         }
 
-        function showDetailNilai(siswaId) {
-            const s = siswaList.find(item => item.id === siswaId);
+        function showDetailNilai(id) {
+            const s = siswaList.find(item => item.id === id);
             if(!s) return;
 
-            document.getElementById('detail-nilai-nama').textContent = `Nilai Materi: ${s.nama}`;
+            document.getElementById('detail-nilai-nama').textContent = `Detail Nilai: ${s.nama}`;
             document.getElementById('detail-nilai-sub').textContent = `${s.kelas} | Regu ${s.regu}`;
 
-            const summaryEl = document.getElementById('detail-nilai-summary');
-            let riwayat = s.riwayatNilai || {};
-            let count = Object.keys(riwayat).length;
+            const grades = s.riwayatNilai ? Object.values(s.riwayatNilai) : [];
+            const avgGrade = calculateAverageGrade(grades);
 
+            const summaryEl = document.getElementById('detail-nilai-summary');
             summaryEl.innerHTML = `
-                <span class="text-gray-700">Total Ujian Materi: <strong>${count} Materi</strong></span>
-                <span class="text-pramuka-800 font-bold">Rata-rata: <strong class="text-base ml-1">${s.nilai || 'A'}</strong></span>
+                <span class="text-gray-700">Jumlah Materi: <strong>${grades.length}</strong></span>
+                <span class="text-pramuka-800">Rata-rata Predikat: <strong class="px-2 py-0.5 bg-pramuka-100 rounded">${avgGrade}</strong></span>
             `;
 
             const tbody = document.getElementById('detail-nilai-tbody');
             tbody.innerHTML = '';
 
-            let entries = Object.entries(riwayat);
-            if(entries.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-gray-400">Belum ada penilaian materi untuk siswa ini.</td></tr>`;
-            } else {
-                const gradeInfo = {
-                    'A': { desc: '100 - 71 (Sangat Baik)', color: 'bg-green-100 text-green-800' },
-                    'B': { desc: '70 - 41 (Baik)', color: 'bg-blue-100 text-blue-800' },
-                    'C': { desc: '40 - 11 (Cukup)', color: 'bg-amber-100 text-amber-800' },
-                    'D': { desc: '10 - 1 (Kurang)', color: 'bg-orange-100 text-orange-800' },
-                    'E': { desc: '0 (Sangat Kurang)', color: 'bg-red-100 text-red-800' }
-                };
+            const entries = s.riwayatNilai ? Object.entries(s.riwayatNilai) : [];
 
-                entries.forEach(([materi, grade]) => {
-                    let info = gradeInfo[grade] || { desc: '100 - 71', color: 'bg-green-100 text-green-800' };
+            if(entries.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-gray-400">Belum ada rincian nilai materi.</td></tr>`;
+            } else {
+                entries.forEach(([materi, val]) => {
+                    let badgeClass = 'bg-red-100 text-red-800';
+                    let desc = 'Sangat Kurang';
+                    if(val === 'A') { badgeClass = 'bg-green-100 text-green-800'; desc = 'Sangat Baik'; }
+                    else if(val === 'B') { badgeClass = 'bg-blue-100 text-blue-800'; desc = 'Baik'; }
+                    else if(val === 'C') { badgeClass = 'bg-amber-100 text-amber-800'; desc = 'Cukup'; }
+                    else if(val === 'D') { badgeClass = 'bg-orange-100 text-orange-800'; desc = 'Kurang'; }
+
                     tbody.innerHTML += `
-                        <tr class="hover:bg-gray-50">
+                        <tr>
                             <td class="p-3 font-semibold text-gray-800">${materi}</td>
-                            <td class="p-3 text-center font-extrabold text-sm">
-                                <span class="px-3 py-0.5 rounded-full ${info.color}">${grade}</span>
-                            </td>
-                            <td class="p-3 text-center text-gray-500 font-medium">${info.desc}</td>
+                            <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${badgeClass}">${val}</span></td>
+                            <td class="p-3 text-center text-xs text-gray-600">${desc}</td>
                         </tr>
                     `;
                 });
@@ -1677,74 +2149,278 @@
             modal.classList.remove('flex');
         }
 
-        function calculateAverageGrade(gradesArray) {
-            if(!gradesArray || gradesArray.length === 0) return 'A';
-            const gradeMap = { 'A': 5, 'B': 4, 'C': 3, 'D': 2, 'E': 1 };
-            const revMap = { 5: 'A', 4: 'B', 3: 'C', 2: 'D', 1: 'E' };
-            
-            let sum = 0;
-            let count = 0;
-            gradesArray.forEach(g => {
-                let score = gradeMap[String(g).toUpperCase()] || 5;
-                sum += score;
-                count++;
-            });
-            let avg = Math.round(sum / count);
-            return revMap[avg] || 'A';
+        function bukaModalPrestasi() {
+            const select = document.getElementById('select-siswa-prestasi');
+            select.innerHTML = '';
+            const filteredSiswa = getFilteredSiswaList();
+            if (filteredSiswa.length === 0) {
+                select.innerHTML = '<option value="" disabled>Tidak ada siswa di kelas aktif</option>';
+            } else {
+                filteredSiswa.forEach(s => {
+                    select.innerHTML += `<option value="${s.nama}">${s.nama} (${s.kelas})</option>`;
+                });
+            }
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('input-tanggal-prestasi').value = today;
+            document.getElementById('input-nama-prestasi').value = '';
+            document.getElementById('input-tingkat-prestasi').value = '';
+            document.getElementById('input-ket-prestasi').value = '';
+            document.getElementById('modal-tambah-prestasi').classList.remove('hidden');
+            document.getElementById('modal-tambah-prestasi').classList.add('flex');
         }
 
-        function calculateFinalScore(siswa) {
-            let totalMeetings = Math.max(pertemuanList.length, (siswa.hadirCount || 0) + (siswa.sakitCount || 0) + (siswa.alpaCount || 0), 1);
-            let hadir = siswa.hadirCount !== undefined ? siswa.hadirCount : 0;
-            let sakit = siswa.sakitCount !== undefined ? siswa.sakitCount : 0;
+        function closeModalPrestasi() {
+            const modal = document.getElementById('modal-tambah-prestasi');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
 
-            let attendanceScore = ((hadir + (sakit * 0.5)) / totalMeetings) * 100;
-            if (attendanceScore > 100) attendanceScore = 100;
+        async function simpanPrestasi() {
+            const select = document.getElementById('select-siswa-prestasi');
+            const selectedOptions = Array.from(select.selectedOptions).map(opt => opt.value);
+            const namaPrestasi = document.getElementById('input-nama-prestasi').value.trim();
+            const tingkat = document.getElementById('input-tingkat-prestasi').value.trim();
+            const tanggal = document.getElementById('input-tanggal-prestasi').value;
+            const ket = document.getElementById('input-ket-prestasi').value.trim();
 
-            const gradeScoreMap = { 'A': 100, 'B': 80, 'C': 60, 'D': 40, 'E': 20 };
-            let riwayat = siswa.riwayatNilai || {};
-            let materialScores = Object.values(riwayat).map(g => gradeScoreMap[g] || 100);
-
-            let avgMaterialScore = 100;
-            if (materialScores.length > 0) {
-                avgMaterialScore = materialScores.reduce((a, b) => a + b, 0) / materialScores.length;
-            } else if (siswa.nilai) {
-                avgMaterialScore = gradeScoreMap[siswa.nilai] || 100;
+            if (selectedOptions.length === 0) {
+                showToast('Pilih setidaknya 1 siswa!', 'warning');
+                return;
+            }
+            if (!namaPrestasi) {
+                showToast('Nama prestasi / kejuaraan tidak boleh kosong!', 'warning');
+                return;
             }
 
-            let finalScore = (attendanceScore * 0.7) + (avgMaterialScore * 0.3);
-            return Math.round(finalScore);
+            const namaSiswaStr = selectedOptions.join(', ');
+            const newEntry = {
+                id: Date.now(),
+                namaSiswa: namaSiswaStr,
+                kejuaraan: namaPrestasi,
+                tingkat: tingkat || '-',
+                tanggal: tanggal || new Date().toISOString().split('T')[0],
+                ket: ket || '-'
+            };
+
+            prestasiList.unshift(newEntry);
+            localStorage.setItem('pramuka_app_prestasi', JSON.stringify(prestasiList));
+
+            if (appsScriptUrl) {
+                await sendDataToAppsScript([
+                    { sheet: 'Prestasi', values: [namaSiswaStr, namaPrestasi, tingkat, tanggal, ket] }
+                ], 'Prestasi berhasil disimpan!');
+            } else {
+                showToast('Prestasi berhasil ditambahkan!');
+            }
+
+            closeModalPrestasi();
+            renderPrestasi();
+            updateDashboard();
+        }
+
+        function renderPrestasi() {
+            const container = document.getElementById('prestasi-container');
+            if(!container) return;
+            container.innerHTML = '';
+
+            const searchInput = document.getElementById('search-prestasi');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
+
+            const activeSiswaNames = getFilteredSiswaList().map(s => s.nama.toLowerCase());
+
+            const filtered = prestasiList.filter(item => {
+                const matchesSearch = (item.namaSiswa || '').toLowerCase().includes(search) ||
+                                      (item.kejuaraan || '').toLowerCase().includes(search) ||
+                                      (item.tingkat || '').toLowerCase().includes(search);
+                
+                if(!item.namaSiswa) return matchesSearch;
+                const names = item.namaSiswa.split(',').map(n => n.trim().toLowerCase());
+                const isFromActiveClass = names.some(n => activeSiswaNames.includes(n));
+                
+                return matchesSearch && isFromActiveClass;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="col-span-full bg-white p-8 rounded-2xl shadow-sm text-center text-gray-400">Belum ada data prestasi untuk siswa kelas aktif.</div>`;
+                return;
+            }
+
+            filtered.forEach(p => {
+                const canDelete = userRole === 'pembina';
+                container.innerHTML += `
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between space-y-3 hover:shadow-md transition">
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-start gap-2">
+                                <span class="inline-block px-3 py-1 bg-amber-100 text-amber-800 font-bold text-xs rounded-full">
+                                    <i class="fa-solid fa-trophy mr-1"></i> ${p.tingkat || 'Prestasi'}
+                                </span>
+                                <span class="text-xs text-gray-400 font-medium">${p.tanggal || '-'}</span>
+                            </div>
+                            <h3 class="text-base font-bold text-gray-800">${p.kejuaraan}</h3>
+                            <p class="text-xs font-semibold text-pramuka-700 bg-pramuka-50 px-3 py-1.5 rounded-lg inline-block">
+                                <i class="fa-solid fa-user-graduate mr-1"></i> ${p.namaSiswa}
+                            </p>
+                            ${p.ket && p.ket !== '-' ? `<p class="text-xs text-gray-600 bg-gray-50 p-2.5 rounded-xl">${p.ket}</p>` : ''}
+                        </div>
+                        ${canDelete ? `
+                            <div class="pt-2 border-t border-gray-100 flex justify-end">
+                                <button onclick="hapusPrestasi(${p.id})" class="text-red-500 hover:text-red-700 text-xs font-semibold flex items-center space-x-1 px-2 py-1 rounded hover:bg-red-50 transition">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                    <span>Hapus</span>
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+        }
+
+        async function hapusPrestasi(id) {
+            if(!confirm("Apakah Kakak yakin ingin menghapus data prestasi ini?")) return;
+            prestasiList = prestasiList.filter(p => p.id !== id);
+            localStorage.setItem('pramuka_app_prestasi', JSON.stringify(prestasiList));
+            renderPrestasi();
+            updateDashboard();
+            showToast('Data prestasi berhasil dihapus.');
+        }
+
+        function bukaModalInformasi() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('input-tanggal-info').value = today;
+            document.getElementById('input-judul-info').value = '';
+            document.getElementById('input-isi-info').value = '';
+            document.getElementById('modal-tambah-informasi').classList.remove('hidden');
+            document.getElementById('modal-tambah-informasi').classList.add('flex');
+        }
+
+        function closeModalInformasi() {
+            const modal = document.getElementById('modal-tambah-informasi');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function simpanInformasi() {
+            const judul = document.getElementById('input-judul-info').value.trim();
+            const tanggal = document.getElementById('input-tanggal-info').value;
+            const isi = document.getElementById('input-isi-info').value.trim();
+
+            if (!judul || !isi) {
+                showToast('Judul dan isi informasi tidak boleh kosong!', 'warning');
+                return;
+            }
+
+            const newEntry = {
+                id: Date.now(),
+                tanggal: tanggal || new Date().toISOString().split('T')[0],
+                judul: judul,
+                isi: isi
+            };
+
+            informasiList.unshift(newEntry);
+            localStorage.setItem('pramuka_app_informasi', JSON.stringify(informasiList));
+
+            if (appsScriptUrl) {
+                await sendDataToAppsScript([
+                    { sheet: 'Informasi', values: [tanggal, judul, isi] }
+                ], 'Informasi berhasil dipublikasikan!');
+            } else {
+                showToast('Informasi berhasil ditambahkan!');
+            }
+
+            closeModalInformasi();
+            renderInformasi();
+            updateDashboard();
+        }
+
+        function renderInformasi() {
+            const container = document.getElementById('informasi-container');
+            if(!container) return;
+            container.innerHTML = '';
+
+            if (informasiList.length === 0) {
+                container.innerHTML = `<div class="bg-white p-8 rounded-2xl shadow-sm text-center text-gray-400">Belum ada pengumuman / informasi.</div>`;
+                return;
+            }
+
+            informasiList.forEach(info => {
+                const canDelete = userRole === 'pembina';
+                container.innerHTML += `
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-3 hover:shadow-md transition">
+                        <div class="flex justify-between items-start gap-2 border-b border-gray-100 pb-2">
+                            <div class="flex items-center space-x-2">
+                                <div class="bg-pramuka-100 text-pramuka-700 p-2 rounded-lg text-sm">
+                                    <i class="fa-solid fa-bullhorn"></i>
+                                </div>
+                                <h3 class="font-bold text-gray-800 text-base">${info.judul}</h3>
+                            </div>
+                            <span class="text-xs text-gray-400 font-medium whitespace-nowrap">${info.tanggal || '-'}</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-gray-600 leading-relaxed whitespace-pre-line">${info.isi}</p>
+                        ${canDelete ? `
+                            <div class="pt-2 border-t border-gray-100 flex justify-end">
+                                <button onclick="hapusInformasi(${info.id})" class="text-red-500 hover:text-red-700 text-xs font-semibold flex items-center space-x-1 px-2 py-1 rounded hover:bg-red-50 transition">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                    <span>Hapus</span>
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+        }
+
+        async function hapusInformasi(id) {
+            if(!confirm("Apakah Kakak yakin ingin menghapus informasi ini?")) return;
+            informasiList = informasiList.filter(info => info.id !== id);
+            localStorage.setItem('pramuka_app_informasi', JSON.stringify(informasiList));
+            renderInformasi();
+            updateDashboard();
+            showToast('Informasi berhasil dihapus.');
         }
 
         function renderHasil() {
             const tbody = document.getElementById('hasil-table-body');
             if(!tbody) return;
             tbody.innerHTML = '';
+
             const searchInput = document.getElementById('search-hasil');
             const search = searchInput ? searchInput.value.toLowerCase() : '';
+
             const filtered = getFilteredSiswaList().filter(s => s.nama.toLowerCase().includes(search));
 
             if(filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">Tidak ada data hasil untuk kelas aktif.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">Tidak ada data hasil akhir untuk kelas aktif.</td></tr>`;
                 return;
             }
 
             filtered.forEach((s, index) => {
-                let score = calculateFinalScore(s);
+                let finalScore = 0;
 
-                let sheetMatch = hasilSheetList.find(h => h.nama.toLowerCase() === s.nama.toLowerCase());
-                if (sheetMatch && sheetMatch.skor) {
-                    let parsedSkor = parseFloat(sheetMatch.skor);
-                    if (!isNaN(parsedSkor)) score = Math.round(parsedSkor);
+                let totalPertemuan = pertemuanList.length || 1;
+                let hadir = s.hadirCount || 0;
+                let sakit = s.sakitCount || 0;
+
+                let attendancePercentage = ((hadir + (sakit * 0.5)) / totalPertemuan) * 100;
+                if (attendancePercentage > 100) attendancePercentage = 100;
+
+                let grades = s.riwayatNilai ? Object.values(s.riwayatNilai) : [];
+                let totalGradeNumeric = 0;
+                if (grades.length > 0) {
+                    grades.forEach(g => totalGradeNumeric += gradeToNumeric(g));
+                    totalGradeNumeric = totalGradeNumeric / grades.length;
+                } else {
+                    totalGradeNumeric = gradeToNumeric(s.nilai || 'E');
                 }
 
-                let predikat = "Sangat Baik";
-                let badgeClass = "bg-green-100 text-green-800";
-                if(score >= 85) { predikat = "Sangat Baik (A)"; badgeClass = "bg-green-100 text-green-800"; }
-                else if(score >= 70) { predikat = "Baik (B)"; badgeClass = "bg-blue-100 text-blue-800"; }
-                else if(score >= 55) { predikat = "Cukup (C)"; badgeClass = "bg-amber-100 text-amber-800"; }
-                else if(score >= 40) { predikat = "Kurang (D)"; badgeClass = "bg-orange-100 text-orange-800"; }
-                else { predikat = "Sangat Kurang (E)"; badgeClass = "bg-red-100 text-red-800"; }
+                finalScore = Math.round((attendancePercentage * 0.7) + (totalGradeNumeric * 0.3));
+
+                let predikat = 'Sangat Kurang';
+                let badgeClass = 'bg-red-100 text-red-800';
+
+                if (finalScore >= 85) { predikat = 'Sangat Baik'; badgeClass = 'bg-green-100 text-green-800'; }
+                else if (finalScore >= 70) { predikat = 'Baik'; badgeClass = 'bg-blue-100 text-blue-800'; }
+                else if (finalScore >= 55) { predikat = 'Cukup'; badgeClass = 'bg-amber-100 text-amber-800'; }
+                else if (finalScore >= 40) { predikat = 'Kurang'; badgeClass = 'bg-orange-100 text-orange-800'; }
 
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50 transition">
@@ -1752,274 +2428,23 @@
                         <td class="p-4 font-semibold text-gray-800">${s.nama}</td>
                         <td class="p-4 text-center text-gray-600">${s.kelas}</td>
                         <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-xs font-semibold">${s.regu}</span></td>
-                        <td class="p-4 text-center font-extrabold text-pramuka-700 text-base">${score}</td>
-                        <td class="p-4 text-center"><span class="px-3 py-1.5 rounded-full text-xs font-bold ${badgeClass}">${predikat}</span></td>
+                        <td class="p-4 text-center font-bold text-pramuka-700 text-base">${finalScore}</td>
+                        <td class="p-4 text-center"><span class="px-3 py-1 rounded-full text-xs font-bold ${badgeClass}">${predikat}</span></td>
                     </tr>
                 `;
             });
         }
 
-        function syncAndRenderHasil() {
-            loadAllData(false).then(() => {
-                renderHasil();
-                showToast('Data Hasil berhasil diperbarui dari Spreadsheet!');
-            });
-        }
-
-        function mulaiAbsen() {
-            const tglVal = document.getElementById('tanggal-sabtu').value;
-            if(!tglVal) {
-                showToast('Pilih tanggal kegiatan terlebih dahulu!', 'warning');
-                return;
-            }
-
-            const section = document.getElementById('section-tabel-absen');
-            const displayTgl = document.getElementById('display-tanggal-absen');
-            
-            try {
-                let d = new Date(tglVal + 'T00:00:00');
-                displayTgl.textContent = d.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            } catch(e) {
-                displayTgl.textContent = tglVal;
-            }
-
-            section.classList.remove('hidden');
-
-            const tbody = document.getElementById('absen-table-body');
-            tbody.innerHTML = '';
-            
-            const filteredSiswa = getFilteredSiswaList();
-            if(filteredSiswa.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Tidak ada siswa untuk kelas aktif.</td></tr>`;
-                updateAbsenCounts();
-                return;
-            }
-
-            filteredSiswa.forEach(s => {
-                let statusVal = 'Hadir';
-                if (s.riwayatAbsen && s.riwayatAbsen[tglVal]) {
-                    statusVal = s.riwayatAbsen[tglVal];
-                }
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition" data-siswa-id="${s.id}">
-                        <td class="p-4 font-semibold text-gray-800">${s.nama}</td>
-                        <td class="p-4 text-center text-gray-600">${s.kelas}</td>
-                        <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-xs font-semibold">${s.regu}</span></td>
-                        <td class="p-4 text-center">
-                            <select onchange="updateAbsenCounts()" class="absen-status-select px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-pramuka-600 bg-white">
-                                <option value="Hadir" ${statusVal === 'Hadir' ? 'selected' : ''}>Hadir</option>
-                                <option value="Sakit/Izin" ${statusVal === 'Sakit/Izin' ? 'selected' : ''}>Sakit / Izin</option>
-                                <option value="Alpa" ${statusVal === 'Alpa' ? 'selected' : ''}>Alpa</option>
-                            </select>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            updateAbsenCounts();
-        }
-
-        function updateAbsenCounts() {
-            const selects = document.querySelectorAll('.absen-status-select');
-            let hadir = 0, sakit = 0, alpa = 0;
-            selects.forEach(s => {
-                if(s.value === 'Hadir') hadir++;
-                else if(s.value === 'Sakit/Izin') sakit++;
-                else if(s.value === 'Alpa') alpa++;
-            });
-            document.getElementById('count-hadir').textContent = hadir;
-            document.getElementById('count-sakit').textContent = sakit;
-            document.getElementById('count-alpa').textContent = alpa;
-        }
-
-        async function sendDataToAppsScript(payload, successMessage) {
-            if(!appsScriptUrl) {
-                showToast(successMessage + ' (Tersimpan Lokal - Webhook belum dikonfigurasi)', 'info');
-                return;
-            }
-
-            try {
-                showToast('Mengirim data ke Google Spreadsheet...', 'info');
-                await fetch(appsScriptUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                showToast(successMessage, 'success');
-            } catch(error) {
-                console.error('Gagal mengirim ke Apps Script:', error);
-                showToast('Berhasil simpan lokal, namun gagal sync ke cloud.', 'warning');
-            }
-        }
-
-        async function simpanAbsen() {
-            if(userRole !== 'pembina') {
-                showToast('Hanya pembina yang dapat menyimpan absensi!', 'warning');
-                return;
-            }
-
-            const tglVal = document.getElementById('tanggal-sabtu').value;
-            if(!tglVal) {
-                showToast('Tanggal tidak valid!', 'warning');
-                return;
-            }
-
-            const rows = document.querySelectorAll('#absen-table-body tr[data-siswa-id]');
-            let payloadLog = [];
-
-            if (!pertemuanList.includes(tglVal)) {
-                pertemuanList.push(tglVal);
-                localStorage.setItem('pramuka_app_pertemuan', JSON.stringify(pertemuanList));
-            }
-            if(!cloudTanggalList.includes(tglVal)) {
-                cloudTanggalList.push(tglVal);
-            }
-
-            rows.forEach(tr => {
-                let id = parseInt(tr.getAttribute('data-siswa-id'));
-                let s = siswaList.find(item => item.id === id);
-                if(s) {
-                    let select = tr.querySelector('.absen-status-select');
-                    let status = select ? select.value : 'Hadir';
-
-                    if(!s.riwayatAbsen) s.riwayatAbsen = {};
-                    s.riwayatAbsen[tglVal] = status;
-
-                    let hadir = 0, sakit = 0, alpa = 0;
-                    Object.values(s.riwayatAbsen).forEach(st => {
-                        if(st === 'Hadir') hadir++;
-                        else if(st === 'Sakit/Izin') sakit++;
-                        else if(st === 'Alpa') alpa++;
-                    });
-                    s.hadirCount = hadir;
-                    s.sakitCount = sakit;
-                    s.alpaCount = alpa;
-
-                    payloadLog.push({
-                        sheet: 'Absensi',
-                        values: [new Date().toISOString(), s.nama, s.kelas, s.regu, status, tglVal]
-                    });
-                }
-            });
-
-            localStorage.setItem('pramuka_app_siswa', JSON.stringify(siswaList));
-
-            let payloadRekap = getFilteredSiswaList().map(s => ({
-                sheet: 'Rekap Absensi',
-                values: [s.nama, s.kelas, s.regu, s.hadirCount || 0, s.sakitCount || 0, s.alpaCount || 0]
-            }));
-
-            updateDashboard();
-            renderRekapKehadiran();
-
-            await sendDataToAppsScript([...payloadLog, ...payloadRekap], 'Absensi berhasil disimpan & dikirim!');
-        }
-
-        function mulaiPenilaianMateri() {
-            const materiVal = document.getElementById('input-materi-uji').value.trim();
-            if(!materiVal) {
-                showToast('Masukkan nama materi latihan terlebih dahulu!', 'warning');
-                return;
-            }
-
-            const section = document.getElementById('section-tabel-nilai');
-            document.getElementById('display-nama-materi').textContent = materiVal;
-            document.getElementById('display-tanggal-input').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-            section.classList.remove('hidden');
-
-            const tbody = document.getElementById('nilai-table-body');
-            tbody.innerHTML = '';
-            
-            const filteredSiswa = getFilteredSiswaList();
-            if(filteredSiswa.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Tidak ada siswa untuk kelas aktif.</td></tr>`;
-                return;
-            }
-
-            filteredSiswa.forEach(s => {
-                let currentGrade = 'A';
-                if (s.riwayatNilai && s.riwayatNilai[materiVal]) {
-                    currentGrade = s.riwayatNilai[materiVal];
-                }
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition" data-siswa-id="${s.id}">
-                        <td class="p-4 font-semibold text-gray-800">${s.nama}</td>
-                        <td class="p-4 text-center text-gray-600">${s.kelas}</td>
-                        <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-xs font-semibold">${s.regu}</span></td>
-                        <td class="p-4 text-center">
-                            <select class="nilai-status-select px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-pramuka-600 bg-white">
-                                <option value="A" ${currentGrade === 'A' ? 'selected' : ''}>A (100 - 71)</option>
-                                <option value="B" ${currentGrade === 'B' ? 'selected' : ''}>B (70 - 41)</option>
-                                <option value="C" ${currentGrade === 'C' ? 'selected' : ''}>C (40 - 11)</option>
-                                <option value="D" ${currentGrade === 'D' ? 'selected' : ''}>D (10 - 1)</option>
-                                <option value="E" ${currentGrade === 'E' ? 'selected' : ''}>E (0)</option>
-                            </select>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        async function simpanDataNilai() {
-            if(userRole !== 'pembina') {
-                showToast('Hanya pembina yang dapat menyimpan nilai!', 'warning');
-                return;
-            }
-
-            const materiVal = document.getElementById('input-materi-uji').value.trim();
-            if(!materiVal) {
-                showToast('Nama materi tidak valid!', 'warning');
-                return;
-            }
-
-            const rows = document.querySelectorAll('#nilai-table-body tr[data-siswa-id]');
-            let payloadNilai = [];
-
-            rows.forEach(tr => {
-                let id = parseInt(tr.getAttribute('data-siswa-id'));
-                let s = siswaList.find(item => item.id === id);
-                if(s) {
-                    let select = tr.querySelector('.nilai-status-select');
-                    let grade = select ? select.value : 'A';
-
-                    if(!s.riwayatNilai) s.riwayatNilai = {};
-                    s.riwayatNilai[materiVal] = grade;
-
-                    let allGrades = Object.values(s.riwayatNilai);
-                    s.nilai = calculateAverageGrade(allGrades);
-
-                    payloadNilai.push({
-                        sheet: 'Nilai',
-                        values: [new Date().toISOString(), materiVal, s.nama, s.kelas, s.regu, grade]
-                    });
-                }
-            });
-
-            if (!cloudMateriMap[materiVal]) {
-                cloudMateriMap[materiVal] = rows.length;
-            }
-
-            localStorage.setItem('pramuka_app_siswa', JSON.stringify(siswaList));
-
-            let payloadRekapNilai = getFilteredSiswaList().map(s => ({
-                sheet: 'Rekap Nilai',
-                values: [s.nama, s.kelas, s.regu, s.nilai || 'A']
-            }));
-
-            renderRekapNilai();
+        async function syncAndRenderHasil() {
+            await loadAllData(false);
             renderHasil();
-
-            await sendDataToAppsScript([...payloadNilai, ...payloadRekapNilai], 'Data Nilai berhasil disimpan & dikirim!');
+            showToast('Data hasil akhir diperbarui!');
         }
 
-        window.onload = function() {
+        window.addEventListener('DOMContentLoaded', () => {
             checkRole();
             loadAllData(true);
-        };
+        });
     </script>
 </body>
 </html>
