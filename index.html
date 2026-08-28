@@ -1316,77 +1316,65 @@
             modal.classList.remove('flex');
         }
 
-        function simpanDokumentasi() {
+        async function simpanDokumentasi() {
+            if (userRole === 'tamu') {
+                showToast('Login sebagai Pembina untuk mengupload dokumentasi.', 'warning');
+                return;
+            }
             const fileInput = document.getElementById('input-foto-dok');
             const ketInput = document.getElementById('input-ket-dok').value.trim();
-
-            if (fileInput.files.length === 0) {
+            if (!fileInput || fileInput.files.length === 0) {
                 showToast('Silakan pilih file foto terlebih dahulu!', 'warning');
                 return;
             }
-
             const file = fileInput.files[0];
             const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
-            
             if (!validTypes.includes(file.type)) {
                 showToast('Hanya format PNG atau JPG yang diperbolehkan!', 'error');
                 return;
             }
+            if (file.size > 8 * 1024 * 1024) {
+                showToast('Ukuran foto maksimal 8 MB.', 'warning');
+                return;
+            }
 
             const reader = new FileReader();
-            reader.onload = function(event) {
-                const img = new Image();
-                img.onload = function() {
-                    // Kompresi ukuran gambar dengan Canvas
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800;
-                    const MAX_HEIGHT = 800;
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height) {
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
+            reader.onload = async function(event) {
+                try {
+                    const img = new Image();
+                    img.onload = async function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 1200, MAX_HEIGHT = 1200;
+                        let width = img.width, height = img.height;
+                        if (width > height && width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        else if (height >= width && height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                        canvas.width = Math.round(width); canvas.height = Math.round(height);
+                        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.78);
+                        const base64 = dataUrl.split(',')[1];
+                        const payload = [{
+                            sheet: 'Dokumentasi',
+                            action: 'upload',
+                            fileName: file.name.replace(/\.[^.]+$/, '') + '_' + Date.now() + '.jpg',
+                            mimeType: 'image/jpeg',
+                            base64: base64,
+                            keterangan: ketInput || 'Dokumentasi Kegiatan Pramuka'
+                        }];
+                        showToast('Mengupload foto ke Google Drive...', 'info');
+                        const ok = await sendDataToAppsScript(payload, 'Foto berhasil disimpan ke Google Drive!');
+                        if (ok) {
+                            closeModalDokumentasi();
+                            fileInput.value = '';
+                            document.getElementById('input-ket-dok').value = '';
+                            setTimeout(() => loadAllData(true), 700);
                         }
-                    } else {
-                        if (height > MAX_HEIGHT) {
-                            width *= MAX_HEIGHT / height;
-                            height = MAX_HEIGHT;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    // Convert to base64 jpeg dengan kualitas 70%
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7); 
-                    const tanggalSekarang = new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'});
-
-                    const newDoc = {
-                        id: Date.now(),
-                        url: dataUrl,
-                        ket: ketInput || 'Dokumentasi Kegiatan Pramuka',
-                        tanggal: tanggalSekarang
                     };
-
-                    dokumentasiList.unshift(newDoc);
-                    localStorage.setItem('pramuka_app_dokumentasi', JSON.stringify(dokumentasiList));
-                    
-                    renderDokumentasi();
-                    closeModalDokumentasi();
-                    showToast('Foto berhasil diupload dan disimpan!', 'success');
-
-                    // Opsional: Kirim data kompresi ke Spreadsheet/Drive jika script web apps mendukung
-                    if(appsScriptUrl) {
-                        sendDataToAppsScript([
-                            { sheet: 'Pengaturan', values: ['dokumentasi_update', JSON.stringify(dokumentasiList)] }
-                        ], 'Foto berhasil disimpan secara lokal & sinkronasi dijalankan.');
-                    }
-                };
-                img.src = event.target.result;
+                    img.onerror = function() { showToast('Foto tidak dapat diproses.', 'error'); };
+                    img.src = event.target.result;
+                } catch(e) {
+                    console.error(e);
+                    showToast('Gagal memproses foto.', 'error');
+                }
             };
             reader.readAsDataURL(file);
         }
@@ -1576,20 +1564,25 @@
 
         async function sendDataToAppsScript(payloadList, successMsg) {
             if(!appsScriptUrl) {
+                await loadAppsScriptUrlFromC2();
+            }
+            if(!appsScriptUrl) {
                 showToast('Apps Script URL belum dikonfigurasi!', 'warning');
-                return;
+                return false;
             }
             try {
                 await fetch(appsScriptUrl, {
                     method: 'POST',
                     mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(payloadList)
                 });
                 showToast(successMsg || 'Data berhasil disimpan!', 'success');
+                return true;
             } catch(e) {
                 console.error('Error sending to Apps Script', e);
                 showToast('Gagal mengirim ke Google Sheets.', 'error');
+                return false;
             }
         }
 
@@ -1604,6 +1597,18 @@
             const rowsPengaturan = await fetchDataFromSheet('Pengaturan', true);
             const rowsPrestasi = await fetchDataFromSheet('Prestasi', true);
             const rowsInformasi = await fetchDataFromSheet('Informasi', true);
+
+            // Dokumentasi dibaca langsung dari Folder Drive melalui Apps Script.
+            let driveDokumentasi = null;
+            try {
+                if(appsScriptUrl) {
+                    const rDok = await fetch(appsScriptUrl + '?action=dokumentasi&_=' + Date.now());
+                    if(rDok.ok) {
+                        const jDok = await rDok.json();
+                        if(jDok && jDok.success && Array.isArray(jDok.data)) driveDokumentasi = jDok.data;
+                    }
+                }
+            } catch(e) { console.log('Dokumentasi Drive belum dapat dimuat:', e); }
             
             let fetchedAbsenMap = {};
             if(rowsRekapAbsen && rowsRekapAbsen.length > 1) {
@@ -1745,19 +1750,10 @@
                     }
                 }
                 
-                // MENGAMBIL DATA DOKUMENTASI DARI SHEET PENGATURAN C3
-                // Baris ke-3 = index 2. Kolom C = index 2.
-                let dataDokumentasiC3 = rowsPengaturan[2]?.c?.[2]?.v; 
-                if (dataDokumentasiC3) {
-                    try {
-                        let parsedDok = JSON.parse(dataDokumentasiC3);
-                        if (Array.isArray(parsedDok)) {
-                            dokumentasiList = parsedDok;
-                            localStorage.setItem('pramuka_app_dokumentasi', JSON.stringify(dokumentasiList));
-                        }
-                    } catch(e) {
-                        console.log("Data C3 bukan format JSON array, menggunakan cache lokal.");
-                    }
+                // DOKUMENTASI: sumber utama adalah Folder Drive pada Pengaturan!C3.
+                if (Array.isArray(driveDokumentasi)) {
+                    dokumentasiList = driveDokumentasi;
+                    localStorage.setItem('pramuka_app_dokumentasi', JSON.stringify(dokumentasiList));
                 }
             }
 
