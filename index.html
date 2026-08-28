@@ -1062,14 +1062,26 @@
         }
 
         function normalizeMeetingDate(value) {
-            if (!isValidMeetingDate(value)) return null;
+            if (value === null || value === undefined || value === '') return null;
+            if (value instanceof Date && !isNaN(value)) {
+                return `${value.getFullYear()}-${String(value.getMonth()+1).padStart(2,'0')}-${String(value.getDate()).padStart(2,'0')}`;
+            }
             const str = String(value).trim();
+            if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
             if (/^\d{4}-\d{2}-\d{2}T/.test(str)) return str.substring(0, 10);
             if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) {
                 const [d,m,y] = str.split('/');
                 return `${y}-${m}-${d}`;
             }
-            return str;
+            const gviz = str.match(/^Date\((\d{4}),\s*(\d{1,2}),\s*(\d{1,2})/);
+            if (gviz) {
+                return `${gviz[1]}-${String(Number(gviz[2])+1).padStart(2,'0')}-${String(gviz[3]).padStart(2,'0')}`;
+            }
+            const d = new Date(str);
+            if (!isNaN(d)) {
+                return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            }
+            return null;
         }
 
         function togglePasswordVisibility() {
@@ -1403,8 +1415,12 @@
                 }
 
                 const result = await response.json();
+                console.log('Respons Apps Script uploadDokumentasi:', result);
                 if (!result || !result.success) {
                     throw new Error(result && result.error ? result.error : 'Server tidak mengonfirmasi penyimpanan file.');
+                }
+                if (!result.file || !result.file.id || !result.file.url) {
+                    throw new Error('Respons upload tidak lengkap: objek file (id/url) tidak ditemukan. Perbarui deployment Apps Script.');
                 }
 
                 const doc = {
@@ -1701,7 +1717,7 @@
             await loadAppsScriptUrlFromC2();
             const rowsSiswa = await fetchDataFromSheet('Data Siswa', isAuto);
             const rowsRekapAbsen = await fetchDataFromSheet('Rekap Absensi', true);
-            const rowsLogAbsen = await fetchDataFromSheet('Log Absensi', true);
+            const rowsLogAbsen = await fetchDataFromSheet('Absensi', true);
             const rowsNilaiDetail = await fetchDataFromSheet('Nilai', true);
             const rowsRekapNilai = await fetchDataFromSheet('Rekap Nilai', true);
             const rowsHasil = await fetchDataFromSheet('Hasil', true);
@@ -2356,7 +2372,7 @@
                 else s.alpaCount++;
                 
                 logPayloads.push({
-                    sheet: 'Log Absensi',
+                    sheet: 'Absensi',
                     values: [timestamp, s.nama, s.kelas, s.regu, s.absen, tglInput]
                 });
             });
