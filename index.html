@@ -1825,271 +1825,89 @@
 
         async function loadAllData(isAuto = false) {
             await loadAppsScriptUrlFromC2();
-            const rowsSiswa = await fetchDataFromSheet('Data Siswa', isAuto);
-            const rowsRekapAbsen = await fetchDataFromSheet('Rekap Absensi', true);
-            const rowsLogAbsen = await fetchDataFromSheet('Absensi', true);
-            const rowsNilaiDetail = await fetchDataFromSheet('Nilai', true);
-            const rowsRekapNilai = await fetchDataFromSheet('Rekap Nilai', true);
-            const rowsHasil = await fetchDataFromSheet('Hasil', true);
+            // WAJIB ambil pengaturan global terlebih dahulu agar cache HP tidak menentukan kelas aktif.
             const rowsPengaturan = await fetchDataFromSheet('Pengaturan', true);
-            const rowsPrestasi = await fetchDataFromSheet('Prestasi', true);
-            const rowsInformasi = await fetchDataFromSheet('Informasi', true);
-            
-            let fetchedAbsenMap = {};
-            if(rowsRekapAbsen && rowsRekapAbsen.length > 1) {
-                for(let i = 1; i < rowsRekapAbsen.length; i++) {
-                    let r = rowsRekapAbsen[i];
-                    let nama = r.c && r.c[0] ? r.c[0].v : '';
-                    let hadir = r.c && r.c[3] ? Number(r.c[3].v) || 0 : 0;
-                    let sakit = r.c && r.c[4] ? Number(r.c[4].v) || 0 : 0;
-                    let alpa = r.c && r.c[5] ? Number(r.c[5].v) || 0 : 0;
-                    if(nama) fetchedAbsenMap[normalizeStudentName(nama)] = { hadir, sakit, alpa };
-                }
-            }
-
-            let logAbsenMap = {};
-            let tempPertemuanSet = new Set();
-            if(rowsLogAbsen && rowsLogAbsen.length > 1) {
-                for(let i = 1; i < rowsLogAbsen.length; i++) {
-                    let r = rowsLogAbsen[i];
-                    let time = r.c && r.c[0] ? r.c[0].v : '';
-                    let nama = r.c && r.c[1] ? r.c[1].v : '';
-                    let status = r.c && r.c[4] ? normalizeAttendanceStatus(r.c[4].v) : 'Alpa';
-                    let tglCol = r.c && r.c[5] ? r.c[5].v : '';
-                    
-                    if(nama && (time || tglCol)) {
-                        let formattedDate = normalizeMeetingDate(tglCol) || normalizeMeetingDate(time);
-                        if(!formattedDate) continue;
-                        let keyNama = normalizeStudentName(nama);
-                        if(!keyNama) continue;
-                        if(!logAbsenMap[keyNama]) logAbsenMap[keyNama] = {};
-                        logAbsenMap[keyNama][formattedDate] = status;
-                        tempPertemuanSet.add(formattedDate);
+            let remoteActiveClasses = null, remoteActiveClassesUpdatedAt = 0;
+            if (rowsPengaturan && rowsPengaturan.length > 1) {
+                for (let i=1;i<rowsPengaturan.length;i++) {
+                    const r=rowsPengaturan[i];
+                    const key=r?.c?.[0]?.v != null ? String(r.c[0].v).trim() : '';
+                    const val=r?.c?.[1]?.v != null ? String(r.c[1].v).trim() : '';
+                    if (key==='activeClasses') {
+                        try { const p=JSON.parse(val); if(Array.isArray(p)) remoteActiveClasses=p.map(String).map(x=>x.trim()).filter(x=>VALID_CLASS_NAMES.includes(x)); } catch(e){}
                     }
+                    if (key==='activeClassesUpdatedAt') remoteActiveClassesUpdatedAt=Number(val)||0;
                 }
             }
-
-            remotePertemuanList = Array.from(tempPertemuanSet)
-                .map(normalizeMeetingDate)
-                .filter(Boolean);
-            pertemuanList = [...remotePertemuanList];
-            cloudTanggalList = [...pertemuanList];
-
-            remoteMateriList = [];
-            let remoteMateriSet = new Set();
-            if(rowsNilaiDetail && rowsNilaiDetail.length > 1) {
-                for(let i = 1; i < rowsNilaiDetail.length; i++) {
-                    let r = rowsNilaiDetail[i];
-                    let materi = r.c && r.c[1] ? String(r.c[1].v || '').trim() : '';
-                    let nama = r.c && r.c[2] ? String(r.c[2].v || '').trim() : '';
-                    if(materi && nama) remoteMateriSet.add(materi);
-                }
-            }
-            remoteMateriList = Array.from(remoteMateriSet);
-
-            let logNilaiMap = {};
-            if(rowsNilaiDetail && rowsNilaiDetail.length > 1) {
-                for(let i = 1; i < rowsNilaiDetail.length; i++) {
-                    let r = rowsNilaiDetail[i];
-                    let materi = r.c && r.c[1] ? r.c[1].v : '';
-                    let nama = r.c && r.c[2] ? r.c[2].v : '';
-                    let val = r.c && r.c[5] ? r.c[5].v : 'E';
-                    if(nama && materi) {
-                        let keyNama = nama.toLowerCase();
-                        if(!logNilaiMap[keyNama]) logNilaiMap[keyNama] = {};
-                        logNilaiMap[keyNama][materi] = val;
-                    }
-                }
+            if (remoteActiveClasses !== null) {
+                activeClasses=[...remoteActiveClasses];
+                activeClassesUpdatedAt=remoteActiveClassesUpdatedAt||Date.now();
+                localStorage.setItem('pramuka_active_classes',JSON.stringify(activeClasses));
+                localStorage.setItem('pramuka_active_classes_updated_at',String(activeClassesUpdatedAt));
             }
 
-            cloudMateriMap = {};
-            if(rowsNilaiDetail && rowsNilaiDetail.length > 1) {
-                for(let i = 1; i < rowsNilaiDetail.length; i++) {
-                    const r = rowsNilaiDetail[i];
-                    const materi = r.c?.[1]?.v ? String(r.c[1].v).trim() : '';
-                    if(materi) cloudMateriMap[materi] = (cloudMateriMap[materi] || 0) + 1;
-                }
+            const [rowsSiswa, rowsRekapAbsen, rowsLogAbsen, rowsNilaiDetail, rowsRekapNilai, rowsHasil, rowsPrestasi, rowsInformasi] = await Promise.all([
+                fetchDataFromSheet('Data Siswa', isAuto),
+                fetchDataFromSheet('Rekap Absensi', true),
+                fetchDataFromSheet('Absensi', true),
+                fetchDataFromSheet('Nilai', true),
+                fetchDataFromSheet('Rekap Nilai', true),
+                fetchDataFromSheet('Hasil', true),
+                fetchDataFromSheet('Prestasi', true),
+                fetchDataFromSheet('Informasi', true)
+            ]);
+
+            const cell=(r,n)=>r?.c?.[n]?.v != null ? r.c[n].v : '';
+            const byId={}, logAbsenMap={}, logNilaiMap={};
+            let tempPertemuanSet=new Set(), remoteMateriSet=new Set();
+
+            if(rowsRekapAbsen?.length>1) for(let i=1;i<rowsRekapAbsen.length;i++){
+                const r=rowsRekapAbsen[i], id=String(cell(r,0)).trim();
+                if(id) byId[id]={...(byId[id]||{}), hadir:Number(cell(r,4))||0, sakit:Number(cell(r,5))||0, alpa:Number(cell(r,6))||0};
+            }
+            if(rowsRekapNilai?.length>1) for(let i=1;i<rowsRekapNilai.length;i++){
+                const r=rowsRekapNilai[i], id=String(cell(r,0)).trim();
+                if(id) byId[id]={...(byId[id]||{}), nilai:cell(r,4)||'E'};
+            }
+            if(rowsLogAbsen?.length>1) for(let i=1;i<rowsLogAbsen.length;i++){
+                const r=rowsLogAbsen[i], id=String(cell(r,1)).trim(), date=normalizeMeetingDate(cell(r,6))||normalizeMeetingDate(cell(r,0));
+                if(id && date){ (logAbsenMap[id] ||= {})[date]=normalizeAttendanceStatus(cell(r,5)); tempPertemuanSet.add(date); }
+            }
+            if(rowsNilaiDetail?.length>1) for(let i=1;i<rowsNilaiDetail.length;i++){
+                const r=rowsNilaiDetail[i], id=String(cell(r,1)).trim(), materi=String(cell(r,2)).trim(), val=cell(r,6)||'E';
+                if(id && materi){ (logNilaiMap[id] ||= {})[materi]=val; remoteMateriSet.add(materi); }
+            }
+            pertemuanList=[...tempPertemuanSet].sort(); cloudTanggalList=[...pertemuanList];
+            remotePertemuanList=[...pertemuanList]; remoteMateriList=[...remoteMateriSet];
+
+            siswaSheetLoaded=Array.isArray(rowsSiswa); siswaLoadFailed=!rowsSiswa || rowsSiswa.length<=1;
+            const oldMap=Object.fromEntries(siswaList.map(s=>[String(s.id),s]));
+            siswaList=[];
+            if(rowsSiswa?.length>1) for(let i=1;i<rowsSiswa.length;i++){
+                const r=rowsSiswa[i], id=String(cell(r,0)).trim(), nama=String(cell(r,1)).trim(), kelas=String(cell(r,2)).trim(), regu=String(cell(r,3)).trim();
+                if(!id || !nama) continue;
+                const old=oldMap[id]||{}, a=byId[id]||{};
+                const historyAbsen={...(old.riwayatAbsen||{}),...(logAbsenMap[id]||{})};
+                const historyNilai={...(old.riwayatNilai||{}),...(logNilaiMap[id]||{})};
+                siswaList.push({id,nama,kelas,regu,absen:'Alpa',
+                    hadirCount:a.hadir ?? old.hadirCount ?? 0,
+                    sakitCount:a.sakit ?? old.sakitCount ?? 0,
+                    alpaCount:a.alpa ?? old.alpaCount ?? 0,
+                    nilai:a.nilai ?? old.nilai ?? calculateAverageGrade(Object.values(historyNilai)),
+                    riwayatNilai:historyNilai, riwayatAbsen:historyAbsen});
             }
 
-            if(rowsHasil && rowsHasil.length > 1) {
-                hasilSheetList = [];
-                for(let i = 1; i < rowsHasil.length; i++) {
-                    let r = rowsHasil[i];
-                    let nama = r.c && r.c[0] ? r.c[0].v : '';
-                    let kelas = r.c && r.c[1] ? r.c[1].v : '';
-                    let regu = r.c && r.c[2] ? r.c[2].v : '';
-                    let skor = r.c && r.c[3] ? r.c[3].v : '';
-                    if(nama) hasilSheetList.push({ nama, kelas, regu, skor });
-                }
-            }
+            if(rowsHasil?.length>1) hasilSheetList=rowsHasil.slice(1).map(r=>({id:String(cell(r,0)),nama:cell(r,1),kelas:cell(r,2),regu:cell(r,3),skor:cell(r,4)})).filter(x=>x.id);
+            if(rowsPrestasi?.length>1) prestasiList=rowsPrestasi.slice(1).map((r,i)=>({id:i+1,namaSiswa:String(cell(r,0)||''),kejuaraan:String(cell(r,1)||''),tingkat:String(cell(r,2)||''),tanggal:String(cell(r,3)||''),ket:String(cell(r,4)||'')})).filter(x=>x.kejuaraan||x.namaSiswa);
+            if(rowsInformasi?.length>1) informasiList=rowsInformasi.slice(1).map((r,i)=>({id:i+1,tanggal:String(cell(r,0)||''),judul:String(cell(r,1)||''),isi:String(cell(r,2)||'')})).filter(x=>x.judul||x.isi);
 
-            // LOAD SHEET PRESTASI
-            if(rowsPrestasi && rowsPrestasi.length > 1) {
-                let newPrestasi = [];
-                for(let i = 1; i < rowsPrestasi.length; i++) {
-                    let r = rowsPrestasi[i];
-                    let namaSiswa = r.c && r.c[0] ? String(r.c[0].v || '') : '';
-                    let kejuaraan = r.c && r.c[1] ? String(r.c[1].v || '') : '';
-                    let tingkat = r.c && r.c[2] ? String(r.c[2].v || '') : '';
-                    let tanggal = r.c && r.c[3] ? String(r.c[3].v || '') : '';
-                    let ket = r.c && r.c[4] ? String(r.c[4].v || '') : '';
-                    if(kejuaraan || namaSiswa) {
-                        newPrestasi.push({ id: i, namaSiswa, kejuaraan, tingkat, tanggal, ket });
-                    }
-                }
-                prestasiList = newPrestasi;
-                localStorage.setItem('pramuka_app_prestasi', JSON.stringify(prestasiList));
-            }
-
-            // LOAD SHEET INFORMASI
-            if(rowsInformasi && rowsInformasi.length > 1) {
-                let newInformasi = [];
-                for(let i = 1; i < rowsInformasi.length; i++) {
-                    let r = rowsInformasi[i];
-                    let tanggal = r.c && r.c[0] ? String(r.c[0].v || '') : '';
-                    let judul = r.c && r.c[1] ? String(r.c[1].v || '') : '';
-                    let isi = r.c && r.c[2] ? String(r.c[2].v || '') : '';
-                    if(judul || isi) {
-                        newInformasi.push({ id: i, tanggal, judul, isi });
-                    }
-                }
-                informasiList = newInformasi;
-                localStorage.setItem('pramuka_app_informasi', JSON.stringify(informasiList));
-            }
-
-            let remoteActiveClasses = null;
-            let remoteActiveClassesUpdatedAt = 0;
-            if(rowsPengaturan && rowsPengaturan.length > 1) {
-                // Membaca Pengaturan filter kelas
-                for(let i = 1; i < rowsPengaturan.length; i++) {
-                    let r = rowsPengaturan[i];
-                    let key = r.c && r.c[0] ? r.c[0].v : '';
-                    let val = r.c && r.c[1] ? r.c[1].v : '';
-                    if(key === 'activeClasses' && val) {
-                        try {
-                            const parsed = JSON.parse(val);
-                            if(Array.isArray(parsed)) remoteActiveClasses = parsed.filter(k => VALID_CLASS_NAMES.includes(k));
-                        } catch(e) {}
-                    }
-                    if(key === 'activeClassesUpdatedAt' && val) {
-                        remoteActiveClassesUpdatedAt = Number(val) || 0;
-                    }
-                }
-                
-            }
-
-            // PENTING: Pengaturan kelas di Google Sheets adalah sumber utama.
-            // Jangan membandingkan dengan timestamp localStorage karena setiap HP/browser
-            // mempunyai waktu/cache sendiri. Dengan ini semua pengguna melihat pengaturan
-            // kelas yang sama.
-            if (remoteActiveClasses) {
-                activeClasses = [...remoteActiveClasses];
-                activeClassesUpdatedAt = remoteActiveClassesUpdatedAt || Date.now();
-                localStorage.setItem('pramuka_active_classes', JSON.stringify(activeClasses));
-                localStorage.setItem('pramuka_active_classes_updated_at', String(activeClassesUpdatedAt));
-            }
-
+            localStorage.setItem('pramuka_app_siswa',JSON.stringify(siswaList));
+            localStorage.setItem('pramuka_app_pertemuan',JSON.stringify(pertemuanList));
+            localStorage.setItem('pramuka_app_prestasi',JSON.stringify(prestasiList));
+            localStorage.setItem('pramuka_app_informasi',JSON.stringify(informasiList));
             await loadDokumentasiFromDrive();
-
-            initSettingsForm();
-
-            let fetchedNilaiMap = {};
-            let sourceNilaiRows = rowsRekapNilai || (rowsNilaiDetail && rowsNilaiDetail.length > 1 ? rowsNilaiDetail : null);
-            if(sourceNilaiRows && sourceNilaiRows.length > 1) {
-                for(let i = 1; i < sourceNilaiRows.length; i++) {
-                    let r = sourceNilaiRows[i];
-                    if(rowsRekapNilai) {
-                        let nama = r.c && r.c[0] ? r.c[0].v : '';
-                        let nilaiAvg = r.c && r.c[3] ? r.c[3].v : (r.c && r.c[1] ? r.c[1].v : 'E');
-                        if(nama) fetchedNilaiMap[nama.toLowerCase()] = nilaiAvg;
-                    } else if(rowsNilaiDetail) {
-                        let nama = r.c && r.c[2] ? r.c[2].v : '';
-                        let val = r.c && r.c[5] ? r.c[5].v : 'E';
-                        if(nama) {
-                            let key = nama.toLowerCase();
-                            if(!fetchedNilaiMap[key]) fetchedNilaiMap[key] = [];
-                            fetchedNilaiMap[key].push(val);
-                        }
-                    }
-                }
-            }
-
-            siswaSheetLoaded = Array.isArray(rowsSiswa);
-            siswaLoadFailed = !rowsSiswa || rowsSiswa.length <= 1;
-
-            if(rowsSiswa && rowsSiswa.length > 1) {
-                let newSiswaList = [];
-                for(let i = 1; i < rowsSiswa.length; i++) {
-                    let r = rowsSiswa[i];
-                    const nama = r.c && r.c[0] ? r.c[0].v : '';
-                    const kelas = r.c && r.c[1] ? r.c[1].v : 'Kelas 4';
-                    const regu = r.c && r.c[2] ? r.c[2].v : 'Putra';
-                    
-                    if(nama) {
-                        let keyNama = normalizeStudentName(nama);
-                        let existing = siswaList.find(s => normalizeStudentName(s.nama) === keyNama);
-                        
-                        let hadirCount = 0;
-                        let sakitCount = 0;
-                        let alpaCount = 0;
-
-                        if(fetchedAbsenMap[keyNama]) {
-                            hadirCount = fetchedAbsenMap[keyNama].hadir;
-                            sakitCount = fetchedAbsenMap[keyNama].sakit;
-                            alpaCount = fetchedAbsenMap[keyNama].alpa;
-                        } else if(existing) {
-                            hadirCount = existing.hadirCount || 0;
-                            sakitCount = existing.sakitCount || 0;
-                            alpaCount = existing.alpaCount || 0;
-                        }
-
-                        let gradeVal = 'E';
-                        if(fetchedNilaiMap[keyNama]) {
-                            let val = fetchedNilaiMap[keyNama];
-                            if(Array.isArray(val)) gradeVal = calculateAverageGrade(val);
-                            else gradeVal = val;
-                        } else if(existing && existing.nilai) {
-                            gradeVal = existing.nilai;
-                        }
-
-                        let riwayatNilai = logNilaiMap[keyNama] || (existing ? existing.riwayatNilai : {});
-                        let riwayatAbsen = {
-                            ...((existing && existing.riwayatAbsen) || {}),
-                            ...(logAbsenMap[keyNama] || {})
-                        };
-
-                        newSiswaList.push({
-                            id: newSiswaList.length + 1,
-                            nama: nama,
-                            kelas: kelas,
-                            regu: regu,
-                            absen: 'Alpa',
-                            hadirCount: hadirCount,
-                            sakitCount: sakitCount,
-                            alpaCount: alpaCount,
-                            nilai: gradeVal,
-                            riwayatNilai: riwayatNilai || {},
-                            riwayatAbsen: riwayatAbsen || {}
-                        });
-                    }
-                }
-                siswaList = newSiswaList;
-            } else {
-                siswaList = [];
-            }
-
-            localStorage.setItem('pramuka_app_siswa', JSON.stringify(siswaList));
-            localStorage.setItem('pramuka_app_pertemuan', JSON.stringify(pertemuanList));
-            updateDashboard();
-            renderSiswa();
-            renderRekapNilai();
-            renderRekapKehadiran();
-            renderPrestasi();
-            renderInformasi();
-            renderDokumentasi();
-            renderHasil();
-            initSettingsForm();
-            if(!isAuto) showToast('Data berhasil dimuat!');
+            initSettingsForm(); updateDashboard(); renderSiswa(); renderRekapNilai(); renderRekapKehadiran(); renderPrestasi(); renderInformasi(); renderDokumentasi(); renderHasil();
+            if(!isAuto) showToast('Data dan kelas aktif berhasil dimuat!');
         }
 
         function resetLocalData() {
@@ -2170,15 +1988,15 @@
                         <td class="p-4 text-center font-bold text-amber-600">${sakit}</td>
                         <td class="p-4 text-center font-bold text-red-600">${alpa}</td>
                         <td class="p-4 text-center">
-                            <button onclick="bukaDetailAbsen('${s.nama}')" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold transition">Detail</button>
+                            <button onclick='bukaDetailAbsen(${JSON.stringify(String(s.id))})' class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold transition">Detail</button>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        function bukaDetailAbsen(nama) {
-            const siswa = siswaList.find(s => normalizeStudentName(s.nama) === normalizeStudentName(nama));
+        function bukaDetailAbsen(id) {
+            const siswa = siswaList.find(s => String(s.id) === String(id));
             if(!siswa) return;
             
             document.getElementById('detail-absen-nama').textContent = siswa.nama;
@@ -2256,15 +2074,15 @@
                         <td class="p-4 text-center font-bold text-gray-600">${jumlahPenilaian} Materi</td>
                         <td class="p-4 text-center font-extrabold text-pramuka-700 text-lg">${s.nilai}</td>
                         <td class="p-4 text-center">
-                            <button onclick="bukaDetailNilai('${s.nama}')" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold transition">Detail</button>
+                            <button onclick='bukaDetailNilai(${JSON.stringify(String(s.id))})' class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold transition">Detail</button>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        function bukaDetailNilai(nama) {
-            const siswa = siswaList.find(s => s.nama === nama);
+        function bukaDetailNilai(id) {
+            const siswa = siswaList.find(s => String(s.id) === String(id));
             if(!siswa) return;
             
             document.getElementById('detail-nilai-nama').textContent = siswa.nama;
@@ -2352,9 +2170,9 @@
                         <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-[11px] font-semibold">${s.regu}</span></td>
                         <td class="p-4">
                             <div class="flex justify-center bg-gray-100 rounded-xl p-1 w-max mx-auto shadow-inner">
-                                <button onclick="updateAbsen(${s.id}, 'Hadir')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${s.absen === 'Hadir' ? 'bg-green-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">Hadir</button>
-                                <button onclick="updateAbsen(${s.id}, 'Sakit')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${s.absen === 'Sakit' ? 'bg-amber-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">Skt/Izn</button>
-                                <button onclick="updateAbsen(${s.id}, 'Alpa')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${s.absen === 'Alpa' ? 'bg-red-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">Alpa</button>
+                                <button onclick="updateAbsen(${JSON.stringify(String(s.id))}, 'Hadir')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${s.absen === 'Hadir' ? 'bg-green-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">Hadir</button>
+                                <button onclick="updateAbsen(${JSON.stringify(String(s.id))}, 'Sakit')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${s.absen === 'Sakit' ? 'bg-amber-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">Skt/Izn</button>
+                                <button onclick="updateAbsen(${JSON.stringify(String(s.id))}, 'Alpa')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${s.absen === 'Alpa' ? 'bg-red-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">Alpa</button>
                             </div>
                         </td>
                     </tr>
@@ -2378,11 +2196,11 @@
                         <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-[11px] font-semibold">${s.regu}</span></td>
                         <td class="p-4">
                             <div class="flex justify-center bg-gray-100 rounded-xl p-1 w-max mx-auto shadow-inner">
-                                <button onclick="updateNilai(${s.id}, 'A')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${s.nilai === 'A' ? 'bg-pramuka-600 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">A</button>
-                                <button onclick="updateNilai(${s.id}, 'B')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${s.nilai === 'B' ? 'bg-pramuka-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">B</button>
-                                <button onclick="updateNilai(${s.id}, 'C')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${s.nilai === 'C' ? 'bg-amber-400 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">C</button>
-                                <button onclick="updateNilai(${s.id}, 'D')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${s.nilai === 'D' ? 'bg-orange-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">D</button>
-                                <button onclick="updateNilai(${s.id}, 'E')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${s.nilai === 'E' ? 'bg-red-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">E</button>
+                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'A')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${s.nilai === 'A' ? 'bg-pramuka-600 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">A</button>
+                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'B')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${s.nilai === 'B' ? 'bg-pramuka-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">B</button>
+                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'C')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${s.nilai === 'C' ? 'bg-amber-400 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">C</button>
+                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'D')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${s.nilai === 'D' ? 'bg-orange-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">D</button>
+                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'E')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${s.nilai === 'E' ? 'bg-red-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">E</button>
                             </div>
                         </td>
                     </tr>
@@ -2496,7 +2314,7 @@
                 
                 logPayloads.push({
                     sheet: 'Absensi',
-                    values: [timestamp, s.nama, s.kelas, s.regu, s.absen, tglInput]
+                    values: [timestamp, s.id, s.nama, s.kelas, s.regu, s.absen, tglInput]
                 });
             });
             
@@ -2514,7 +2332,6 @@
 
             if(appsScriptUrl) {
                 await sendDataToAppsScript(logPayloads, 'Data log absen terkirim ke server!');
-                await sendDataToAppsScript(rekapPayloads, 'Data rekap absen diperbarui!');
             }
         }
 
@@ -2533,7 +2350,7 @@
                 
                 logPayloads.push({
                     sheet: 'Nilai',
-                    values: [timestamp, materiInput, s.nama, s.kelas, s.regu, s.riwayatNilai[materiInput]]
+                    values: [timestamp, s.id, materiInput, s.nama, s.kelas, s.regu, s.riwayatNilai[materiInput]]
                 });
             });
 
@@ -2551,7 +2368,6 @@
 
             if(appsScriptUrl) {
                 await sendDataToAppsScript(logPayloads, 'Data rincian nilai terkirim ke server!');
-                await sendDataToAppsScript(rekapNilaiPayloads, 'Data rekap nilai diperbarui!');
             }
         }
 
