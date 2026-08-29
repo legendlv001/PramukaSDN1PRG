@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -1061,27 +1062,65 @@
                    /^\d{4}-\d{2}-\d{2}T/.test(str);
         }
 
+        // Normalisasi tanggal yang kuat untuk data Google Sheets/GVIZ.
+        // Menangani YYYY-MM-DD, DD/MM/YYYY, ISO, Date(YYYY,M,D), Date object,
+        // timestamp lokal Indonesia, dan nomor serial tanggal Google Sheets.
         function normalizeMeetingDate(value) {
             if (value === null || value === undefined || value === '') return null;
-            if (value instanceof Date && !isNaN(value)) {
+
+            if (value instanceof Date && !isNaN(value.getTime())) {
                 return `${value.getFullYear()}-${String(value.getMonth()+1).padStart(2,'0')}-${String(value.getDate()).padStart(2,'0')}`;
             }
+
+            if (typeof value === 'number' && isFinite(value)) {
+                // Google Sheets serial date: 1899-12-30 sebagai epoch.
+                if (value >= 1 && value <= 100000) {
+                    const base = new Date(Date.UTC(1899, 11, 30));
+                    base.setUTCDate(base.getUTCDate() + Math.floor(value));
+                    return `${base.getUTCFullYear()}-${String(base.getUTCMonth()+1).padStart(2,'0')}-${String(base.getUTCDate()).padStart(2,'0')}`;
+                }
+            }
+
             const str = String(value).trim();
+            if (!str || str === 'activeClasses') return null;
             if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
             if (/^\d{4}-\d{2}-\d{2}T/.test(str)) return str.substring(0, 10);
-            if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) {
-                const [d,m,y] = str.split('/');
-                return `${y}-${m}-${d}`;
+
+            // Format tanggal Indonesia: DD/MM/YYYY atau DD/MM/YYYY, jam...
+            const indo = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s|,|$)/);
+            if (indo) {
+                return `${indo[3]}-${String(Number(indo[2])).padStart(2,'0')}-${String(Number(indo[1])).padStart(2,'0')}`;
             }
+
+            // Format GVIZ: Date(2026,7,8) -> bulan JavaScript dimulai dari 0.
             const gviz = str.match(/^Date\((\d{4}),\s*(\d{1,2}),\s*(\d{1,2})/);
             if (gviz) {
                 return `${gviz[1]}-${String(Number(gviz[2])+1).padStart(2,'0')}-${String(gviz[3]).padStart(2,'0')}`;
             }
+
             const d = new Date(str);
-            if (!isNaN(d)) {
+            if (!isNaN(d.getTime())) {
                 return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
             }
             return null;
+        }
+
+        // Nama siswa dinormalisasi agar perbedaan spasi/huruf besar-kecil
+        // tidak membuat riwayat Absensi terpisah.
+        function normalizeStudentName(value) {
+            return String(value ?? '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toLocaleLowerCase('id-ID');
+        }
+
+        function normalizeAttendanceStatus(value) {
+            const status = String(value ?? '').trim().toLowerCase();
+            if (status === 'hadir') return 'Hadir';
+            if (status === 'sakit') return 'Sakit';
+            if (status === 'izin') return 'Izin';
+            if (status === 'alpa' || status === 'alpha') return 'Alpa';
+            return value ? String(value).trim() : 'Alpa';
         }
 
         function togglePasswordVisibility() {
@@ -1539,12 +1578,43 @@
 
         async function saveClassFilters() {
             const checkboxes = document.querySelectorAll('.class-filter-cb');
-            activeClasses = [];
+            const selectedClasses = [];
+
             checkboxes.forEach(cb => {
-                if(cb.checked) activeClasses.push(cb.value);
+                if (cb.checked && VALID_CLASS_NAMES.includes(String(cb.value).trim())) {
+                    selectedClasses.push(String(cb.value).trim());
+                }
             });
 
-            activeClassesUpdatedAt = Date.now();
+            // Pengaturan kelas adalah PENGATURAN BERSAMA.
+            // Google Sheets menjadi sumber utama, bukan localStorage masing-masing HP.
+            const newActiveClasses = selectedClasses;
+            const newUpdatedAt = Date.now();
+
+            if (!appsScriptUrl) {
+                await loadAppsScriptUrlFromC2();
+            }
+
+            if (!appsScriptUrl) {
+                showToast('GAGAL: Apps Script URL belum tersedia. Pengaturan kelas TIDAK disimpan bersama.', 'error');
+                initClassCheckboxes();
+                return;
+            }
+
+            const ok = await sendDataToAppsScript([
+                { sheet: 'Pengaturan', values: ['activeClasses', JSON.stringify(newActiveClasses)] },
+                { sheet: 'Pengaturan', values: ['activeClassesUpdatedAt', String(newUpdatedAt)] }
+            ], 'Pengaturan kelas berhasil disimpan untuk SEMUA pengguna!');
+
+            if (!ok) {
+                initClassCheckboxes();
+                return;
+            }
+
+            activeClasses = [...newActiveClasses];
+            activeClassesUpdatedAt = newUpdatedAt;
+
+            // Cache lokal hanya sebagai cache tampilan, bukan sumber kebenaran.
             localStorage.setItem('pramuka_active_classes', JSON.stringify(activeClasses));
             localStorage.setItem('pramuka_active_classes_updated_at', String(activeClassesUpdatedAt));
 
@@ -1552,19 +1622,60 @@
             renderSiswa();
             renderRekapKehadiran();
             renderPrestasi();
-
-            if(appsScriptUrl) {
-                await sendDataToAppsScript([
-                    { sheet: 'Pengaturan', values: ['activeClasses', JSON.stringify(activeClasses)] },
-                    { sheet: 'Pengaturan', values: ['activeClassesUpdatedAt', String(activeClassesUpdatedAt)] }
-                ], 'Filter kelas aktif berhasil disimpan!');
-            } else {
-                showToast('Filter kelas berhasil diperbarui!');
-            }
+            renderHasil();
         }
 
         function getFilteredSiswaList() {
             return siswaList.filter(s => isActiveClass(s.kelas));
+        }
+
+        // Sinkronisasi pengaturan kelas bersama secara berkala.
+        async function syncSharedClassFilters() {
+            try {
+                const rows = await fetchDataFromSheet('Pengaturan', true);
+                if (!rows || rows.length <= 1) return;
+
+                let remoteClasses = null;
+                let remoteUpdatedAt = 0;
+
+                for (let i = 1; i < rows.length; i++) {
+                    const r = rows[i];
+                    const key = r?.c?.[0]?.v != null ? String(r.c[0].v).trim() : '';
+                    const val = r?.c?.[1]?.v != null ? String(r.c[1].v).trim() : '';
+
+                    if (key === 'activeClasses' && val) {
+                        try {
+                            const parsed = JSON.parse(val);
+                            if (Array.isArray(parsed)) {
+                                remoteClasses = parsed.map(k => String(k).trim())
+                                    .filter(k => VALID_CLASS_NAMES.includes(k));
+                            }
+                        } catch (e) {}
+                    }
+                    if (key === 'activeClassesUpdatedAt') remoteUpdatedAt = Number(val) || 0;
+                }
+
+                if (!remoteClasses) return;
+
+                const changed = JSON.stringify(activeClasses) !== JSON.stringify(remoteClasses) ||
+                    Number(activeClassesUpdatedAt || 0) !== Number(remoteUpdatedAt || 0);
+
+                if (changed) {
+                    activeClasses = [...remoteClasses];
+                    activeClassesUpdatedAt = remoteUpdatedAt || Date.now();
+                    localStorage.setItem('pramuka_active_classes', JSON.stringify(activeClasses));
+                    localStorage.setItem('pramuka_active_classes_updated_at', String(activeClassesUpdatedAt));
+                    initClassCheckboxes();
+                    updateDashboard();
+                    renderSiswa();
+                    renderRekapKehadiran();
+                    renderPrestasi();
+                    renderHasil();
+                    showToast('Pengaturan kelas bersama diperbarui.', 'info');
+                }
+            } catch (e) {
+                console.log('Gagal sinkronisasi pengaturan kelas bersama:', e);
+            }
         }
 
         function getNextSaturday() {
@@ -1733,7 +1844,7 @@
                     let hadir = r.c && r.c[3] ? Number(r.c[3].v) || 0 : 0;
                     let sakit = r.c && r.c[4] ? Number(r.c[4].v) || 0 : 0;
                     let alpa = r.c && r.c[5] ? Number(r.c[5].v) || 0 : 0;
-                    if(nama) fetchedAbsenMap[nama.toLowerCase()] = { hadir, sakit, alpa };
+                    if(nama) fetchedAbsenMap[normalizeStudentName(nama)] = { hadir, sakit, alpa };
                 }
             }
 
@@ -1744,13 +1855,14 @@
                     let r = rowsLogAbsen[i];
                     let time = r.c && r.c[0] ? r.c[0].v : '';
                     let nama = r.c && r.c[1] ? r.c[1].v : '';
-                    let status = r.c && r.c[4] ? r.c[4].v : 'Alpa';
+                    let status = r.c && r.c[4] ? normalizeAttendanceStatus(r.c[4].v) : 'Alpa';
                     let tglCol = r.c && r.c[5] ? r.c[5].v : '';
                     
                     if(nama && (time || tglCol)) {
                         let formattedDate = normalizeMeetingDate(tglCol) || normalizeMeetingDate(time);
                         if(!formattedDate) continue;
-                        let keyNama = nama.toLowerCase();
+                        let keyNama = normalizeStudentName(nama);
+                        if(!keyNama) continue;
                         if(!logAbsenMap[keyNama]) logAbsenMap[keyNama] = {};
                         logAbsenMap[keyNama][formattedDate] = status;
                         tempPertemuanSet.add(formattedDate);
@@ -1867,8 +1979,12 @@
                 
             }
 
-            if(remoteActiveClasses && (activeClassesUpdatedAt === 0 || remoteActiveClassesUpdatedAt >= activeClassesUpdatedAt)) {
-                activeClasses = remoteActiveClasses;
+            // PENTING: Pengaturan kelas di Google Sheets adalah sumber utama.
+            // Jangan membandingkan dengan timestamp localStorage karena setiap HP/browser
+            // mempunyai waktu/cache sendiri. Dengan ini semua pengguna melihat pengaturan
+            // kelas yang sama.
+            if (remoteActiveClasses) {
+                activeClasses = [...remoteActiveClasses];
                 activeClassesUpdatedAt = remoteActiveClassesUpdatedAt || Date.now();
                 localStorage.setItem('pramuka_active_classes', JSON.stringify(activeClasses));
                 localStorage.setItem('pramuka_active_classes_updated_at', String(activeClassesUpdatedAt));
@@ -1911,8 +2027,8 @@
                     const regu = r.c && r.c[2] ? r.c[2].v : 'Putra';
                     
                     if(nama) {
-                        let keyNama = nama.toLowerCase();
-                        let existing = siswaList.find(s => s.nama.toLowerCase() === keyNama);
+                        let keyNama = normalizeStudentName(nama);
+                        let existing = siswaList.find(s => normalizeStudentName(s.nama) === keyNama);
                         
                         let hadirCount = 0;
                         let sakitCount = 0;
@@ -1938,7 +2054,10 @@
                         }
 
                         let riwayatNilai = logNilaiMap[keyNama] || (existing ? existing.riwayatNilai : {});
-                        let riwayatAbsen = logAbsenMap[keyNama] || (existing ? existing.riwayatAbsen : {});
+                        let riwayatAbsen = {
+                            ...((existing && existing.riwayatAbsen) || {}),
+                            ...(logAbsenMap[keyNama] || {})
+                        };
 
                         newSiswaList.push({
                             id: newSiswaList.length + 1,
@@ -2001,8 +2120,8 @@
             if(!tbody) return;
             tbody.innerHTML = '';
             const searchInput = document.getElementById('search-siswa');
-            const search = searchInput ? searchInput.value.toLowerCase() : '';
-            const filtered = getFilteredSiswaList().filter(s => s.nama.toLowerCase().includes(search));
+            const search = searchInput ? normalizeStudentName(searchInput.value) : '';
+            const filtered = getFilteredSiswaList().filter(s => normalizeStudentName(s.nama).includes(search));
 
             if(filtered.length === 0) {
                 const pesan = siswaLoadFailed
@@ -2060,7 +2179,7 @@
         }
 
         function bukaDetailAbsen(nama) {
-            const siswa = siswaList.find(s => s.nama === nama);
+            const siswa = siswaList.find(s => normalizeStudentName(s.nama) === normalizeStudentName(nama));
             if(!siswa) return;
             
             document.getElementById('detail-absen-nama').textContent = siswa.nama;
@@ -2073,13 +2192,18 @@
             const tbody = document.getElementById('detail-absen-tbody');
             tbody.innerHTML = '';
 
-            let riwayatTgl = Object.keys(siswa.riwayatAbsen).sort((a, b) => new Date(b) - new Date(a));
+            let normalizedHistory = {};
+            Object.entries(siswa.riwayatAbsen || {}).forEach(([tgl, status]) => {
+                const normalizedDate = normalizeMeetingDate(tgl);
+                if (normalizedDate) normalizedHistory[normalizedDate] = normalizeAttendanceStatus(status);
+            });
+            let riwayatTgl = Object.keys(normalizedHistory).sort((a, b) => new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00'));
             
             if(riwayatTgl.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-gray-400">Belum ada riwayat absen.</td></tr>`;
             } else {
                 riwayatTgl.forEach(tgl => {
-                    const status = siswa.riwayatAbsen[tgl];
+                    const status = normalizedHistory[tgl];
                     let badgeClass = "bg-red-100 text-red-800";
                     if(status === 'Hadir') badgeClass = "bg-green-100 text-green-800";
                     if(status === 'Sakit' || status === 'Izin') badgeClass = "bg-amber-100 text-amber-800";
@@ -2752,6 +2876,12 @@
                     showToast('Anda sedang offline dan tidak ada data lokal!', 'error');
                 }
             }
+
+            // Perubahan kelas dari perangkat/pengguna lain ikut tampil otomatis.
+            setTimeout(() => {
+                syncSharedClassFilters();
+                setInterval(syncSharedClassFilters, 30000);
+            }, 5000);
         });
     </script>
 </body>
