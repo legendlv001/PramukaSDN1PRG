@@ -1871,7 +1871,7 @@
                 const r=rowsRekapNilai[i], id=String(cell(r,0)).trim();
                 if(id) byId[id]={...(byId[id]||{}), nilai:cell(r,4)||'E'};
             }
-            if(rowsLogAbsen?.length>1) for(let i=1;i<rowsLogAbsen.length;i++){
+            if(rowsLogAbsen?.length>0) for(let i=0;i<rowsLogAbsen.length;i++){
                 const r=rowsLogAbsen[i], id=String(cell(r,1)).trim(), date=normalizeMeetingDate(cell(r,6))||normalizeMeetingDate(cell(r,0));
                 if(id && date){ (logAbsenMap[id] ||= {})[date]=normalizeAttendanceStatus(cell(r,5)); tempPertemuanSet.add(date); }
             }
