@@ -1632,13 +1632,14 @@
         async function syncSharedClassFilters() {
             try {
                 const rows = await fetchDataFromSheet('Pengaturan', true);
-                if (!rows || rows.length <= 1) return;
+                if (!Array.isArray(rows) || rows.length === 0) return;
 
                 let remoteClasses = null;
                 let remoteUpdatedAt = 0;
+                const settingRows = getDataRows(rows, ['Key','Value','Keterangan']);
 
-                for (let i = 1; i < rows.length; i++) {
-                    const r = rows[i];
+                for (let i = 0; i < settingRows.length; i++) {
+                    const r = settingRows[i];
                     const key = r?.c?.[0]?.v != null ? String(r.c[0].v).trim() : '';
                     const val = r?.c?.[1]?.v != null ? String(r.c[1].v).trim() : '';
 
@@ -1781,12 +1782,36 @@
             }
         }
 
+        // GVIZ mengembalikan data tanpa header pada sebagian kondisi.
+        // Jangan pernah membuang index 0 secara buta.
+        function rowFirstValue(row) {
+            return String(row?.c?.[0]?.v ?? '').trim();
+        }
+
+        function looksLikeHeader(row, expectedHeaders = []) {
+            if (!row || !Array.isArray(expectedHeaders) || !expectedHeaders.length) return false;
+            const values = (row.c || []).map(c => String(c?.v ?? '').trim().toLowerCase());
+            return expectedHeaders.some((h, i) => {
+                const expected = String(h || '').trim().toLowerCase();
+                return expected && values[i] === expected;
+            });
+        }
+
+        function dataStartIndex(rows, expectedHeaders = []) {
+            return Array.isArray(rows) && rows.length && looksLikeHeader(rows[0], expectedHeaders) ? 1 : 0;
+        }
+
+        function getDataRows(rows, expectedHeaders = []) {
+            if (!Array.isArray(rows)) return [];
+            return rows.slice(dataStartIndex(rows, expectedHeaders));
+        }
+
         async function loadAppsScriptUrlFromC2() {
             try {
                 const rows = await fetchDataFromSheet('Pengaturan', true);
-                if(rows && rows.length >= 2) {
-                    const c2 = rows[1]?.c?.[2]?.v || '';
-                    const value = String(c2).trim();
+                const settingsRows = getDataRows(rows, ['Key','Value','Keterangan']);
+                for (const row of settingsRows) {
+                    const value = String(row?.c?.[2]?.v || '').trim();
                     if(/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(value)) {
                         appsScriptUrl = value;
                         return true;
@@ -1830,9 +1855,10 @@
             // WAJIB ambil pengaturan global terlebih dahulu agar cache HP tidak menentukan kelas aktif.
             const rowsPengaturan = await fetchDataFromSheet('Pengaturan', true);
             let remoteActiveClasses = null, remoteActiveClassesUpdatedAt = 0;
-            if (rowsPengaturan && rowsPengaturan.length > 1) {
-                for (let i=1;i<rowsPengaturan.length;i++) {
-                    const r=rowsPengaturan[i];
+            if (Array.isArray(rowsPengaturan) && rowsPengaturan.length > 0) {
+                const pengaturanDataRows = getDataRows(rowsPengaturan, ['Key','Value','Keterangan']);
+                for (let i=0;i<pengaturanDataRows.length;i++) {
+                    const r=pengaturanDataRows[i];
                     const key=r?.c?.[0]?.v != null ? String(r.c[0].v).trim() : '';
                     const val=r?.c?.[1]?.v != null ? String(r.c[1].v).trim() : '';
                     if (key==='activeClasses') {
@@ -1863,30 +1889,34 @@
             const byId={}, logAbsenMap={}, logNilaiMap={};
             let tempPertemuanSet=new Set(), remoteMateriSet=new Set();
 
-            if(rowsRekapAbsen?.length>1) for(let i=1;i<rowsRekapAbsen.length;i++){
-                const r=rowsRekapAbsen[i], id=String(cell(r,0)).trim();
+            const rekapAbsenRows = getDataRows(rowsRekapAbsen, ['ID Peserta','Nama Siswa','Kelas','Regu','Hadir','Sakit/Izin','Alpa']);
+            for(let i=0;i<rekapAbsenRows.length;i++){
+                const r=rekapAbsenRows[i], id=String(cell(r,0)).trim();
                 if(id) byId[id]={...(byId[id]||{}), hadir:Number(cell(r,4))||0, sakit:Number(cell(r,5))||0, alpa:Number(cell(r,6))||0};
             }
-            if(rowsRekapNilai?.length>1) for(let i=1;i<rowsRekapNilai.length;i++){
-                const r=rowsRekapNilai[i], id=String(cell(r,0)).trim();
+            const rekapNilaiRows = getDataRows(rowsRekapNilai, ['ID Peserta','Nama Siswa','Kelas','Regu','Nilai Rata-rata']);
+            for(let i=0;i<rekapNilaiRows.length;i++){
+                const r=rekapNilaiRows[i], id=String(cell(r,0)).trim();
                 if(id) byId[id]={...(byId[id]||{}), nilai:cell(r,4)||'E'};
             }
             if(rowsLogAbsen?.length>0) for(let i=0;i<rowsLogAbsen.length;i++){
                 const r=rowsLogAbsen[i], id=String(cell(r,1)).trim(), date=normalizeMeetingDate(cell(r,6))||normalizeMeetingDate(cell(r,0));
                 if(id && date){ (logAbsenMap[id] ||= {})[date]=normalizeAttendanceStatus(cell(r,5)); tempPertemuanSet.add(date); }
             }
-            if(rowsNilaiDetail?.length>1) for(let i=1;i<rowsNilaiDetail.length;i++){
-                const r=rowsNilaiDetail[i], id=String(cell(r,1)).trim(), materi=String(cell(r,2)).trim(), val=cell(r,6)||'E';
+            const nilaiDetailRows = getDataRows(rowsNilaiDetail, ['Timestamp','ID Peserta','Materi','Nama Siswa','Kelas','Regu','Nilai']);
+            for(let i=0;i<nilaiDetailRows.length;i++){
+                const r=nilaiDetailRows[i], id=String(cell(r,1)).trim(), materi=String(cell(r,2)).trim(), val=cell(r,6)||'E';
                 if(id && materi){ (logNilaiMap[id] ||= {})[materi]=val; remoteMateriSet.add(materi); }
             }
             pertemuanList=[...tempPertemuanSet].sort(); cloudTanggalList=[...pertemuanList];
             remotePertemuanList=[...pertemuanList]; remoteMateriList=[...remoteMateriSet];
 
-            siswaSheetLoaded=Array.isArray(rowsSiswa); siswaLoadFailed=!rowsSiswa || rowsSiswa.length<=1;
+            const siswaDataRows = getDataRows(rowsSiswa, ['ID Peserta','Nama Siswa','Kelas','Regu']);
+            siswaSheetLoaded=Array.isArray(rowsSiswa); siswaLoadFailed=!Array.isArray(rowsSiswa) || siswaDataRows.length===0;
             const oldMap=Object.fromEntries(siswaList.map(s=>[String(s.id),s]));
             siswaList=[];
-            if(rowsSiswa?.length>1) for(let i=1;i<rowsSiswa.length;i++){
-                const r=rowsSiswa[i], id=String(cell(r,0)).trim(), nama=String(cell(r,1)).trim(), kelas=String(cell(r,2)).trim(), regu=String(cell(r,3)).trim();
+            for(let i=0;i<siswaDataRows.length;i++){
+                const r=siswaDataRows[i], id=String(cell(r,0)).trim(), nama=String(cell(r,1)).trim(), kelas=String(cell(r,2)).trim(), regu=String(cell(r,3)).trim();
                 if(!id || !nama) continue;
                 const old=oldMap[id]||{}, a=byId[id]||{};
                 const historyAbsen = logAbsenMap[id] || (old.riwayatAbsen||{});
@@ -1899,9 +1929,26 @@
                     riwayatNilai:historyNilai, riwayatAbsen:historyAbsen});
             }
 
-            if(rowsHasil?.length>1) hasilSheetList=rowsHasil.slice(1).map(r=>({id:String(cell(r,0)),nama:cell(r,1),kelas:cell(r,2),regu:cell(r,3),skor:cell(r,4)})).filter(x=>x.id);
-            if(rowsPrestasi?.length>1) prestasiList=rowsPrestasi.slice(1).map((r,i)=>({id:i+1,namaSiswa:String(cell(r,0)||''),kejuaraan:String(cell(r,1)||''),tingkat:String(cell(r,2)||''),tanggal:String(cell(r,3)||''),ket:String(cell(r,4)||'')})).filter(x=>x.kejuaraan||x.namaSiswa);
-            if(rowsInformasi?.length>1) informasiList=rowsInformasi.slice(1).map((r,i)=>({id:i+1,tanggal:String(cell(r,0)||''),judul:String(cell(r,1)||''),isi:String(cell(r,2)||'')})).filter(x=>x.judul||x.isi);
+            const hasilRows = getDataRows(rowsHasil, ['ID Peserta','Nama Siswa','Kelas','Regu','Skor']);
+            hasilSheetList=hasilRows.map(r=>({id:String(cell(r,0)),nama:cell(r,1),kelas:cell(r,2),regu:cell(r,3),skor:cell(r,4)})).filter(x=>x.id);
+            // Jangan buang data pertama. Header hanya dilewati bila benar-benar terdeteksi sebagai header.
+            const prestasiRows = getDataRows(rowsPrestasi, ['Nama Siswa','Prestasi','Tingkat','Tanggal','Keterangan']);
+            prestasiList = prestasiRows.map((r,i)=>({
+                id:i+1,
+                namaSiswa:String(cell(r,0)||''),
+                kejuaraan:String(cell(r,1)||''),
+                tingkat:String(cell(r,2)||''),
+                tanggal:String(cell(r,3)||''),
+                ket:String(cell(r,4)||'')
+            })).filter(x=>x.namaSiswa.trim()!=='' || x.kejuaraan.trim()!=='' || x.tingkat.trim()!=='' || x.tanggal.trim()!=='' || x.ket.trim()!=='');
+
+            const informasiRows = getDataRows(rowsInformasi, ['Tanggal','Judul','Isi']);
+            informasiList = informasiRows.map((r,i)=>({
+                id:i+1,
+                tanggal:String(cell(r,0)||''),
+                judul:String(cell(r,1)||''),
+                isi:String(cell(r,2)||'')
+            })).filter(x=>x.tanggal.trim()!=='' || x.judul.trim()!=='' || x.isi.trim()!=='');
 
             localStorage.setItem('pramuka_app_siswa',JSON.stringify(siswaList));
             localStorage.setItem('pramuka_app_pertemuan',JSON.stringify(pertemuanList));
@@ -2669,26 +2716,17 @@
             }
             
             checkRole();
-            if (siswaList.length > 0) {
-                updateDashboard();
-                renderSiswa();
-                renderRekapNilai();
-                renderRekapKehadiran();
-                renderPrestasi();
-                renderInformasi();
-                renderDokumentasi();
-                renderHasil();
-                initSettingsForm();
-                
-                // Background sync
-                if(navigator.onLine) {
-                    setTimeout(() => {
-                        loadAllData(true);
-                    }, 2000);
-                }
+
+            // PENTING: saat pertama kali web dibuka, jangan render cache kelas lokal.
+            // Jika online, selalu ambil Pengaturan Spreadsheet terlebih dahulu agar semua HP sama.
+            if(navigator.onLine) {
+                loadAllData(false);
             } else {
-                if(navigator.onLine) {
-                    loadAllData(false);
+                // Offline saja boleh memakai cache terakhir sebagai cadangan.
+                if (siswaList.length > 0) {
+                    updateDashboard(); renderSiswa(); renderRekapNilai(); renderRekapKehadiran();
+                    renderPrestasi(); renderInformasi(); renderDokumentasi(); renderHasil(); initSettingsForm();
+                    showToast('Mode offline: menggunakan data terakhir yang tersimpan.', 'warning');
                 } else {
                     siswaLoadFailed = true;
                     renderSiswa();
