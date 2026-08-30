@@ -424,7 +424,7 @@
                         <span>Selamat Datang</span> <span class="inline-block animate-wave text-3xl">👋</span>
                     </h2>
                     <p class="text-pramuka-100 text-sm sm:text-base max-w-xl">
-                        Gerakan Pramuka Gugus Depan SD Negeri 1 Parigi (10.031-10.032). Bersama membentuk generasi muda yang berkarakter, mandiri, dan berjiwa Pancasila.
+                        Gerakan Pramuka Gugus Depan SD Negeri 1 Parigi. Bersama membentuk generasi muda yang berkarakter, mandiri, dan berjiwa Pancasila.
                     </p>
                 </div>
                 <div class="bg-white/10 p-5 rounded-2xl backdrop-blur-sm border border-white/10 z-10 text-center flex flex-col items-center justify-center min-w-[160px]">
@@ -1786,18 +1786,50 @@
             return rows.slice(dataStartIndex(rows, expectedHeaders));
         }
 
+        // Ambil URL Web App dari Pengaturan!C2.
+        // Prioritas: posisi C2 langsung (baris data pertama, kolom C),
+        // lalu fallback mencari URL /exec di seluruh data Pengaturan.
+        // Ini aman baik GVIZ mengirim header maupun tidak.
         async function loadAppsScriptUrlFromC2() {
             try {
                 const rows = await fetchDataFromSheet('Pengaturan', true);
-                const settingsRows = getDataRows(rows, ['Key','Value','Keterangan']);
-                for (const row of settingsRows) {
-                    const value = String(row?.c?.[2]?.v || '').trim();
-                    if(/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(value)) {
-                        appsScriptUrl = value;
+                if (!Array.isArray(rows) || rows.length === 0) throw new Error('Data Pengaturan kosong');
+
+                const isWebAppUrl = (v) => {
+                    const value = String(v ?? '').trim();
+                    return /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec(?:[?#].*)?$/i.test(value) ? value : '';
+                };
+
+                // 1) C2 langsung: jika header tidak ikut dalam rows, C2 = rows[0].c[2].
+                // Jika header ikut, C2 = rows[1].c[2]. Coba keduanya.
+                const directCandidates = [
+                    rows[0]?.c?.[2]?.v, rows[0]?.c?.[2]?.f,
+                    rows[1]?.c?.[2]?.v, rows[1]?.c?.[2]?.f
+                ];
+                for (const candidate of directCandidates) {
+                    const found = isWebAppUrl(candidate);
+                    if (found) {
+                        appsScriptUrl = found;
+                        console.log('Apps Script URL ditemukan dari Pengaturan!C2');
                         return true;
                     }
                 }
-            } catch(e) { console.error('Gagal membaca Pengaturan!C2', e); }
+
+                // 2) Fallback: cari URL Web App di semua sel Pengaturan.
+                for (const row of rows) {
+                    for (const cell of (row?.c || [])) {
+                        const foundV = isWebAppUrl(cell?.v);
+                        const foundF = isWebAppUrl(cell?.f);
+                        if (foundV || foundF) {
+                            appsScriptUrl = foundV || foundF;
+                            console.log('Apps Script URL ditemukan melalui pencarian Pengaturan');
+                            return true;
+                        }
+                    }
+                }
+            } catch(e) {
+                console.error('Gagal membaca Pengaturan!C2', e);
+            }
             appsScriptUrl = '';
             return false;
         }
