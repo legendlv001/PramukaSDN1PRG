@@ -70,11 +70,8 @@
                 <button onclick="switchTab('nilai')" id="nav-btn-nilai" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2 nav-pembina-only">
                     <i class="fa-solid fa-award"></i> <span>Penilaian</span>
                 </button>
-                <button onclick="switchTab('rekap')" id="nav-btn-rekap" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2">
-                    <i class="fa-solid fa-chart-pie"></i> <span>R. Kehadiran</span>
-                </button>
-                <button onclick="switchTab('rekap-nilai')" id="nav-btn-rekap-nilai" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2">
-                    <i class="fa-solid fa-chart-line"></i> <span>R. Nilai</span>
+                <button onclick="switchTab('hasil-rekap')" id="nav-btn-hasil-rekap" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-chart-column"></i> <span>Hasil Rekap</span>
                 </button>
                 <button onclick="switchTab('prestasi')" id="nav-btn-prestasi" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2">
                     <i class="fa-solid fa-trophy"></i> <span>Prestasi</span>
@@ -85,9 +82,6 @@
                 </button>
                 <button onclick="switchTab('informasi')" id="nav-btn-informasi" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2">
                     <i class="fa-solid fa-bullhorn"></i> <span>Informasi</span>
-                </button>
-                <button onclick="switchTab('hasil')" id="nav-btn-hasil" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2">
-                    <i class="fa-solid fa-square-poll-vertical"></i> <span>Hasil</span>
                 </button>
                 <button onclick="switchTab('settings')" id="nav-btn-settings" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2 nav-pembina-only">
                     <i class="fa-solid fa-gear"></i> <span>Pengaturan</span>
@@ -114,11 +108,8 @@
                 <button onclick="switchTab('nilai'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3 nav-pembina-only">
                     <i class="fa-solid fa-award w-5"></i> <span>Penilaian Latihan</span>
                 </button>
-                <button onclick="switchTab('rekap'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3">
-                    <i class="fa-solid fa-chart-pie w-5"></i> <span>Rekap Kehadiran</span>
-                </button>
-                <button onclick="switchTab('rekap-nilai'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3">
-                    <i class="fa-solid fa-chart-line w-5"></i> <span>Rekap Nilai</span>
+                <button onclick="switchTab('hasil-rekap'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3">
+                    <i class="fa-solid fa-chart-column w-5"></i> <span>Hasil Rekap</span>
                 </button>
                 <button onclick="switchTab('prestasi'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3">
                     <i class="fa-solid fa-trophy w-5"></i> <span>Prestasi</span>
@@ -129,9 +120,6 @@
                 </button>
                 <button onclick="switchTab('informasi'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3">
                     <i class="fa-solid fa-bullhorn w-5"></i> <span>Informasi</span>
-                </button>
-                <button onclick="switchTab('hasil'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3">
-                    <i class="fa-solid fa-square-poll-vertical w-5"></i> <span>Hasil</span>
                 </button>
                 <button onclick="switchTab('settings'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3 nav-pembina-only">
                     <i class="fa-solid fa-gear w-5"></i> <span>Pengaturan</span>
@@ -436,16 +424,14 @@
                         <span>Selamat Datang</span> <span class="inline-block animate-wave text-3xl">👋</span>
                     </h2>
                     <p class="text-pramuka-100 text-sm sm:text-base max-w-xl">
-                        Gerakan Pramuka Gugus Depan SD Negeri 1 Parigi. Bersama membentuk generasi muda yang berkarakter, mandiri, dan berjiwa Pancasila.
+                        Gerakan Pramuka Gugus Depan SD Negeri 1 Parigi (10.031-10.032). Bersama membentuk generasi muda yang berkarakter, mandiri, dan berjiwa Pancasila.
                     </p>
                 </div>
                 <div class="bg-white/10 p-5 rounded-2xl backdrop-blur-sm border border-white/10 z-10 text-center flex flex-col items-center justify-center min-w-[160px]">
                     <span id="current-greeting" class="text-sm font-bold">Halo, Kakak/Adik!</span>
                     <span class="text-xs text-pramuka-100">Tetap Semangat & Produktif</span>
                 </div>
-                <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl pointer-events-none">
-                    <i class="fa-solid fa-shield-halved"></i>
-                </div>
+                <div class="absolute -right-8 -bottom-12 opacity-15 text-[10rem] sm:text-[12rem] leading-none pointer-events-none select-none" aria-hidden="true">⚜️</div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -502,13 +488,9 @@
                         <i class="fa-solid fa-award text-base"></i>
                         <span>Penilaian Materi</span>
                     </button>
-                    <button onclick="switchTab('rekap')" class="p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 text-xs sm:text-sm">
-                        <i class="fa-solid fa-chart-pie text-base"></i>
-                        <span>Rekap Kehadiran</span>
-                    </button>
-                    <button onclick="switchTab('rekap-nilai')" class="p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 text-xs sm:text-sm">
-                        <i class="fa-solid fa-chart-line text-base"></i>
-                        <span>Rekap Nilai</span>
+                    <button onclick="switchTab('hasil-rekap')" class="p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 text-xs sm:text-sm">
+                        <i class="fa-solid fa-chart-column text-base"></i>
+                        <span>Hasil Rekap</span>
                     </button>
                     <button onclick="switchTab('prestasi')" class="p-4 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 text-xs sm:text-sm">
                         <i class="fa-solid fa-trophy text-base"></i>
@@ -522,10 +504,7 @@
                         <i class="fa-solid fa-bullhorn text-base"></i>
                         <span>Informasi</span>
                     </button>
-                    <button onclick="switchTab('hasil')" class="p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 text-xs sm:text-sm">
-                        <i class="fa-solid fa-square-poll-vertical text-base"></i>
-                        <span>Hasil Akhir</span>
-                    </button>
+
                     <a href="https://chat.whatsapp.com/IdzSApCpsbD3u9jzeb7uue?s=cl&p=a&mlu=4" target="_blank" class="p-4 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 col-span-2 sm:col-span-3 md:col-span-4 border border-green-200">
                         <i class="fa-brands fa-whatsapp text-xl text-green-600"></i>
                         <span>Gabung Grup WhatsApp Pramuka</span>
@@ -1727,8 +1706,9 @@
 
             if(tabId === 'dashboard') updateDashboard();
             if(tabId === 'siswa') renderSiswa();
-            if(tabId === 'rekap-nilai') renderRekapNilai();
-            if(tabId === 'rekap') renderRekapKehadiran();
+            if(tabId === 'hasil-rekap') {
+                switchRekapView('absen');
+            }
             if(tabId === 'prestasi') renderPrestasi();
             if(tabId === 'informasi') renderInformasi();
             if(tabId === 'dokumentasi') renderDokumentasi();
@@ -2048,7 +2028,7 @@
             const siswa = siswaList.find(s => String(s.id) === String(id));
             if(!siswa) return;
             
-            document.getElementById('detail-absen-nama').textContent = `${siswa.nama} — ${siswa.kelas} (${siswa.id})`;
+            document.getElementById('detail-absen-nama').textContent = `${siswa.nama} — ${siswa.kelas}`;
             document.getElementById('detail-absen-summary').innerHTML = `
                 <span class="text-green-600"><i class="fa-solid fa-user-check"></i> ${siswa.hadirCount} Hadir</span>
                 <span class="text-amber-600"><i class="fa-solid fa-user-clock"></i> ${siswa.sakitCount} Sakit/Izin</span>
@@ -2709,7 +2689,62 @@
             });
         }
 
+        // Gabungkan Rekap Kehadiran, Rekap Nilai, dan Hasil dalam satu menu Hasil Rekap.
+        function setupHasilRekapMenu() {
+            const rekap = document.getElementById('tab-rekap');
+            const rekapNilai = document.getElementById('tab-rekap-nilai');
+            const hasil = document.getElementById('tab-hasil');
+            if (!rekap || !rekapNilai || !hasil || document.getElementById('tab-hasil-rekap')) return;
+
+            const parent = document.createElement('section');
+            parent.id = 'tab-hasil-rekap';
+            parent.className = 'tab-content hidden space-y-6';
+            parent.innerHTML = `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">Hasil Rekap</h2>
+                        <p class="text-sm text-gray-500">Pilih jenis rekap yang ingin dilihat.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2 bg-white border border-gray-100 rounded-xl p-1.5 shadow-sm">
+                        <button type="button" data-rekap-view="absen" onclick="switchRekapView('absen')" class="rekap-subtab px-4 py-2 rounded-lg text-sm font-bold transition">Rekap Absen</button>
+                        <button type="button" data-rekap-view="nilai" onclick="switchRekapView('nilai')" class="rekap-subtab px-4 py-2 rounded-lg text-sm font-bold transition">Rekap Nilai</button>
+                        <button type="button" data-rekap-view="hasil" onclick="switchRekapView('hasil')" class="rekap-subtab px-4 py-2 rounded-lg text-sm font-bold transition">Hasil</button>
+                    </div>
+                </div>
+                <div id="hasil-rekap-panel-absen"></div>
+                <div id="hasil-rekap-panel-nilai" class="hidden"></div>
+                <div id="hasil-rekap-panel-hasil" class="hidden"></div>
+            `;
+            rekap.parentNode.insertBefore(parent, rekap);
+            rekap.classList.remove('tab-content', 'hidden');
+            rekapNilai.classList.remove('tab-content', 'hidden');
+            hasil.classList.remove('tab-content', 'hidden');
+            parent.querySelector('#hasil-rekap-panel-absen').appendChild(rekap);
+            parent.querySelector('#hasil-rekap-panel-nilai').appendChild(rekapNilai);
+            parent.querySelector('#hasil-rekap-panel-hasil').appendChild(hasil);
+            switchRekapView('absen');
+        }
+
+        function switchRekapView(view) {
+            const panels = {
+                absen: document.getElementById('hasil-rekap-panel-absen'),
+                nilai: document.getElementById('hasil-rekap-panel-nilai'),
+                hasil: document.getElementById('hasil-rekap-panel-hasil')
+            };
+            Object.entries(panels).forEach(([key, panel]) => {
+                if (panel) panel.classList.toggle('hidden', key !== view);
+            });
+            document.querySelectorAll('.rekap-subtab').forEach(btn => {
+                const active = btn.dataset.rekapView === view;
+                btn.className = `rekap-subtab px-4 py-2 rounded-lg text-sm font-bold transition ${active ? 'bg-pramuka-700 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`;
+            });
+            if (view === 'absen') renderRekapKehadiran();
+            if (view === 'nilai') renderRekapNilai();
+            if (view === 'hasil') renderHasil();
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            setupHasilRekapMenu();
             const adminRem = localStorage.getItem('pramuka_admin_remembered');
             if(adminRem === 'true') {
                 settingsUnlocked = true;
