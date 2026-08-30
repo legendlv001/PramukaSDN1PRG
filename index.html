@@ -1632,12 +1632,12 @@
         async function syncSharedClassFilters() {
             try {
                 const rows = await fetchDataFromSheet('Pengaturan', true);
-                if (!rows || rows.length <= 1) return;
+                if (!rows || rows.length === 0) return;
 
                 let remoteClasses = null;
                 let remoteUpdatedAt = 0;
 
-                for (let i = 1; i < rows.length; i++) {
+                for (let i = 0; i < rows.length; i++) {
                     const r = rows[i];
                     const key = r?.c?.[0]?.v != null ? String(r.c[0].v).trim() : '';
                     const val = r?.c?.[1]?.v != null ? String(r.c[1].v).trim() : '';
@@ -1759,10 +1759,8 @@
             const filtered = getFilteredSiswaList();
             document.getElementById('stat-total-siswa').textContent = filtered.length;
             document.getElementById('stat-pertemuan').textContent = pertemuanList.length;
-            const validPrestasi = prestasiList.filter(r => Array.isArray(r) ? r.some(v => String(v ?? '').trim() !== '') : r && Object.values(r).some(v => String(v ?? '').trim() !== ''));
-            const validInformasi = informasiList.filter(r => Array.isArray(r) ? r.some(v => String(v ?? '').trim() !== '') : r && Object.values(r).some(v => String(v ?? '').trim() !== ''));
-            document.getElementById('stat-prestasi').textContent = validPrestasi.length;
-            document.getElementById('stat-informasi').textContent = validInformasi.length;
+            document.getElementById('stat-prestasi').textContent = prestasiList.length;
+            document.getElementById('stat-informasi').textContent = informasiList.length;
         }
 
         async function fetchDataFromSheet(sheetName, isAuto = false) {
@@ -1784,17 +1782,20 @@
         async function loadAppsScriptUrlFromC2() {
             try {
                 const rows = await fetchDataFromSheet('Pengaturan', true);
-                if(rows && rows.length >= 2) {
-                    const c2 = rows[1]?.c?.[2]?.v || '';
-                    const value = String(c2).trim();
-                    if(/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(value)) {
-                        appsScriptUrl = value;
-                        return true;
+                if (rows && rows.length) {
+                    for (const row of rows) {
+                        const cells = row?.c || [];
+                        for (const cell of cells) {
+                            const value = String(cell?.v || '').trim();
+                            if (/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(value)) {
+                                appsScriptUrl = value;
+                                return true;
+                            }
+                        }
                     }
                 }
-            } catch(e) { console.error('Gagal membaca Pengaturan!C2', e); }
-            appsScriptUrl = '';
-            return false;
+            } catch(e) { console.error('Gagal membaca URL Apps Script', e); }
+            return Boolean(appsScriptUrl);
         }
 
         async function sendDataToAppsScript(payloadList, successMsg) {
@@ -1863,29 +1864,29 @@
             const byId={}, logAbsenMap={}, logNilaiMap={};
             let tempPertemuanSet=new Set(), remoteMateriSet=new Set();
 
-            if(rowsRekapAbsen?.length>1) for(let i=1;i<rowsRekapAbsen.length;i++){
+            if(rowsRekapAbsen?.length>0) for(let i=0;i<rowsRekapAbsen.length;i++){
                 const r=rowsRekapAbsen[i], id=String(cell(r,0)).trim();
                 if(id) byId[id]={...(byId[id]||{}), hadir:Number(cell(r,4))||0, sakit:Number(cell(r,5))||0, alpa:Number(cell(r,6))||0};
             }
-            if(rowsRekapNilai?.length>1) for(let i=1;i<rowsRekapNilai.length;i++){
+            if(rowsRekapNilai?.length>0) for(let i=0;i<rowsRekapNilai.length;i++){
                 const r=rowsRekapNilai[i], id=String(cell(r,0)).trim();
                 if(id) byId[id]={...(byId[id]||{}), nilai:cell(r,4)||'E'};
             }
-            if(rowsLogAbsen?.length>1) for(let i=1;i<rowsLogAbsen.length;i++){
+            if(rowsLogAbsen?.length>0) for(let i=0;i<rowsLogAbsen.length;i++){
                 const r=rowsLogAbsen[i], id=String(cell(r,1)).trim(), date=normalizeMeetingDate(cell(r,6))||normalizeMeetingDate(cell(r,0));
                 if(id && date){ (logAbsenMap[id] ||= {})[date]=normalizeAttendanceStatus(cell(r,5)); tempPertemuanSet.add(date); }
             }
-            if(rowsNilaiDetail?.length>1) for(let i=1;i<rowsNilaiDetail.length;i++){
+            if(rowsNilaiDetail?.length>0) for(let i=0;i<rowsNilaiDetail.length;i++){
                 const r=rowsNilaiDetail[i], id=String(cell(r,1)).trim(), materi=String(cell(r,2)).trim(), val=cell(r,6)||'E';
                 if(id && materi){ (logNilaiMap[id] ||= {})[materi]=val; remoteMateriSet.add(materi); }
             }
             pertemuanList=[...tempPertemuanSet].sort(); cloudTanggalList=[...pertemuanList];
             remotePertemuanList=[...pertemuanList]; remoteMateriList=[...remoteMateriSet];
 
-            siswaSheetLoaded=Array.isArray(rowsSiswa); siswaLoadFailed=!rowsSiswa || rowsSiswa.length<=1;
+            siswaSheetLoaded=Array.isArray(rowsSiswa); siswaLoadFailed=!rowsSiswa || rowsSiswa.length===0;
             const oldMap=Object.fromEntries(siswaList.map(s=>[String(s.id),s]));
             siswaList=[];
-            if(rowsSiswa?.length>1) for(let i=1;i<rowsSiswa.length;i++){
+            if(rowsSiswa?.length>0) for(let i=0;i<rowsSiswa.length;i++){
                 const r=rowsSiswa[i], id=String(cell(r,0)).trim(), nama=String(cell(r,1)).trim(), kelas=String(cell(r,2)).trim(), regu=String(cell(r,3)).trim();
                 if(!id || !nama) continue;
                 const old=oldMap[id]||{}, a=byId[id]||{};
@@ -1899,9 +1900,9 @@
                     riwayatNilai:historyNilai, riwayatAbsen:historyAbsen});
             }
 
-            if(rowsHasil?.length>1) hasilSheetList=rowsHasil.slice(1).map(r=>({id:String(cell(r,0)),nama:cell(r,1),kelas:cell(r,2),regu:cell(r,3),skor:cell(r,4)})).filter(x=>x.id);
-            if(rowsPrestasi?.length>1) prestasiList=rowsPrestasi.slice(1).map((r,i)=>({id:i+1,namaSiswa:String(cell(r,0)||''),kejuaraan:String(cell(r,1)||''),tingkat:String(cell(r,2)||''),tanggal:String(cell(r,3)||''),ket:String(cell(r,4)||'')})).filter(x=>x.kejuaraan||x.namaSiswa);
-            if(rowsInformasi?.length>1) informasiList=rowsInformasi.slice(1).map((r,i)=>({id:i+1,tanggal:String(cell(r,0)||''),judul:String(cell(r,1)||''),isi:String(cell(r,2)||'')})).filter(x=>x.judul||x.isi);
+            if(rowsHasil?.length>0) hasilSheetList=rowsHasil.map(r=>({id:String(cell(r,0)),nama:cell(r,1),kelas:cell(r,2),regu:cell(r,3),skor:cell(r,4)})).filter(x=>x.id);
+            if(rowsPrestasi?.length>0) prestasiList=rowsPrestasi.map((r,i)=>({id:i+1,namaSiswa:String(cell(r,0)||''),kejuaraan:String(cell(r,1)||''),tingkat:String(cell(r,2)||''),tanggal:String(cell(r,3)||''),ket:String(cell(r,4)||'')})).filter(x=>x.kejuaraan||x.namaSiswa);
+            if(rowsInformasi?.length>0) informasiList=rowsInformasi.map((r,i)=>({id:i+1,tanggal:String(cell(r,0)||''),judul:String(cell(r,1)||''),isi:String(cell(r,2)||'')})).filter(x=>x.judul||x.isi);
 
             localStorage.setItem('pramuka_app_siswa',JSON.stringify(siswaList));
             localStorage.setItem('pramuka_app_pertemuan',JSON.stringify(pertemuanList));
@@ -2440,13 +2441,12 @@
             const container = document.getElementById('prestasi-container');
             if(!container) return;
             container.innerHTML = '';
-            const validPrestasiRows = prestasiList.filter(r => Array.isArray(r) && r.some(v => String(v ?? '').trim() !== ''));
             
             const searchInput = document.getElementById('search-prestasi');
             const search = searchInput ? searchInput.value.toLowerCase() : '';
             
             // Hanya tampilkan siswa dari kelas yang aktif
-            const filteredByClassAndSearch = validPrestasiRows.filter(p => {
+            const filteredByClassAndSearch = prestasiList.filter(p => {
                 const siswaObj = siswaList.find(s => s.nama === p.namaSiswa);
                 const isClassActive = siswaObj ? isActiveClass(siswaObj.kelas) : true;
                 return isClassActive && (p.namaSiswa.toLowerCase().includes(search) || p.kejuaraan.toLowerCase().includes(search));
@@ -2535,9 +2535,8 @@
             const container = document.getElementById('informasi-container');
             if(!container) return;
             container.innerHTML = '';
-            const validInformasiRows = informasiList.filter(r => Array.isArray(r) && r.some(v => String(v ?? '').trim() !== ''));
 
-            if(validInformasiRows.length === 0) {
+            if(informasiList.length === 0) {
                 container.innerHTML = `<div class="bg-white p-8 rounded-xl border border-gray-100 text-center text-gray-400">Belum ada informasi terbaru.</div>`;
                 return;
             }
