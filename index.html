@@ -1887,8 +1887,8 @@
                 const r=rowsSiswa[i], id=String(cell(r,0)).trim(), nama=String(cell(r,1)).trim(), kelas=String(cell(r,2)).trim(), regu=String(cell(r,3)).trim();
                 if(!id || !nama) continue;
                 const old=oldMap[id]||{}, a=byId[id]||{};
-                const historyAbsen={...(old.riwayatAbsen||{}),...(logAbsenMap[id]||{})};
-                const historyNilai={...(old.riwayatNilai||{}),...(logNilaiMap[id]||{})};
+                const historyAbsen = logAbsenMap[id] || (old.riwayatAbsen||{});
+                const historyNilai = logNilaiMap[id] || (old.riwayatNilai||{});
                 siswaList.push({id,nama,kelas,regu,absen:'Alpa',
                     hadirCount:a.hadir ?? old.hadirCount ?? 0,
                     sakitCount:a.sakit ?? old.sakitCount ?? 0,
@@ -1999,7 +1999,7 @@
             const siswa = siswaList.find(s => String(s.id) === String(id));
             if(!siswa) return;
             
-            document.getElementById('detail-absen-nama').textContent = siswa.nama;
+            document.getElementById('detail-absen-nama').textContent = `${siswa.nama} — ${siswa.kelas} (${siswa.id})`;
             document.getElementById('detail-absen-summary').innerHTML = `
                 <span class="text-green-600"><i class="fa-solid fa-user-check"></i> ${siswa.hadirCount} Hadir</span>
                 <span class="text-amber-600"><i class="fa-solid fa-user-clock"></i> ${siswa.sakitCount} Sakit/Izin</span>
