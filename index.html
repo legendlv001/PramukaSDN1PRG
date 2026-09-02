@@ -1014,8 +1014,10 @@
         let pembinaPassword = localStorage.getItem('pramuka_pembina_password') || '3132';
         let adminPassword = localStorage.getItem('pramuka_admin_password') || '123';
 
-        let activeClasses = JSON.parse(localStorage.getItem('pramuka_active_classes')) || ["Kelas 3", "Kelas 4", "Kelas 5", "Kelas 6"];
-        let activeClassesUpdatedAt = Number(localStorage.getItem('pramuka_active_classes_updated_at') || 0);
+        let activeClasses = [];
+        let activeClassesUpdatedAt = 0;
+        let activeClassesRetryTimer = null;
+        let activeClassesLoading = false;
 
         let siswaLoadFailed = false;
         let siswaSheetLoaded = false;
@@ -1609,52 +1611,8 @@
 
         // Sinkronisasi pengaturan kelas bersama secara berkala.
         async function syncSharedClassFilters() {
-            try {
-                const rows = await fetchDataFromSheet('Pengaturan', true);
-                if (!Array.isArray(rows) || rows.length === 0) return;
-
-                let remoteClasses = null;
-                let remoteUpdatedAt = 0;
-                const settingRows = getDataRows(rows, ['Key','Value','Keterangan']);
-
-                for (let i = 0; i < settingRows.length; i++) {
-                    const r = settingRows[i];
-                    const key = r?.c?.[0]?.v != null ? String(r.c[0].v).trim() : '';
-                    const val = r?.c?.[1]?.v != null ? String(r.c[1].v).trim() : '';
-
-                    if (key === 'activeClasses' && val) {
-                        try {
-                            const parsed = JSON.parse(val);
-                            if (Array.isArray(parsed)) {
-                                remoteClasses = parsed.map(k => String(k).trim())
-                                    .filter(k => VALID_CLASS_NAMES.includes(k));
-                            }
-                        } catch (e) {}
-                    }
-                    if (key === 'activeClassesUpdatedAt') remoteUpdatedAt = Number(val) || 0;
-                }
-
-                if (!remoteClasses) return;
-
-                const changed = JSON.stringify(activeClasses) !== JSON.stringify(remoteClasses) ||
-                    Number(activeClassesUpdatedAt || 0) !== Number(remoteUpdatedAt || 0);
-
-                if (changed) {
-                    activeClasses = [...remoteClasses];
-                    activeClassesUpdatedAt = remoteUpdatedAt || Date.now();
-                    localStorage.setItem('pramuka_active_classes', JSON.stringify(activeClasses));
-                    localStorage.setItem('pramuka_active_classes_updated_at', String(activeClassesUpdatedAt));
-                    initClassCheckboxes();
-                    updateDashboard();
-                    renderSiswa();
-                    renderRekapKehadiran();
-                    renderPrestasi();
-                    renderHasil();
-                    showToast('Pengaturan kelas bersama diperbarui.', 'info');
-                }
-            } catch (e) {
-                console.log('Gagal sinkronisasi pengaturan kelas bersama:', e);
-            }
+            // Semua perangkat selalu sinkron melalui endpoint Apps Script yang membaca B2.
+            await loadActiveClassesFromSheet();
         }
 
         function getNextSaturday() {
@@ -1862,29 +1820,105 @@
             }
         }
 
-        async function loadAllData(isAuto = false) {
-            await loadAppsScriptUrlFromC2();
-            // WAJIB ambil pengaturan global terlebih dahulu agar cache HP tidak menentukan kelas aktif.
-            const rowsPengaturan = await fetchDataFromSheet('Pengaturan', true);
-            let remoteActiveClasses = null, remoteActiveClassesUpdatedAt = 0;
-            if (Array.isArray(rowsPengaturan) && rowsPengaturan.length > 0) {
-                const pengaturanDataRows = getDataRows(rowsPengaturan, ['Key','Value','Keterangan']);
-                for (let i=0;i<pengaturanDataRows.length;i++) {
-                    const r=pengaturanDataRows[i];
-                    const key=r?.c?.[0]?.v != null ? String(r.c[0].v).trim() : '';
-                    const val=r?.c?.[1]?.v != null ? String(r.c[1].v).trim() : '';
-                    if (key==='activeClasses') {
-                        try { const p=JSON.parse(val); if(Array.isArray(p)) remoteActiveClasses=p.map(String).map(x=>x.trim()).filter(x=>VALID_CLASS_NAMES.includes(x)); } catch(e){}
-                    }
-                    if (key==='activeClassesUpdatedAt') remoteActiveClassesUpdatedAt=Number(val)||0;
+        async function loadActiveClassesFromSheet() {
+            if (activeClassesLoading) return false;
+            activeClassesLoading = true;
+
+            // Setiap percobaan dimulai dari kosong agar HP baru/lama tidak memakai cache lama.
+            activeClasses = [];
+            activeClassesUpdatedAt = 0;
+            initClassCheckboxes();
+
+            try {
+                // Baca LANGSUNG Google Sheet Pengaturan.
+                // Tidak bergantung pada endpoint Apps Script atau URL C2.
+                const rows = await fetchDataFromSheet('Pengaturan', true);
+                if (!Array.isArray(rows) || rows.length === 0) {
+                    throw new Error('Sheet Pengaturan tidak dapat dibaca');
                 }
+
+                // Cari baris dengan A = activeClasses, lalu ambil B pada baris yang sama.
+                let rawActiveClasses = '';
+                for (const row of rows) {
+                    const key = String(row?.c?.[0]?.v ?? '').trim();
+                    if (key === 'activeClasses') {
+                        rawActiveClasses = String(row?.c?.[1]?.v ?? row?.c?.[1]?.f ?? '').trim();
+                        break;
+                    }
+                }
+
+                if (!rawActiveClasses) {
+                    throw new Error('activeClasses tidak ditemukan pada Pengaturan!B2');
+                }
+
+                let parsed;
+                try {
+                    parsed = JSON.parse(rawActiveClasses);
+                } catch (parseError) {
+                    throw new Error('Format Pengaturan!B2 tidak valid: ' + parseError.message);
+                }
+
+                if (!Array.isArray(parsed)) {
+                    throw new Error('Pengaturan!B2 harus berupa daftar kelas');
+                }
+
+                const classes = parsed
+                    .map(k => String(k).trim())
+                    .filter(k => VALID_CLASS_NAMES.includes(k));
+
+                // Jika JSON ada tetapi tidak menghasilkan kelas valid, anggap gagal.
+                if (parsed.length > 0 && classes.length === 0) {
+                    throw new Error('Tidak ada nama kelas valid di Pengaturan!B2');
+                }
+
+                activeClasses = classes;
+                activeClassesUpdatedAt = Date.now();
+
+                if (activeClassesRetryTimer) {
+                    clearTimeout(activeClassesRetryTimer);
+                    activeClassesRetryTimer = null;
+                }
+
+                initClassCheckboxes();
+                updateDashboard();
+                renderSiswa();
+                renderRekapNilai();
+                renderRekapKehadiran();
+                renderPrestasi();
+                renderHasil();
+                console.log('Kelas aktif berhasil dibaca langsung dari Pengaturan!B2:', activeClasses);
+                return true;
+
+            } catch (e) {
+                console.error('Gagal memuat kelas aktif:', e);
+                activeClasses = [];
+                activeClassesUpdatedAt = 0;
+                initClassCheckboxes();
+                updateDashboard();
+                renderSiswa();
+                renderRekapNilai();
+                renderRekapKehadiran();
+                renderPrestasi();
+                renderHasil();
+
+                // Tampilkan penyebab asli agar mudah diketahui jika masih ada masalah.
+                showToast('Gagal memuat kelas: ' + (e.message || e) + '. Mencoba lagi dalam 3 detik...', 'error');
+
+                if (!activeClassesRetryTimer) {
+                    activeClassesRetryTimer = setTimeout(() => {
+                        activeClassesRetryTimer = null;
+                        loadActiveClassesFromSheet();
+                    }, 3000);
+                }
+                return false;
+            } finally {
+                activeClassesLoading = false;
             }
-            if (remoteActiveClasses !== null) {
-                activeClasses=[...remoteActiveClasses];
-                activeClassesUpdatedAt=remoteActiveClassesUpdatedAt||Date.now();
-                localStorage.setItem('pramuka_active_classes',JSON.stringify(activeClasses));
-                localStorage.setItem('pramuka_active_classes_updated_at',String(activeClassesUpdatedAt));
-            }
+        }
+
+        async function loadAllData(isAuto = false) {
+            // Setiap membuka/memuat ulang web, kelas selalu diambil dari Sheet.
+            await loadActiveClassesFromSheet();
 
             const [rowsSiswa, rowsRekapAbsen, rowsLogAbsen, rowsNilaiDetail, rowsRekapNilai, rowsHasil, rowsPrestasi, rowsInformasi] = await Promise.all([
                 fetchDataFromSheet('Data Siswa', isAuto),
