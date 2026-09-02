@@ -920,8 +920,8 @@
                         <i class="fa-solid fa-filter"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-gray-800">Pilihan Kelas Aktif</h3>
-                        <p class="text-xs text-gray-500">Jika kelas diklik/dicentang maka spreadsheet menyimpan <b>iya</b>. Jika tidak diklik maka menyimpan <b>tidak</b>.</p>
+                        <h3 class="font-bold text-gray-800">Pilihan Kelas Aktif (Kotak Centang)</h3>
+                        <p class="text-xs text-gray-500">Jika centang kelas dihapus, siswa kelas tersebut disembunyikan.</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2" id="kelas-checkbox-container">
@@ -1556,105 +1556,40 @@
 
         async function saveClassFilters() {
             const checkboxes = document.querySelectorAll('.class-filter-cb');
+            const payload = [];
             const selectedClasses = [];
-
             checkboxes.forEach(cb => {
-                if (cb.checked && VALID_CLASS_NAMES.includes(String(cb.value).trim())) {
-                    selectedClasses.push(String(cb.value).trim());
-                }
+                const kelas = String(cb.value).trim();
+                if (!VALID_CLASS_NAMES.includes(kelas)) return;
+                const status = cb.checked ? 'iya' : 'tidak';
+                payload.push({ sheet: 'Pengaturan', values: [kelas, status] });
+                if (cb.checked) selectedClasses.push(kelas);
             });
-
-            // Pengaturan kelas adalah PENGATURAN BERSAMA.
-            // Google Sheets menjadi sumber utama, bukan localStorage masing-masing HP.
-            const newActiveClasses = selectedClasses;
-            const newUpdatedAt = Date.now();
-
+            if (!appsScriptUrl) await loadAppsScriptUrlFromC2();
             if (!appsScriptUrl) {
-                await loadAppsScriptUrlFromC2();
+                showToast('GAGAL: URL Apps Script belum tersedia di Pengaturan!C2.', 'error');
+                initClassCheckboxes(); return;
             }
+            const ok = await sendDataToAppsScript(payload, 'Pengaturan kelas berhasil disimpan!');
+            if (!ok) { initClassCheckboxes(); return; }
+            activeClasses = selectedClasses;
+            updateDashboard(); renderSiswa(); renderRekapKehadiran(); renderPrestasi(); renderHasil();
+        }
 
-            if (!appsScriptUrl) {
-                showToast('GAGAL: Apps Script URL belum tersedia. Pengaturan kelas TIDAK disimpan bersama.', 'error');
-                initClassCheckboxes();
-                return;
-            }
-
-            const ok = await sendDataToAppsScript(VALID_CLASS_NAMES.map(kelas => ({
-                sheet: 'Pengaturan',
-                values: [kelas, newActiveClasses.includes(kelas) ? 'iya' : 'tidak']
-            })), 'Pengaturan kelas berhasil disimpan untuk SEMUA pengguna!');
-
-            if (!ok) {
-                initClassCheckboxes();
-                return;
-            }
-
-            activeClasses = [...newActiveClasses];
-            activeClassesUpdatedAt = newUpdatedAt;
-
-            // Cache lokal hanya sebagai cache tampilan, bukan sumber kebenaran.
-            localStorage.setItem('pramuka_active_classes', JSON.stringify(activeClasses));
-            localStorage.setItem('pramuka_active_classes_updated_at', String(activeClassesUpdatedAt));
-
-            updateDashboard();
-            renderSiswa();
-            renderRekapKehadiran();
-            renderPrestasi();
-            renderHasil();
+        // Sinkronisasi status kelas langsung dari Pengaturan A2:B5.
+        async function syncSharedClassFilters() {
+            try {
+                const settings = await getSettingsMap();
+                const remoteClasses = VALID_CLASS_NAMES.filter(k => settings[k] === 'iya');
+                if (JSON.stringify(activeClasses) !== JSON.stringify(remoteClasses)) {
+                    activeClasses = remoteClasses;
+                    initClassCheckboxes(); updateDashboard(); renderSiswa(); renderRekapKehadiran(); renderPrestasi(); renderHasil();
+                }
+            } catch (e) { console.log('Gagal sinkronisasi kelas:', e); }
         }
 
         function getFilteredSiswaList() {
             return siswaList.filter(s => isActiveClass(s.kelas));
-        }
-
-        // Sinkronisasi pengaturan kelas bersama secara berkala.
-        async function syncSharedClassFilters() {
-            try {
-                const rows = await fetchDataFromSheet('Pengaturan', true);
-                if (!Array.isArray(rows) || rows.length === 0) return;
-
-                let remoteClasses = null;
-                let remoteUpdatedAt = 0;
-                const settingRows = getDataRows(rows, ['Key','Value','Keterangan']);
-
-                for (let i = 0; i < settingRows.length; i++) {
-                    const r = settingRows[i];
-                    const key = r?.c?.[0]?.v != null ? String(r.c[0].v).trim() : '';
-                    const val = r?.c?.[1]?.v != null ? String(r.c[1].v).trim() : '';
-
-                    if (key === 'activeClasses' && val) {
-                        try {
-                            const parsed = JSON.parse(val);
-                            if (Array.isArray(parsed)) {
-                                remoteClasses = parsed.map(k => String(k).trim())
-                                    .filter(k => VALID_CLASS_NAMES.includes(k));
-                            }
-                        } catch (e) {}
-                    }
-                    if (key === 'activeClassesUpdatedAt') remoteUpdatedAt = Number(val) || 0;
-                }
-
-                if (!remoteClasses) return;
-
-                const changed = JSON.stringify(activeClasses) !== JSON.stringify(remoteClasses) ||
-                    Number(activeClassesUpdatedAt || 0) !== Number(remoteUpdatedAt || 0);
-
-                if (changed) {
-                    activeClasses = [...remoteClasses];
-                    activeClassesUpdatedAt = remoteUpdatedAt || Date.now();
-                    localStorage.setItem('pramuka_active_classes', JSON.stringify(activeClasses));
-                    localStorage.setItem('pramuka_active_classes_updated_at', String(activeClassesUpdatedAt));
-                    initClassCheckboxes();
-                    updateDashboard();
-                    renderSiswa();
-                    renderRekapKehadiran();
-                    renderPrestasi();
-                    renderHasil();
-                    showToast('Pengaturan kelas bersama diperbarui.', 'info');
-                }
-            } catch (e) {
-                console.log('Gagal sinkronisasi pengaturan kelas bersama:', e);
-            }
         }
 
         function getNextSaturday() {
@@ -1800,81 +1735,41 @@
         async function getSettingsMap() {
             const rows = await fetchDataFromSheet('Pengaturan', true);
             if (!Array.isArray(rows)) throw new Error('Sheet Pengaturan tidak dapat dibaca');
-
             const settings = {};
             for (const row of rows) {
-                const key = settingCell(row, 0);
-                if (!key || key.toLowerCase() === 'key') continue;
-                settings[key.toLowerCase()] = {
-                    value: settingCell(row, 1),
-                    webAppUrl: settingCell(row, 2)
-                };
+                const kelas = settingCell(row, 0);
+                const status = settingCell(row, 1).toLowerCase();
+                if (!VALID_CLASS_NAMES.includes(kelas)) continue;
+                settings[kelas] = status;
+                const url = settingCell(row, 2);
+                if (url && /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec(?:[?#].*)?$/i.test(url)) appsScriptUrl = url;
             }
             return settings;
         }
 
         async function ensureAppsScriptUrl() {
-            if (appsScriptUrl && /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/i.test(appsScriptUrl)) {
-                return true;
-            }
-            try {
-                const settings = await getSettingsMap();
-                const row = settings['activeclasses'] || {};
-                const url = String(row.webAppUrl || '').trim();
-                if (!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec(?:[?#].*)?$/i.test(url)) {
-                    throw new Error('Web App URL tidak valid atau kosong');
-                }
-                appsScriptUrl = url;
-                return true;
-            } catch (e) {
-                console.error('Gagal mendapatkan Apps Script URL:', e);
-                appsScriptUrl = '';
-                return false;
-            }
+            if (appsScriptUrl && /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/i.test(appsScriptUrl)) return true;
+            try { await getSettingsMap(); return !!appsScriptUrl; }
+            catch (e) { appsScriptUrl = ''; return false; }
         }
 
         async function loadActiveClassesKeyValue() {
             try {
                 activeClasses = [];
-                activeClassesUpdatedAt = 0;
-                initClassCheckboxes();
-
                 const settings = await getSettingsMap();
-                const row = settings['activeclasses'];
-                if (!row || !row.value) throw new Error('Key activeClasses tidak ditemukan');
-
-                const parsed = JSON.parse(row.value);
-                if (!Array.isArray(parsed)) throw new Error('Value activeClasses tidak valid');
-
-                activeClasses = parsed
-                    .map(x => String(x).trim())
-                    .filter(x => VALID_CLASS_NAMES.includes(x));
-
-                if (window.__activeClassesRetry) { clearTimeout(window.__activeClassesRetry); window.__activeClassesRetry = null; }
-
-                const stamp = settings['activeclassesupdatedat']?.value;
-                activeClassesUpdatedAt = Number(stamp) || Date.now();
-
-                if (row.webAppUrl && /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/i.test(row.webAppUrl)) {
-                    appsScriptUrl = row.webAppUrl;
-                }
-
+                activeClasses = VALID_CLASS_NAMES.filter(k => settings[k] === 'iya');
                 initClassCheckboxes();
                 return true;
             } catch (e) {
                 console.error('Gagal memuat kelas:', e);
                 activeClasses = [];
                 initClassCheckboxes();
-                showToast('Gagal memuat kelas: ' + (e.message || e) + '. Coba lagi 3 detik...', 'error');
-                if (!window.__activeClassesRetry) { window.__activeClassesRetry = setTimeout(() => { window.__activeClassesRetry = null; loadActiveClassesKeyValue(); }, 3000); }
+                showToast('Gagal memuat kelas: ' + (e.message || e), 'error');
                 return false;
             }
         }
 
-
-        async function loadAppsScriptUrlFromC2() {
-            return await ensureAppsScriptUrl();
-        }
+        async function loadAppsScriptUrlFromC2() { return await ensureAppsScriptUrl(); }
 
         async function sendDataToAppsScript(payloadList, successMsg) {
             if(!appsScriptUrl) {
