@@ -180,7 +180,7 @@
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">Pilih Foto (Hanya PNG / JPG)</label>
                     <input type="file" id="input-foto-dok" accept=".png, .jpg, .jpeg" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pramuka-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pramuka-50 file:text-pramuka-700 hover:file:bg-pramuka-100">
-                    <p class="text-[11px] text-gray-400 mt-1">*Foto akan dikompresi secara otomatis agar cepat dimuat</p>
+                    <p class="text-[11px] text-gray-400 mt-1">*Foto akan dikirim ke Google Drive dan tidak disimpan di browser</p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">Keterangan Kegiatan</label>
@@ -999,7 +999,7 @@
         let siswaList = JSON.parse(localStorage.getItem('pramuka_app_siswa')) || [];
         let prestasiList = JSON.parse(localStorage.getItem('pramuka_app_prestasi')) || [];
         let informasiList = JSON.parse(localStorage.getItem('pramuka_app_informasi')) || [];
-        let dokumentasiList = JSON.parse(localStorage.getItem('pramuka_app_dokumentasi')) || [];
+        let dokumentasiList = []; // Sumber utama dokumentasi: Google Drive
 
         let pertemuanList = [];
         let remotePertemuanList = [];
@@ -1015,7 +1015,7 @@
         let adminPassword = localStorage.getItem('pramuka_admin_password') || '123';
 
         let activeClasses = [];
-        
+        let activeClassesUpdatedAt = Number(localStorage.getItem('pramuka_active_classes_updated_at') || 0);
 
         let siswaLoadFailed = false;
         let siswaSheetLoaded = false;
@@ -1034,7 +1034,7 @@
         function isValidMeetingDate(value) {
             if (value === null || value === undefined) return false;
             const str = String(value).trim();
-            if (!str) return false;
+            if (!str || str === 'activeClasses') return false;
             return /^\d{4}-\d{2}-\d{2}$/.test(str) ||
                    /^\d{2}\/\d{2}\/\d{4}$/.test(str) ||
                    /^\d{4}-\d{2}-\d{2}T/.test(str);
@@ -1060,7 +1060,7 @@
             }
 
             const str = String(value).trim();
-            if (!str) return null;
+            if (!str || str === 'activeClasses') return null;
             if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
             if (/^\d{4}-\d{2}-\d{2}T/.test(str)) return str.substring(0, 10);
 
@@ -1373,33 +1373,27 @@
             const ketInput = document.getElementById('input-ket-dok').value.trim();
             const button = document.querySelector('#modal-tambah-dokumentasi button[onclick*="simpanDokumentasi"]');
 
-            if (fileInput.files.length === 0) {
+            if (!fileInput || fileInput.files.length === 0) {
                 setDokUploadStatus('Silakan pilih foto terlebih dahulu.', 'warning');
                 showToast('Silakan pilih file foto terlebih dahulu!', 'warning');
                 return;
             }
 
+            if (!appsScriptUrl) await loadAppsScriptUrlFromC2();
             if (!appsScriptUrl) {
-                await loadAppsScriptUrlFromC2();
-            }
-
-            if (!appsScriptUrl) {
-                setDokUploadStatus('GAGAL: URL Apps Script tidak ditemukan pada Pengaturan!C2.', 'error');
-                showToast('URL Apps Script belum dikonfigurasi di Pengaturan!C2.', 'error');
+                setDokUploadStatus('URL Apps Script tidak ditemukan pada Pengaturan!C2.', 'error');
+                showToast('URL Apps Script belum dikonfigurasi.', 'error');
                 return;
             }
 
             const file = fileInput.files[0];
             const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
             if (!validTypes.includes(file.type)) {
-                setDokUploadStatus('GAGAL: format foto harus PNG, JPG/JPEG, atau WEBP.', 'error');
-                showToast('Format foto tidak didukung!', 'error');
+                setDokUploadStatus('Format foto harus PNG, JPG/JPEG, atau WEBP.', 'error');
                 return;
             }
-
             if (file.size > 12 * 1024 * 1024) {
-                setDokUploadStatus(`GAGAL: ukuran foto ${formatBytes(file.size)} terlalu besar. Maksimal 12 MB.`, 'error');
-                showToast('Ukuran foto terlalu besar!', 'error');
+                setDokUploadStatus(`Ukuran foto ${formatBytes(file.size)} terlalu besar. Maksimal 12 MB.`, 'error');
                 return;
             }
 
@@ -1409,11 +1403,10 @@
                 button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Mengunggah...</span>';
             }
 
-            setDokUploadStatus('1/3 Menyiapkan dan mengecilkan foto...', 'info');
-
             try {
+                setDokUploadStatus('1/3 Menyiapkan foto...', 'info');
                 const dataUrl = await compressImageForUpload(file);
-                setDokUploadStatus('2/3 Mengirim foto ke Google Drive melalui Apps Script...', 'info');
+                setDokUploadStatus('2/3 Mengirim foto ke Google Drive...', 'info');
 
                 const response = await fetch(appsScriptUrl, {
                     method: 'POST',
@@ -1427,45 +1420,31 @@
                     })
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const result = await response.json();
-                console.log('Respons Apps Script uploadDokumentasi:', result);
                 if (!result || !result.success) {
                     throw new Error(result && result.error ? result.error : 'Server tidak mengonfirmasi penyimpanan file.');
                 }
-                if (!result.file || !result.file.id || !result.file.url) {
-                    throw new Error('Respons upload tidak lengkap: objek file (id/url) tidak ditemukan. Perbarui deployment Apps Script.');
-                }
 
-                const doc = {
-                    id: result.file.id,
-                    url: result.file.url,
-                    ket: result.file.keterangan || ketInput || 'Dokumentasi Kegiatan Pramuka',
-                    tanggal: result.file.tanggal || new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'}),
-                    fileId: result.file.id,
-                    driveUrl: result.file.driveUrl || ''
-                };
+                setDokUploadStatus('3/3 Berhasil. Memuat ulang galeri langsung dari Google Drive...', 'success');
 
-                dokumentasiList = [doc, ...dokumentasiList.filter(x => String(x.id) !== String(doc.id))];
-                localStorage.setItem('pramuka_app_dokumentasi', JSON.stringify(dokumentasiList));
-                renderDokumentasi();
+                // Jangan menyimpan daftar foto ke localStorage.
+                // Google Drive adalah sumber data utama.
+                const loaded = await loadDokumentasiFromDrive(true);
+                if (!loaded) throw new Error('Foto berhasil dikirim, tetapi daftar foto dari Google Drive gagal dimuat ulang.');
 
-                setDokUploadStatus(`3/3 BERHASIL: foto tersimpan di Google Drive. File ID: ${doc.fileId}`, 'success');
                 showToast('Foto berhasil disimpan ke Google Drive!', 'success');
+                setTimeout(() => closeModalDokumentasi(), 900);
 
-                setTimeout(() => closeModalDokumentasi(), 1200);
             } catch (error) {
                 console.error('Upload Dokumentasi gagal:', error);
                 const msg = error && error.message ? error.message : String(error);
-                setDokUploadStatus(`GAGAL UPLOAD: ${msg}. Foto TIDAK dianggap tersimpan. Periksa Pengaturan!C3, izin Drive, dan deployment Apps Script.`, 'error');
+                setDokUploadStatus('GAGAL UPLOAD: ' + msg, 'error');
                 showToast('Upload foto gagal: ' + msg, 'error');
             } finally {
                 if (button) {
                     button.disabled = false;
-                    button.innerHTML = button.dataset.originalText || '<i class="fa-solid fa-cloud-arrow-up"></i><span>Simpan</span>';
+                    button.innerHTML = button.dataset.originalText || '<i class="fa-solid fa-cloud-arrow-up"></i><span>Upload</span>';
                 }
             }
         }
@@ -1473,13 +1452,13 @@
         function compressImageForUpload(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.onerror = () => reject(new Error('Gagal membaca file foto dari perangkat.'));
+                reader.onerror = () => reject(new Error('Gagal membaca foto dari perangkat.'));
                 reader.onload = event => {
                     const img = new Image();
-                    img.onerror = () => reject(new Error('File foto tidak dapat dibaca sebagai gambar.'));
+                    img.onerror = () => reject(new Error('File tidak dapat dibaca sebagai gambar.'));
                     img.onload = () => {
-                        const MAX_WIDTH = 1400;
-                        const MAX_HEIGHT = 1400;
+                        const MAX_WIDTH = 1600;
+                        const MAX_HEIGHT = 1600;
                         let width = img.width;
                         let height = img.height;
                         if (width > height && width > MAX_WIDTH) {
@@ -1492,9 +1471,9 @@
                         const canvas = document.createElement('canvas');
                         canvas.width = width;
                         canvas.height = height;
-                        const ctx = canvas.getContext('2d', {alpha:false});
+                        const ctx = canvas.getContext('2d', { alpha: false });
                         ctx.drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.78));
+                        resolve(canvas.toDataURL('image/jpeg', 0.82));
                     };
                     img.src = event.target.result;
                 };
@@ -1502,52 +1481,72 @@
             });
         }
 
-        async function loadDokumentasiFromDrive() {
+        async function loadDokumentasiFromDrive(forceRender = true) {
+            if (!appsScriptUrl) await loadAppsScriptUrlFromC2();
             if (!appsScriptUrl) return false;
+
             try {
-                const response = await fetch(appsScriptUrl + '?action=dokumentasi&_=' + Date.now(), { cache: 'no-store' });
+                const response = await fetch(
+                    appsScriptUrl + '?action=dokumentasi&_=' + Date.now(),
+                    { cache: 'no-store' }
+                );
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
                 const result = await response.json();
-                if (!result.success) throw new Error(result.error || 'Gagal membaca dokumentasi dari Drive.');
-                dokumentasiList = Array.isArray(result.data) ? result.data : [];
-                localStorage.setItem('pramuka_app_dokumentasi', JSON.stringify(dokumentasiList));
-                renderDokumentasi();
+                if (!result || !result.success) {
+                    throw new Error(result && result.error ? result.error : 'Gagal membaca dokumentasi dari Drive.');
+                }
+
+                // Hanya mengganti daftar jika server benar-benar mengembalikan array.
+                if (!Array.isArray(result.data)) {
+                    throw new Error('Respons dokumentasi dari server tidak valid.');
+                }
+
+                dokumentasiList = result.data;
+                if (forceRender) renderDokumentasi();
                 return true;
+
             } catch (e) {
                 console.error('Gagal membaca Dokumentasi Drive:', e);
+                // Jangan mengosongkan galeri jika jaringan/server sedang bermasalah.
+                if (forceRender && dokumentasiList.length > 0) renderDokumentasi();
                 return false;
             }
         }
 
         function renderDokumentasi() {
             const container = document.getElementById('dokumentasi-container');
-            if(!container) return;
+            if (!container) return;
             container.innerHTML = '';
 
-            if(dokumentasiList.length === 0) {
-                container.innerHTML = `<div class="col-span-full bg-white p-8 rounded-xl border border-gray-100 text-center text-gray-400">Belum ada foto dokumentasi yang diupload.</div>`;
+            if (!dokumentasiList.length) {
+                container.innerHTML = `<div class="col-span-full bg-white p-8 rounded-xl border border-gray-100 text-center text-gray-400">Belum ada foto dokumentasi yang tersimpan di Google Drive.</div>`;
                 return;
             }
 
             dokumentasiList.forEach(doc => {
+                const safeUrl = String(doc.url || doc.driveUrl || '').replace(/'/g, '%27');
+                const safeKet = String(doc.ket || 'Dokumentasi Kegiatan').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 container.innerHTML += `
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group">
-                        <div class="aspect-[4/3] w-full bg-gray-100 overflow-hidden relative cursor-pointer" onclick="window.open('${doc.url}', '_blank')">
-                            <img src="${doc.url}" alt="${doc.ket}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                        <div class="aspect-[4/3] w-full bg-gray-100 overflow-hidden relative cursor-pointer" onclick="window.open('${safeUrl}', '_blank')">
+                            <img src="${safeUrl}" alt="${safeKet}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.style.display='none'; this.parentElement.classList.add('flex','items-center','justify-center'); this.parentElement.insertAdjacentHTML('beforeend','<i class=\"fa-solid fa-image text-gray-300 text-4xl\"></i>');">
                             <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
                                 <i class="fa-solid fa-magnifying-glass-plus text-white text-2xl drop-shadow-md"></i>
                             </div>
                         </div>
                         <div class="p-3 border-t border-gray-50">
-                            <h4 class="text-sm font-bold text-gray-800 line-clamp-2 leading-tight">${doc.ket}</h4>
-                            <p class="text-[11px] text-gray-500 mt-1 flex items-center gap-1.5 font-medium"><i class="fa-regular fa-calendar text-pramuka-600"></i>${doc.tanggal}</p>
+                            <h4 class="text-sm font-bold text-gray-800 line-clamp-2 leading-tight">${safeKet}</h4>
+                            <p class="text-[11px] text-gray-500 mt-1 flex items-center gap-1.5 font-medium"><i class="fa-regular fa-calendar text-pramuka-600"></i>${doc.tanggal || ''}</p>
                         </div>
                     </div>
                 `;
             });
         }
 
-        function initClassCheckboxes() {
+        
+
+function initClassCheckboxes() {
             const checkboxes = document.querySelectorAll('.class-filter-cb');
             checkboxes.forEach(cb => {
                 cb.checked = activeClasses.includes(cb.value);
@@ -1556,40 +1555,105 @@
 
         async function saveClassFilters() {
             const checkboxes = document.querySelectorAll('.class-filter-cb');
-            const payload = [];
             const selectedClasses = [];
-            checkboxes.forEach(cb => {
-                const kelas = String(cb.value).trim();
-                if (!VALID_CLASS_NAMES.includes(kelas)) return;
-                const status = cb.checked ? 'iya' : 'tidak';
-                payload.push({ sheet: 'Pengaturan', values: [kelas, status] });
-                if (cb.checked) selectedClasses.push(kelas);
-            });
-            if (!appsScriptUrl) await loadAppsScriptUrlFromC2();
-            if (!appsScriptUrl) {
-                showToast('GAGAL: URL Apps Script belum tersedia di Pengaturan!C2.', 'error');
-                initClassCheckboxes(); return;
-            }
-            const ok = await sendDataToAppsScript(payload, 'Pengaturan kelas berhasil disimpan!');
-            if (!ok) { initClassCheckboxes(); return; }
-            activeClasses = selectedClasses;
-            updateDashboard(); renderSiswa(); renderRekapKehadiran(); renderPrestasi(); renderHasil();
-        }
 
-        // Sinkronisasi status kelas langsung dari Pengaturan A2:B5.
-        async function syncSharedClassFilters() {
-            try {
-                const settings = await getSettingsMap();
-                const remoteClasses = VALID_CLASS_NAMES.filter(k => settings[k] === 'iya');
-                if (JSON.stringify(activeClasses) !== JSON.stringify(remoteClasses)) {
-                    activeClasses = remoteClasses;
-                    initClassCheckboxes(); updateDashboard(); renderSiswa(); renderRekapKehadiran(); renderPrestasi(); renderHasil();
+            checkboxes.forEach(cb => {
+                if (cb.checked && VALID_CLASS_NAMES.includes(String(cb.value).trim())) {
+                    selectedClasses.push(String(cb.value).trim());
                 }
-            } catch (e) { console.log('Gagal sinkronisasi kelas:', e); }
+            });
+
+            // Pengaturan kelas adalah PENGATURAN BERSAMA.
+            // Google Sheets menjadi sumber utama, bukan localStorage masing-masing HP.
+            const newActiveClasses = selectedClasses;
+            const newUpdatedAt = Date.now();
+
+            if (!appsScriptUrl) {
+                await loadAppsScriptUrlFromC2();
+            }
+
+            if (!appsScriptUrl) {
+                showToast('GAGAL: Apps Script URL belum tersedia. Pengaturan kelas TIDAK disimpan bersama.', 'error');
+                initClassCheckboxes();
+                return;
+            }
+
+            const ok = await sendDataToAppsScript([
+                { sheet: 'Pengaturan', values: ['activeClasses', JSON.stringify(newActiveClasses)] },
+                { sheet: 'Pengaturan', values: ['activeClassesUpdatedAt', String(newUpdatedAt)] }
+            ], 'Pengaturan kelas berhasil disimpan untuk SEMUA pengguna!');
+
+            if (!ok) {
+                initClassCheckboxes();
+                return;
+            }
+
+            activeClasses = [...newActiveClasses];
+            activeClassesUpdatedAt = newUpdatedAt;
+
+            // Cache lokal hanya sebagai cache tampilan, bukan sumber kebenaran.
+            localStorage.setItem('pramuka_active_classes', JSON.stringify(activeClasses));
+            localStorage.setItem('pramuka_active_classes_updated_at', String(activeClassesUpdatedAt));
+
+            updateDashboard();
+            renderSiswa();
+            renderRekapKehadiran();
+            renderPrestasi();
+            renderHasil();
         }
 
         function getFilteredSiswaList() {
             return siswaList.filter(s => isActiveClass(s.kelas));
+        }
+
+        // Sinkronisasi pengaturan kelas bersama secara berkala.
+        async function syncSharedClassFilters() {
+            try {
+                const rows = await fetchDataFromSheet('Pengaturan', true);
+                if (!Array.isArray(rows) || rows.length === 0) return;
+
+                let remoteClasses = null;
+                let remoteUpdatedAt = 0;
+                const settingRows = getDataRows(rows, ['Key','Value','Keterangan']);
+
+                for (let i = 0; i < settingRows.length; i++) {
+                    const r = settingRows[i];
+                    const key = r?.c?.[0]?.v != null ? String(r.c[0].v).trim() : '';
+                    const val = r?.c?.[1]?.v != null ? String(r.c[1].v).trim() : '';
+
+                    if (key === 'activeClasses' && val) {
+                        try {
+                            const parsed = JSON.parse(val);
+                            if (Array.isArray(parsed)) {
+                                remoteClasses = parsed.map(k => String(k).trim())
+                                    .filter(k => VALID_CLASS_NAMES.includes(k));
+                            }
+                        } catch (e) {}
+                    }
+                    if (key === 'activeClassesUpdatedAt') remoteUpdatedAt = Number(val) || 0;
+                }
+
+                if (!remoteClasses) return;
+
+                const changed = JSON.stringify(activeClasses) !== JSON.stringify(remoteClasses) ||
+                    Number(activeClassesUpdatedAt || 0) !== Number(remoteUpdatedAt || 0);
+
+                if (changed) {
+                    activeClasses = [...remoteClasses];
+                    activeClassesUpdatedAt = remoteUpdatedAt || Date.now();
+                    localStorage.setItem('pramuka_active_classes', JSON.stringify(activeClasses));
+                    localStorage.setItem('pramuka_active_classes_updated_at', String(activeClassesUpdatedAt));
+                    initClassCheckboxes();
+                    updateDashboard();
+                    renderSiswa();
+                    renderRekapKehadiran();
+                    renderPrestasi();
+                    renderHasil();
+                    showToast('Pengaturan kelas bersama diperbarui.', 'info');
+                }
+            } catch (e) {
+                console.log('Gagal sinkronisasi pengaturan kelas bersama:', e);
+            }
         }
 
         function getNextSaturday() {
@@ -1646,7 +1710,7 @@
             }
             if(tabId === 'prestasi') renderPrestasi();
             if(tabId === 'informasi') renderInformasi();
-            if(tabId === 'dokumentasi') renderDokumentasi();
+            if(tabId === 'dokumentasi') { renderDokumentasi(); loadDokumentasiFromDrive(true); }
             if(tabId === 'hasil') renderHasil();
             if(tabId === 'settings') initSettingsForm();
         }
@@ -1726,8 +1790,8 @@
         // lalu fallback mencari URL /exec di seluruh data Pengaturan.
         // Ini aman baik GVIZ mengirim header maupun tidak.
         
-        // ========================= PENGATURAN STATUS KELAS =========================
-        // A2:A5 = nama kelas, B2:B5 = iya/tidak, C2 = URL Web App.
+        // ========================= PENGATURAN KEY-VALUE =========================
+        // Tidak bergantung pada nomor baris. Header A1:C1 diabaikan otomatis.
         function settingCell(row, index) {
             return String(row?.c?.[index]?.v ?? row?.c?.[index]?.f ?? '').trim();
         }
@@ -1735,41 +1799,81 @@
         async function getSettingsMap() {
             const rows = await fetchDataFromSheet('Pengaturan', true);
             if (!Array.isArray(rows)) throw new Error('Sheet Pengaturan tidak dapat dibaca');
+
             const settings = {};
             for (const row of rows) {
-                const kelas = settingCell(row, 0);
-                const status = settingCell(row, 1).toLowerCase();
-                if (!VALID_CLASS_NAMES.includes(kelas)) continue;
-                settings[kelas] = status;
-                const url = settingCell(row, 2);
-                if (url && /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec(?:[?#].*)?$/i.test(url)) appsScriptUrl = url;
+                const key = settingCell(row, 0);
+                if (!key || key.toLowerCase() === 'key') continue;
+                settings[key.toLowerCase()] = {
+                    value: settingCell(row, 1),
+                    webAppUrl: settingCell(row, 2)
+                };
             }
             return settings;
         }
 
         async function ensureAppsScriptUrl() {
-            if (appsScriptUrl && /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/i.test(appsScriptUrl)) return true;
-            try { await getSettingsMap(); return !!appsScriptUrl; }
-            catch (e) { appsScriptUrl = ''; return false; }
-        }
-
-        async function loadClassStatusFromSheet() {
+            if (appsScriptUrl && /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/i.test(appsScriptUrl)) {
+                return true;
+            }
             try {
-                activeClasses = [];
                 const settings = await getSettingsMap();
-                activeClasses = VALID_CLASS_NAMES.filter(k => settings[k] === 'iya');
-                initClassCheckboxes();
+                const row = settings['activeclasses'] || {};
+                const url = String(row.webAppUrl || '').trim();
+                if (!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec(?:[?#].*)?$/i.test(url)) {
+                    throw new Error('Web App URL tidak valid atau kosong');
+                }
+                appsScriptUrl = url;
                 return true;
             } catch (e) {
-                console.error('Gagal membaca status kelas:', e);
-                activeClasses = [];
-                initClassCheckboxes();
-                showToast('Gagal membaca status kelas: ' + (e.message || e), 'error');
+                console.error('Gagal mendapatkan Apps Script URL:', e);
+                appsScriptUrl = '';
                 return false;
             }
         }
 
-        async function loadAppsScriptUrlFromC2() { return await ensureAppsScriptUrl(); }
+        async function loadActiveClassesKeyValue() {
+            try {
+                activeClasses = [];
+                activeClassesUpdatedAt = 0;
+                initClassCheckboxes();
+
+                const settings = await getSettingsMap();
+                const row = settings['activeclasses'];
+                if (!row || !row.value) throw new Error('Key activeClasses tidak ditemukan');
+
+                const parsed = JSON.parse(row.value);
+                if (!Array.isArray(parsed)) throw new Error('Value activeClasses tidak valid');
+
+                activeClasses = parsed
+                    .map(x => String(x).trim())
+                    .filter(x => VALID_CLASS_NAMES.includes(x));
+
+                if (window.__activeClassesRetry) { clearTimeout(window.__activeClassesRetry); window.__activeClassesRetry = null; }
+
+                const stamp = settings['activeclassesupdatedat']?.value;
+                activeClassesUpdatedAt = Number(stamp) || Date.now();
+
+                if (row.webAppUrl && /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/i.test(row.webAppUrl)) {
+                    appsScriptUrl = row.webAppUrl;
+                }
+
+                initClassCheckboxes();
+                return true;
+            } catch (e) {
+                console.error('Gagal memuat kelas:', e);
+                activeClasses = [];
+                initClassCheckboxes();
+                showToast('Gagal memuat kelas: ' + (e.message || e) + '. Coba lagi 3 detik...', 'error');
+                if (!window.__activeClassesRetry) { window.__activeClassesRetry = setTimeout(() => { window.__activeClassesRetry = null; loadActiveClassesKeyValue(); }, 3000); }
+                return false;
+            }
+        }
+
+
+        async function loadAppsScriptUrlFromC2() {
+            return await ensureAppsScriptUrl();
+        }
 
         async function sendDataToAppsScript(payloadList, successMsg) {
             if(!appsScriptUrl) {
@@ -1800,7 +1904,7 @@
         }
 
         async function loadAllData(isAuto = false) {
-            await loadClassStatusFromSheet();
+            await loadActiveClassesKeyValue();
             await loadAppsScriptUrlFromC2();
 
             const [rowsSiswa, rowsRekapAbsen, rowsLogAbsen, rowsNilaiDetail, rowsRekapNilai, rowsHasil, rowsPrestasi, rowsInformasi] = await Promise.all([
@@ -2691,6 +2795,14 @@
             if (view === 'nilai') renderRekapNilai();
             if (view === 'hasil') renderHasil();
         }
+
+        // Sinkronisasi galeri: Drive tetap menjadi sumber utama.
+        setInterval(() => {
+            const tab = document.getElementById('tab-dokumentasi');
+            if (tab && !tab.classList.contains('hidden') && navigator.onLine) {
+                loadDokumentasiFromDrive(true);
+            }
+        }, 30000);
 
         document.addEventListener('DOMContentLoaded', () => {
             setupHasilRekapMenu();
