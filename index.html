@@ -178,9 +178,21 @@
             </div>
             <div class="space-y-3">
                 <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Pilih Foto (Hanya PNG / JPG)</label>
-                    <input type="file" id="input-foto-dok" accept=".png, .jpg, .jpeg" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pramuka-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pramuka-50 file:text-pramuka-700 hover:file:bg-pramuka-100">
-                    <p class="text-[11px] text-gray-400 mt-1">*Foto akan dikompresi secara otomatis agar cepat dimuat</p>
+                    <label class="block text-xs font-bold text-gray-700 mb-2">Sumber Dokumentasi</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" id="mode-upload-foto" onclick="pilihModeDokumentasi('foto')" class="px-3 py-2 rounded-xl bg-pramuka-700 text-white text-xs font-bold">📁 Upload Foto</button>
+                        <button type="button" id="mode-upload-link" onclick="pilihModeDokumentasi('link')" class="px-3 py-2 rounded-xl bg-gray-100 text-gray-700 text-xs font-bold">🔗 Masukkan Link</button>
+                    </div>
+                </div>
+                <div id="dok-mode-foto">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Pilih Foto (PNG / JPG / WEBP)</label>
+                    <input type="file" id="input-foto-dok" accept=".png,.jpg,.jpeg,.webp" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pramuka-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pramuka-50 file:text-pramuka-700 hover:file:bg-pramuka-100">
+                    <p class="text-[11px] text-gray-400 mt-1">Foto disimpan ke Google Drive.</p>
+                </div>
+                <div id="dok-mode-link" class="hidden">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Link Foto</label>
+                    <input type="url" id="input-link-dok" placeholder="https://contoh.com/foto.jpg" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pramuka-600">
+                    <p class="text-[11px] text-gray-400 mt-1">Masukkan link gambar yang bisa diakses.</p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">Keterangan Kegiatan</label>
@@ -1332,9 +1344,26 @@
         }
 
         // FUNGSI MODAL DOKUMENTASI - UPLOAD LANGSUNG KE GOOGLE DRIVE
+        let modeDokumentasi = 'foto';
+
+        function pilihModeDokumentasi(mode) {
+            modeDokumentasi = mode === 'link' ? 'link' : 'foto';
+            const foto = document.getElementById('dok-mode-foto');
+            const link = document.getElementById('dok-mode-link');
+            const btnFoto = document.getElementById('mode-upload-foto');
+            const btnLink = document.getElementById('mode-upload-link');
+            if (foto) foto.classList.toggle('hidden', modeDokumentasi !== 'foto');
+            if (link) link.classList.toggle('hidden', modeDokumentasi !== 'link');
+            if (btnFoto) btnFoto.className = 'px-3 py-2 rounded-xl text-xs font-bold ' + (modeDokumentasi === 'foto' ? 'bg-pramuka-700 text-white' : 'bg-gray-100 text-gray-700');
+            if (btnLink) btnLink.className = 'px-3 py-2 rounded-xl text-xs font-bold ' + (modeDokumentasi === 'link' ? 'bg-pramuka-700 text-white' : 'bg-gray-100 text-gray-700');
+        }
+
         function bukaModalDokumentasi() {
             document.getElementById('input-foto-dok').value = '';
             document.getElementById('input-ket-dok').value = '';
+            const linkInput = document.getElementById('input-link-dok');
+            if (linkInput) linkInput.value = '';
+            pilihModeDokumentasi('foto');
             const status = document.getElementById('dok-upload-status');
             if (status) status.innerHTML = '';
             const modal = document.getElementById('modal-tambah-dokumentasi');
@@ -1372,6 +1401,40 @@
             const fileInput = document.getElementById('input-foto-dok');
             const ketInput = document.getElementById('input-ket-dok').value.trim();
             const button = document.querySelector('#modal-tambah-dokumentasi button[onclick*="simpanDokumentasi"]');
+
+            // MODE LINK: simpan URL langsung ke Sheet Dokumentasi
+            if (modeDokumentasi === 'link') {
+                const url = String((document.getElementById('input-link-dok') || {}).value || '').trim();
+                if (!url || !/^https?:\/\//i.test(url)) {
+                    setDokUploadStatus('Masukkan link yang valid dan diawali http:// atau https://', 'warning');
+                    showToast('Link foto belum valid.', 'warning');
+                    return;
+                }
+                if (!appsScriptUrl) await loadAppsScriptUrlFromC2();
+                if (!appsScriptUrl) {
+                    setDokUploadStatus('GAGAL: URL Apps Script tidak ditemukan pada Pengaturan!C2.', 'error');
+                    return;
+                }
+                if (button) { button.disabled = true; button.dataset.originalText = button.innerHTML; button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Menyimpan...</span>'; }
+                setDokUploadStatus('Menyimpan link dokumentasi...', 'info');
+                try {
+                    const response = await fetch(appsScriptUrl, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'simpanLinkDokumentasi', url:url, keterangan: ketInput || 'Dokumentasi Kegiatan Pramuka' }) });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const result = await response.json();
+                    if (!result || !result.success || !result.file) throw new Error(result && result.error ? result.error : 'Server gagal menyimpan link.');
+                    const doc = result.file;
+                    dokumentasiList = [doc, ...dokumentasiList.filter(x => String(x.id) !== String(doc.id))];
+                    renderDokumentasi();
+                    setDokUploadStatus('BERHASIL: link foto tersimpan di Dokumentasi.', 'success');
+                    showToast('Link foto berhasil disimpan!', 'success');
+                    setTimeout(() => { closeModalDokumentasi(); loadDokumentasiFromDrive(); }, 700);
+                } catch (e) {
+                    console.error(e); setDokUploadStatus('GAGAL: ' + (e.message || e), 'error'); showToast('Gagal menyimpan link foto.', 'error');
+                } finally {
+                    if (button) { button.disabled=false; button.innerHTML=button.dataset.originalText || '<i class="fa-solid fa-upload"></i> Upload'; }
+                }
+                return;
+            }
 
             if (fileInput.files.length === 0) {
                 setDokUploadStatus('Silakan pilih foto terlebih dahulu.', 'warning');
@@ -1450,13 +1513,8 @@
                 };
 
                 dokumentasiList = [doc, ...dokumentasiList.filter(x => String(x.id) !== String(doc.id))];
+                localStorage.setItem('pramuka_app_dokumentasi', JSON.stringify(dokumentasiList));
                 renderDokumentasi();
-
-                // Sinkronkan ulang dengan Google Drive setelah upload selesai.
-                // Jika sinkronisasi gagal, foto yang sudah tampil tetap dipertahankan.
-                setTimeout(() => {
-                    loadDokumentasiFromDrive();
-                }, 1500);
 
                 setDokUploadStatus(`3/3 BERHASIL: foto tersimpan di Google Drive. File ID: ${doc.fileId}`, 'success');
                 showToast('Foto berhasil disimpan ke Google Drive!', 'success');
@@ -1508,55 +1566,18 @@
         }
 
         async function loadDokumentasiFromDrive() {
-            // Google Drive / Apps Script adalah sumber utama dokumentasi.
-            // Jika koneksi gagal atau server sementara mengirim daftar kosong,
-            // foto yang sudah tampil tidak boleh dihapus.
-            if (!appsScriptUrl) {
-                try {
-                    if (typeof loadAppsScriptUrlFromC2 === 'function') {
-                        await loadAppsScriptUrlFromC2();
-                    }
-                } catch (e) {
-                    console.warn('Gagal mengambil URL Apps Script:', e);
-                }
-            }
-
-            if (!appsScriptUrl) {
-                console.warn('URL Apps Script belum tersedia. Dokumentasi yang ada dipertahankan.');
-                return false;
-            }
-
+            if (!appsScriptUrl) return false;
             try {
-                const separator = appsScriptUrl.includes('?') ? '&' : '?';
-                const response = await fetch(
-                    appsScriptUrl + separator + 'action=dokumentasi&_=' + Date.now(),
-                    { method: 'GET', cache: 'no-store' }
-                );
-
+                const response = await fetch(appsScriptUrl + '?action=dokumentasi&_=' + Date.now(), { cache: 'no-store' });
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
                 const result = await response.json();
-                if (!result || !result.success) {
-                    throw new Error(result && result.error ? result.error : 'Gagal membaca dokumentasi dari Drive.');
-                }
-
-                if (!Array.isArray(result.data)) {
-                    throw new Error('Format data dokumentasi dari server tidak valid.');
-                }
-
-                // Jangan timpa daftar yang sudah ada dengan respons kosong sementara.
-                if (result.data.length === 0 && dokumentasiList.length > 0) {
-                    console.warn('Server mengembalikan daftar kosong. Dokumentasi yang sedang tampil dipertahankan.');
-                    return false;
-                }
-
-                dokumentasiList = result.data;
+                if (!result.success) throw new Error(result.error || 'Gagal membaca dokumentasi dari Drive.');
+                dokumentasiList = Array.isArray(result.data) ? result.data : [];
+                localStorage.setItem('pramuka_app_dokumentasi', JSON.stringify(dokumentasiList));
                 renderDokumentasi();
                 return true;
-
             } catch (e) {
                 console.error('Gagal membaca Dokumentasi Drive:', e);
-                // Jangan pernah mengosongkan dokumentasiList saat terjadi error.
                 return false;
             }
         }
