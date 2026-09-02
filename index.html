@@ -1450,8 +1450,13 @@
                 };
 
                 dokumentasiList = [doc, ...dokumentasiList.filter(x => String(x.id) !== String(doc.id))];
-                localStorage.setItem('pramuka_app_dokumentasi', JSON.stringify(dokumentasiList));
                 renderDokumentasi();
+
+                // Sinkronkan ulang dengan Google Drive setelah upload selesai.
+                // Jika sinkronisasi gagal, foto yang sudah tampil tetap dipertahankan.
+                setTimeout(() => {
+                    loadDokumentasiFromDrive();
+                }, 1500);
 
                 setDokUploadStatus(`3/3 BERHASIL: foto tersimpan di Google Drive. File ID: ${doc.fileId}`, 'success');
                 showToast('Foto berhasil disimpan ke Google Drive!', 'success');
@@ -1503,18 +1508,55 @@
         }
 
         async function loadDokumentasiFromDrive() {
-            if (!appsScriptUrl) return false;
+            // Google Drive / Apps Script adalah sumber utama dokumentasi.
+            // Jika koneksi gagal atau server sementara mengirim daftar kosong,
+            // foto yang sudah tampil tidak boleh dihapus.
+            if (!appsScriptUrl) {
+                try {
+                    if (typeof loadAppsScriptUrlFromC2 === 'function') {
+                        await loadAppsScriptUrlFromC2();
+                    }
+                } catch (e) {
+                    console.warn('Gagal mengambil URL Apps Script:', e);
+                }
+            }
+
+            if (!appsScriptUrl) {
+                console.warn('URL Apps Script belum tersedia. Dokumentasi yang ada dipertahankan.');
+                return false;
+            }
+
             try {
-                const response = await fetch(appsScriptUrl + '?action=dokumentasi&_=' + Date.now(), { cache: 'no-store' });
+                const separator = appsScriptUrl.includes('?') ? '&' : '?';
+                const response = await fetch(
+                    appsScriptUrl + separator + 'action=dokumentasi&_=' + Date.now(),
+                    { method: 'GET', cache: 'no-store' }
+                );
+
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
                 const result = await response.json();
-                if (!result.success) throw new Error(result.error || 'Gagal membaca dokumentasi dari Drive.');
-                dokumentasiList = Array.isArray(result.data) ? result.data : [];
-                localStorage.setItem('pramuka_app_dokumentasi', JSON.stringify(dokumentasiList));
+                if (!result || !result.success) {
+                    throw new Error(result && result.error ? result.error : 'Gagal membaca dokumentasi dari Drive.');
+                }
+
+                if (!Array.isArray(result.data)) {
+                    throw new Error('Format data dokumentasi dari server tidak valid.');
+                }
+
+                // Jangan timpa daftar yang sudah ada dengan respons kosong sementara.
+                if (result.data.length === 0 && dokumentasiList.length > 0) {
+                    console.warn('Server mengembalikan daftar kosong. Dokumentasi yang sedang tampil dipertahankan.');
+                    return false;
+                }
+
+                dokumentasiList = result.data;
                 renderDokumentasi();
                 return true;
+
             } catch (e) {
                 console.error('Gagal membaca Dokumentasi Drive:', e);
+                // Jangan pernah mengosongkan dokumentasiList saat terjadi error.
                 return false;
             }
         }
