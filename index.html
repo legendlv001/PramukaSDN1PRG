@@ -1015,7 +1015,7 @@
         let adminPassword = localStorage.getItem('pramuka_admin_password') || '123';
 
         let activeClasses = [];
-        let activeClassesUpdatedAt = Number(localStorage.getItem('pramuka_active_classes_updated_at') || 0);
+        
 
         let siswaLoadFailed = false;
         let siswaSheetLoaded = false;
@@ -1034,7 +1034,7 @@
         function isValidMeetingDate(value) {
             if (value === null || value === undefined) return false;
             const str = String(value).trim();
-            if (!str || str === 'activeClasses') return false;
+            if (!str) return false;
             return /^\d{4}-\d{2}-\d{2}$/.test(str) ||
                    /^\d{2}\/\d{2}\/\d{4}$/.test(str) ||
                    /^\d{4}-\d{2}-\d{2}T/.test(str);
@@ -1060,7 +1060,7 @@
             }
 
             const str = String(value).trim();
-            if (!str || str === 'activeClasses') return null;
+            if (!str) return null;
             if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
             if (/^\d{4}-\d{2}-\d{2}T/.test(str)) return str.substring(0, 10);
 
@@ -1726,8 +1726,8 @@
         // lalu fallback mencari URL /exec di seluruh data Pengaturan.
         // Ini aman baik GVIZ mengirim header maupun tidak.
         
-        // ========================= PENGATURAN KEY-VALUE =========================
-        // Tidak bergantung pada nomor baris. Header A1:C1 diabaikan otomatis.
+        // ========================= PENGATURAN STATUS KELAS =========================
+        // A2:A5 = nama kelas, B2:B5 = iya/tidak, C2 = URL Web App.
         function settingCell(row, index) {
             return String(row?.c?.[index]?.v ?? row?.c?.[index]?.f ?? '').trim();
         }
@@ -1753,7 +1753,7 @@
             catch (e) { appsScriptUrl = ''; return false; }
         }
 
-        async function loadActiveClassesKeyValue() {
+        async function loadClassStatusFromSheet() {
             try {
                 activeClasses = [];
                 const settings = await getSettingsMap();
@@ -1761,10 +1761,10 @@
                 initClassCheckboxes();
                 return true;
             } catch (e) {
-                console.error('Gagal memuat kelas:', e);
+                console.error('Gagal membaca status kelas:', e);
                 activeClasses = [];
                 initClassCheckboxes();
-                showToast('Gagal memuat kelas: ' + (e.message || e), 'error');
+                showToast('Gagal membaca status kelas: ' + (e.message || e), 'error');
                 return false;
             }
         }
@@ -1800,7 +1800,7 @@
         }
 
         async function loadAllData(isAuto = false) {
-            await loadActiveClassesKeyValue();
+            await loadClassStatusFromSheet();
             await loadAppsScriptUrlFromC2();
 
             const [rowsSiswa, rowsRekapAbsen, rowsLogAbsen, rowsNilaiDetail, rowsRekapNilai, rowsHasil, rowsPrestasi, rowsInformasi] = await Promise.all([
