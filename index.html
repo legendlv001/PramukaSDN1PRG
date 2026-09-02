@@ -196,7 +196,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">Keterangan Kegiatan</label>
-                    <input type="text" id="input-ket-dok" placeholder="Contoh: Latihan Tali Temali Regu Putra" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pramuka-600">
+                    <textarea id="input-ket-dok" rows="3" placeholder="Tulis keterangan foto di sini..." class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pramuka-600 resize-y"></textarea>
                 <div id="dok-upload-status" class="hidden"></div>
                 </div>
             </div>
@@ -206,19 +206,6 @@
                     <i class="fa-solid fa-upload"></i> Upload
                 </button>
             </div>
-        </div>
-    </div>
-
-    <!-- MODAL FOTO DOKUMENTASI FULLSCREEN -->
-    <div id="modal-foto-dokumentasi" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[100] p-3 sm:p-6" onclick="tutupFotoDokumentasi(event)">
-        <button type="button" onclick="tutupFotoDokumentasi()" aria-label="Tutup foto" class="absolute top-3 right-3 sm:top-5 sm:right-5 z-20 w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition">
-            <i class="fa-solid fa-xmark text-xl"></i>
-        </button>
-        <div class="w-full h-full flex flex-col items-center justify-center gap-3 sm:gap-4" onclick="event.stopPropagation()">
-            <div class="flex-1 min-h-0 w-full flex items-center justify-center">
-                <img id="foto-dokumentasi-fullscreen" src="" alt="Foto dokumentasi" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl select-none">
-            </div>
-            <div id="ket-foto-dokumentasi-fullscreen" class="w-full max-w-3xl text-center text-white text-sm sm:text-base font-semibold leading-relaxed px-4 pb-2"></div>
         </div>
     </div>
 
@@ -432,6 +419,34 @@
                 <button onclick="closeCekMateriModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2 rounded-xl font-semibold text-xs transition">
                     Tutup
                 </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODAL FOTO DOKUMENTASI FULLSCREEN -->
+    <div id="modal-foto-fullscreen"
+         class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[100] p-3 sm:p-6"
+         onclick="tutupFotoFullscreen(event)">
+        <button type="button"
+                onclick="tutupFotoFullscreen(event)"
+                class="absolute top-3 right-3 sm:top-5 sm:right-5 z-10 w-11 h-11 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition"
+                aria-label="Tutup foto">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+
+        <div class="w-full h-full flex flex-col items-center justify-center gap-3"
+             onclick="event.stopPropagation()">
+            <div class="flex-1 min-h-0 w-full flex items-center justify-center">
+                <img id="foto-fullscreen-img"
+                     src=""
+                     alt="Foto dokumentasi"
+                     class="max-w-full max-h-full object-contain rounded-lg shadow-2xl select-none">
+            </div>
+
+            <div class="w-full max-w-3xl bg-white rounded-2xl px-4 py-3 sm:px-5 sm:py-4 shadow-xl">
+                <p id="foto-fullscreen-ket"
+                   class="text-sm sm:text-base font-semibold text-gray-800 text-center leading-relaxed"></p>
             </div>
         </div>
     </div>
@@ -1431,7 +1446,7 @@
                 if (button) { button.disabled = true; button.dataset.originalText = button.innerHTML; button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Menyimpan...</span>'; }
                 setDokUploadStatus('Menyimpan link dokumentasi...', 'info');
                 try {
-                    const response = await fetch(appsScriptUrl, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'simpanLinkDokumentasi', url:url, keterangan: ketInput || 'Dokumentasi Kegiatan Pramuka' }) });
+                    const response = await fetch(appsScriptUrl, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'simpanLinkDokumentasi', url:url, keterangan: ketInput }) });
                     if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     const result = await response.json();
                     if (!result || !result.success || !result.file) throw new Error(result && result.error ? result.error : 'Server gagal menyimpan link.');
@@ -1499,7 +1514,7 @@
                         fileName: file.name,
                         mimeType: 'image/jpeg',
                         base64: dataUrl.split(',')[1],
-                        keterangan: ketInput || 'Dokumentasi Kegiatan Pramuka'
+                        keterangan: ketInput
                     })
                 });
 
@@ -1519,7 +1534,8 @@
                 const doc = {
                     id: result.file.id,
                     url: result.file.url,
-                    ket: result.file.keterangan || ketInput || 'Dokumentasi Kegiatan Pramuka',
+                    ket: result.file.keterangan ?? ketInput ?? '',
+                    keterangan: result.file.keterangan ?? ketInput ?? '',
                     tanggal: result.file.tanggal || new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'}),
                     fileId: result.file.id,
                     driveUrl: result.file.driveUrl || ''
@@ -1595,39 +1611,39 @@
             }
         }
 
-        function bukaFotoDokumentasi(index) {
-            const doc = dokumentasiList[index];
-            if (!doc || !doc.url) return;
-
-            const modal = document.getElementById('modal-foto-dokumentasi');
-            const img = document.getElementById('foto-dokumentasi-fullscreen');
-            const ket = document.getElementById('ket-foto-dokumentasi-fullscreen');
+        function bukaFotoFullscreen(url, keterangan) {
+            const modal = document.getElementById('modal-foto-fullscreen');
+            const img = document.getElementById('foto-fullscreen-img');
+            const ket = document.getElementById('foto-fullscreen-ket');
             if (!modal || !img || !ket) return;
 
-            img.src = doc.url;
-            img.alt = doc.keterangan || doc.ket || 'Foto dokumentasi';
-            ket.textContent = doc.keterangan || doc.ket || '';
+            img.src = url || '';
+            img.alt = keterangan || 'Foto dokumentasi';
+            ket.textContent = keterangan || 'Dokumentasi Kegiatan Pramuka';
+
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             document.body.classList.add('overflow-hidden');
         }
 
-        function tutupFotoDokumentasi(event) {
-            if (event && event.target !== event.currentTarget) return;
-            const modal = document.getElementById('modal-foto-dokumentasi');
-            const img = document.getElementById('foto-dokumentasi-fullscreen');
-            const ket = document.getElementById('ket-foto-dokumentasi-fullscreen');
+        function tutupFotoFullscreen(event) {
+            if (event && event.target && event.target.id !== 'modal-foto-fullscreen' &&
+                !event.currentTarget?.classList?.contains('modal-close-button')) {
+                // Tombol tutup memanggil fungsi ini dengan event; tetap lanjut menutup.
+            }
+
+            const modal = document.getElementById('modal-foto-fullscreen');
+            const img = document.getElementById('foto-fullscreen-img');
             if (!modal) return;
+
             modal.classList.add('hidden');
             modal.classList.remove('flex');
-            if (img) img.src = '';
-            if (ket) ket.textContent = '';
             document.body.classList.remove('overflow-hidden');
-        }
 
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') tutupFotoDokumentasi();
-        });
+            if (img) {
+                img.src = '';
+            }
+        }
 
         function renderDokumentasi() {
             const container = document.getElementById('dokumentasi-container');
@@ -1640,21 +1656,38 @@
             }
 
             dokumentasiList.forEach(doc => {
+                const url = String(doc.url || '');
+                const ket = String(doc.keterangan || doc.ket || '');
+
+                // Encode agar aman dimasukkan ke atribut onclick.
+                const safeUrl = url.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                const safeKet = ket.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
                 container.innerHTML += `
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group">
-                        <div class="aspect-[4/3] w-full bg-gray-100 overflow-hidden relative cursor-pointer" onclick="bukaFotoDokumentasi(${dokumentasiList.indexOf(doc)})" title="Klik untuk melihat foto penuh">
-                            <img src="${doc.url}" alt="${doc.keterangan || doc.ket || ''}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                            <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                        <div class="aspect-[4/3] w-full bg-gray-100 overflow-hidden relative cursor-pointer"
+                             onclick="bukaFotoFullscreen('${safeUrl}', '${safeKet}')"
+                             title="Klik untuk melihat foto penuh">
+                            <img src="${url}" alt="${ket}"
+                                 class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                            <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition pointer-events-none">
                                 <i class="fa-solid fa-expand text-white text-2xl drop-shadow-md"></i>
                             </div>
                         </div>
-                        <div class="p-3 border-t border-gray-50">
-                            <h4 class="text-sm font-bold text-gray-800 line-clamp-2 leading-tight">${doc.keterangan || doc.ket || ''}</h4>
+
+                        <div class="px-3 py-3">
+                            <h4 class="text-sm font-bold text-gray-800 line-clamp-2 leading-tight">${ket}</h4>
                         </div>
                     </div>
                 `;
             });
         }
+
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') tutupFotoFullscreen();
+        });
+
 
         function initClassCheckboxes() {
             const checkboxes = document.querySelectorAll('.class-filter-cb');
