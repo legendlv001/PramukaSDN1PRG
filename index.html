@@ -1605,8 +1605,8 @@
             if (!modal || !img || !ket) return;
 
             img.src = doc.url;
-            img.alt = doc.ket || 'Foto dokumentasi';
-            ket.textContent = doc.ket || '';
+            img.alt = doc.keterangan || doc.ket || 'Foto dokumentasi';
+            ket.textContent = doc.keterangan || doc.ket || '';
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             document.body.classList.add('overflow-hidden');
@@ -1643,13 +1643,13 @@
                 container.innerHTML += `
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group">
                         <div class="aspect-[4/3] w-full bg-gray-100 overflow-hidden relative cursor-pointer" onclick="bukaFotoDokumentasi(${dokumentasiList.indexOf(doc)})" title="Klik untuk melihat foto penuh">
-                            <img src="${doc.url}" alt="${doc.ket}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                            <img src="${doc.url}" alt="${doc.keterangan || doc.ket || ''}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                             <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
                                 <i class="fa-solid fa-expand text-white text-2xl drop-shadow-md"></i>
                             </div>
                         </div>
                         <div class="p-3 border-t border-gray-50">
-                            <h4 class="text-sm font-bold text-gray-800 line-clamp-2 leading-tight">${doc.ket}</h4>
+                            <h4 class="text-sm font-bold text-gray-800 line-clamp-2 leading-tight">${doc.keterangan || doc.ket || ''}</h4>
                         </div>
                     </div>
                 `;
