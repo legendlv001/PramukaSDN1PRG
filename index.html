@@ -37,7 +37,7 @@
             }
         }
     </script>
-</head>
+<style>.link-documentation-card{display:flex;align-items:center;justify-content:center;min-height:220px;font-size:72px;text-decoration:none;cursor:pointer;background:#f8fafc}.link-documentation-card:hover{transform:scale(1.02)}</style></head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
 
     <header class="bg-pramuka-700 text-white shadow-md sticky top-0 z-50">
@@ -2803,5 +2803,31 @@
             }, 5000);
         });
     </script>
+
+<script>
+(function(){
+  function renderLinkAware(){
+    const grid=document.getElementById('dokumentasi-grid');
+    if(!grid)return;
+    if(!Array.isArray(dokumentasiList)||!dokumentasiList.length){
+      grid.innerHTML='<div class="col-span-full text-center py-10 text-gray-400">Belum ada dokumentasi.</div>';return;
+    }
+    grid.innerHTML=dokumentasiList.map(function(doc){
+      const url=String(doc.url||'').trim();
+      const ket=String(doc.ket||doc.keterangan||'').trim();
+      if(!url)return '';
+      const isLink=String(doc.fileId||doc.id||'').startsWith('link_');
+      if(isLink){
+        return '<div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100"><a href="'+url+'" target="_blank" rel="noopener noreferrer" class="link-documentation-card" title="Buka link">🔗</a><div class="p-3 border-t border-gray-50"><h4 class="text-sm font-bold text-gray-800 line-clamp-2 leading-tight">'+ket+'</h4></div></div>';
+      }
+      return '<div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer" onclick="openFotoFullscreen('+JSON.stringify(url)+')"><div class="aspect-[4/3] overflow-hidden bg-gray-100"><img src="'+url+'" alt="" class="w-full h-full object-cover"></div><div class="p-3 border-t border-gray-50"><h4 class="text-sm font-bold text-gray-800 line-clamp-2 leading-tight">'+ket+'</h4></div></div>';
+    }).join('');
+  }
+  window.renderDokumentasi=renderLinkAware;
+  const wait=setInterval(function(){
+    if(typeof dokumentasiList!=='undefined'){renderLinkAware();clearInterval(wait);}
+  },100);
+})();
+</script>
 </body>
 </html>
