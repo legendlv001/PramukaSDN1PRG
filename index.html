@@ -178,9 +178,21 @@
             </div>
             <div class="space-y-3">
                 <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Pilih Foto (Hanya PNG / JPG)</label>
-                    <input type="file" id="input-foto-dok" accept=".png, .jpg, .jpeg" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pramuka-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pramuka-50 file:text-pramuka-700 hover:file:bg-pramuka-100">
-                    <p class="text-[11px] text-gray-400 mt-1">*Foto akan dikompresi secara otomatis agar cepat dimuat</p>
+                    <label class="block text-xs font-bold text-gray-700 mb-2">Sumber Dokumentasi</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" id="mode-upload-foto" onclick="pilihModeDokumentasi('foto')" class="px-3 py-2 rounded-xl bg-pramuka-700 text-white text-xs font-bold">📁 Upload Foto</button>
+                        <button type="button" id="mode-upload-link" onclick="pilihModeDokumentasi('link')" class="px-3 py-2 rounded-xl bg-gray-100 text-gray-700 text-xs font-bold">🔗 Masukkan Link</button>
+                    </div>
+                </div>
+                <div id="dok-mode-foto">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Pilih Foto (PNG / JPG / WEBP)</label>
+                    <input type="file" id="input-foto-dok" accept=".png,.jpg,.jpeg,.webp" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pramuka-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pramuka-50 file:text-pramuka-700 hover:file:bg-pramuka-100">
+                    <p class="text-[11px] text-gray-400 mt-1">Foto disimpan ke Google Drive.</p>
+                </div>
+                <div id="dok-mode-link" class="hidden">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Link Foto</label>
+                    <input type="url" id="input-link-dok" placeholder="https://contoh.com/foto.jpg" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pramuka-600">
+                    <p class="text-[11px] text-gray-400 mt-1">Masukkan link gambar yang bisa diakses.</p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">Keterangan Kegiatan</label>
@@ -1332,9 +1344,26 @@
         }
 
         // FUNGSI MODAL DOKUMENTASI - UPLOAD LANGSUNG KE GOOGLE DRIVE
+        let modeDokumentasi = 'foto';
+
+        function pilihModeDokumentasi(mode) {
+            modeDokumentasi = mode === 'link' ? 'link' : 'foto';
+            const foto = document.getElementById('dok-mode-foto');
+            const link = document.getElementById('dok-mode-link');
+            const btnFoto = document.getElementById('mode-upload-foto');
+            const btnLink = document.getElementById('mode-upload-link');
+            if (foto) foto.classList.toggle('hidden', modeDokumentasi !== 'foto');
+            if (link) link.classList.toggle('hidden', modeDokumentasi !== 'link');
+            if (btnFoto) btnFoto.className = 'px-3 py-2 rounded-xl text-xs font-bold ' + (modeDokumentasi === 'foto' ? 'bg-pramuka-700 text-white' : 'bg-gray-100 text-gray-700');
+            if (btnLink) btnLink.className = 'px-3 py-2 rounded-xl text-xs font-bold ' + (modeDokumentasi === 'link' ? 'bg-pramuka-700 text-white' : 'bg-gray-100 text-gray-700');
+        }
+
         function bukaModalDokumentasi() {
             document.getElementById('input-foto-dok').value = '';
             document.getElementById('input-ket-dok').value = '';
+            const linkInput = document.getElementById('input-link-dok');
+            if (linkInput) linkInput.value = '';
+            pilihModeDokumentasi('foto');
             const status = document.getElementById('dok-upload-status');
             if (status) status.innerHTML = '';
             const modal = document.getElementById('modal-tambah-dokumentasi');
@@ -1372,6 +1401,40 @@
             const fileInput = document.getElementById('input-foto-dok');
             const ketInput = document.getElementById('input-ket-dok').value.trim();
             const button = document.querySelector('#modal-tambah-dokumentasi button[onclick*="simpanDokumentasi"]');
+
+            // MODE LINK: simpan URL langsung ke Sheet Dokumentasi
+            if (modeDokumentasi === 'link') {
+                const url = String((document.getElementById('input-link-dok') || {}).value || '').trim();
+                if (!url || !/^https?:\/\//i.test(url)) {
+                    setDokUploadStatus('Masukkan link yang valid dan diawali http:// atau https://', 'warning');
+                    showToast('Link foto belum valid.', 'warning');
+                    return;
+                }
+                if (!appsScriptUrl) await loadAppsScriptUrlFromC2();
+                if (!appsScriptUrl) {
+                    setDokUploadStatus('GAGAL: URL Apps Script tidak ditemukan pada Pengaturan!C2.', 'error');
+                    return;
+                }
+                if (button) { button.disabled = true; button.dataset.originalText = button.innerHTML; button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Menyimpan...</span>'; }
+                setDokUploadStatus('Menyimpan link dokumentasi...', 'info');
+                try {
+                    const response = await fetch(appsScriptUrl, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'simpanLinkDokumentasi', url:url, keterangan: ketInput || 'Dokumentasi Kegiatan Pramuka' }) });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const result = await response.json();
+                    if (!result || !result.success || !result.file) throw new Error(result && result.error ? result.error : 'Server gagal menyimpan link.');
+                    const doc = result.file;
+                    dokumentasiList = [doc, ...dokumentasiList.filter(x => String(x.id) !== String(doc.id))];
+                    renderDokumentasi();
+                    setDokUploadStatus('BERHASIL: link foto tersimpan di Dokumentasi.', 'success');
+                    showToast('Link foto berhasil disimpan!', 'success');
+                    setTimeout(() => { closeModalDokumentasi(); loadDokumentasiFromDrive(); }, 700);
+                } catch (e) {
+                    console.error(e); setDokUploadStatus('GAGAL: ' + (e.message || e), 'error'); showToast('Gagal menyimpan link foto.', 'error');
+                } finally {
+                    if (button) { button.disabled=false; button.innerHTML=button.dataset.originalText || '<i class="fa-solid fa-upload"></i> Upload'; }
+                }
+                return;
+            }
 
             if (fileInput.files.length === 0) {
                 setDokUploadStatus('Silakan pilih foto terlebih dahulu.', 'warning');
@@ -1530,21 +1593,54 @@
             }
 
             dokumentasiList.forEach(doc => {
-                container.innerHTML += `
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group">
-                        <div class="aspect-[4/3] w-full bg-gray-100 overflow-hidden relative cursor-pointer" onclick="window.open('${doc.url}', '_blank')">
-                            <img src="${doc.url}" alt="${doc.ket}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                            <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
-                                <i class="fa-solid fa-magnifying-glass-plus text-white text-2xl drop-shadow-md"></i>
+                const url = String(doc.url || '').trim();
+                const ket = String(doc.ket || doc.keterangan || '').trim();
+                const isLink = String(doc.fileId || doc.id || '').startsWith('link_');
+
+                if (isLink) {
+                    container.innerHTML += `
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <a href="${url}" target="_blank" rel="noopener noreferrer"
+                               class="aspect-[4/3] w-full bg-gray-100 flex items-center justify-center text-6xl cursor-pointer hover:bg-gray-200 transition"
+                               title="Buka link">🔗</a>
+                            <div class="p-3 border-t border-gray-50">
+                                <h4 class="text-sm font-bold text-gray-800 line-clamp-2 leading-tight">${ket}</h4>
                             </div>
                         </div>
-                        <div class="p-3 border-t border-gray-50">
-                            <h4 class="text-sm font-bold text-gray-800 line-clamp-2 leading-tight">${doc.ket}</h4>
-                            <p class="text-[11px] text-gray-500 mt-1 flex items-center gap-1.5 font-medium"><i class="fa-regular fa-calendar text-pramuka-600"></i>${doc.tanggal}</p>
+                    `;
+                } else {
+                    container.innerHTML += `
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group">
+                            <div class="aspect-[4/3] w-full bg-gray-100 overflow-hidden relative cursor-pointer"
+                                 onclick="openFotoFullscreen('${url.replace(/'/g, "\\'")}')">
+                                <img src="${url}" alt="${ket}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                                <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                                    <i class="fa-solid fa-magnifying-glass-plus text-white text-2xl drop-shadow-md"></i>
+                                </div>
+                            </div>
+                            <div class="p-3 border-t border-gray-50">
+                                <h4 class="text-sm font-bold text-gray-800 line-clamp-2 leading-tight">${ket}</h4>
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                }
             });
+        }
+
+
+        // Membuka foto di layar penuh tanpa pindah ke Google Drive atau tab baru.
+        function openFotoFullscreen(url) {
+            const modal = document.createElement('div');
+            modal.id = 'foto-fullscreen-modal';
+            modal.className = 'fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <button type="button" aria-label="Tutup" class="absolute top-4 right-4 z-10 w-11 h-11 rounded-full bg-white/15 text-white text-2xl flex items-center justify-center hover:bg-white/25" onclick="document.getElementById('foto-fullscreen-modal').remove()">&times;</button>
+                <img src="${url}" alt="Foto dokumentasi" class="max-w-full max-h-full object-contain rounded-lg">
+            `;
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) modal.remove();
+            });
+            document.body.appendChild(modal);
         }
 
         function initClassCheckboxes() {
@@ -2724,85 +2820,18 @@
                 setInterval(syncSharedClassFilters, 30000);
             }, 5000);
         });
-    
-/* ===== PATCH CRUD PRESTASI / INFORMASI / DOKUMENTASI ===== */
-let editingPrestasiId = null, editingInformasiId = null, editingDokumentasiId = null;
-
-function escHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function escJs(v){return String(v??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');}
-
-async function apiAction(action, data={}) {
-  if (!appsScriptUrl && typeof loadAppsScriptUrlFromC2 === 'function') await loadAppsScriptUrlFromC2();
-  if (!appsScriptUrl) throw new Error('URL Apps Script belum tersedia.');
-  const r = await fetch(appsScriptUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,...data})});
-  const j = await r.json();
-  if (!j.success) throw new Error(j.error||'Proses server gagal.');
-  return j;
-}
-async function refreshCrudData() {
-  if (!appsScriptUrl) return;
-  const j=await (await fetch(appsScriptUrl+'?action=data&_='+Date.now(),{cache:'no-store'})).json();
-  if(!j.success) throw new Error(j.error||'Gagal memuat data.');
-  if(Array.isArray(j.data.prestasi)) prestasiList=j.data.prestasi;
-  if(Array.isArray(j.data.informasi)) informasiList=j.data.informasi;
-  if(Array.isArray(j.data.dokumentasi)) dokumentasiList=j.data.dokumentasi;
-  localStorage.setItem('pramuka_app_prestasi',JSON.stringify(prestasiList||[]));
-  localStorage.setItem('pramuka_app_informasi',JSON.stringify(informasiList||[]));
-  localStorage.setItem('pramuka_app_dokumentasi',JSON.stringify(dokumentasiList||[]));
-  renderPrestasi(); renderInformasi(); renderDokumentasi(); updateDashboard();
-}
-
-async function simpanPrestasi() {
-  const sel=document.getElementById('select-siswa-prestasi');
-  const siswa=Array.from(sel.selectedOptions).map(x=>x.value).filter(Boolean);
-  const kejuaraan=document.getElementById('input-nama-prestasi').value.trim();
-  const tingkat=document.getElementById('input-tingkat-prestasi').value.trim();
-  const tanggal=document.getElementById('input-tanggal-prestasi').value;
-  const ket=document.getElementById('input-ket-prestasi').value.trim();
-  if(!siswa.length||!kejuaraan||!tanggal){showToast('Mohon lengkapi data prestasi.','warning');return;}
-  try{
-    if(editingPrestasiId){
-      await apiAction('editPrestasi',{id:editingPrestasiId,namaSiswa:siswa[0],kejuaraan,tingkat,tanggal,ket});
-      editingPrestasiId=null;
-    } else {
-      for(const namaSiswa of siswa) await apiAction('tambahPrestasi',{namaSiswa,kejuaraan,tingkat,tanggal,ket});
-    }
-    if(typeof closeModalPrestasi==='function') closeModalPrestasi();
-    await refreshCrudData(); showToast('Prestasi berhasil disimpan.','success');
-  }catch(e){console.error(e);showToast('Gagal menyimpan prestasi: '+e.message,'error');}
-}
-function editPrestasi(id){
-  const d=(prestasiList||[]).find(x=>String(x.id)===String(id)); if(!d)return;
-  editingPrestasiId=id;
-  const sel=document.getElementById('select-siswa-prestasi'); Array.from(sel.options).forEach(o=>o.selected=o.value===d.namaSiswa);
-  document.getElementById('input-nama-prestasi').value=d.kejuaraan||'';
-  document.getElementById('input-tingkat-prestasi').value=d.tingkat||'';
-  document.getElementById('input-tanggal-prestasi').value=d.tanggal||'';
-  document.getElementById('input-ket-prestasi').value=d.ket||'';
-  bukaModalPrestasi();
-}
-async function hapusPrestasi(id){if(!confirm('Hapus prestasi ini?'))return;try{await apiAction('hapusPrestasi',{id});await refreshCrudData();showToast('Prestasi berhasil dihapus.','success');}catch(e){showToast(e.message,'error');}}
-function renderPrestasi(){
- const c=document.getElementById('prestasi-container'); if(!c)return;
- const q=(document.getElementById('search-prestasi')?.value||'').toLowerCase();
- const a=(prestasiList||[]).filter(x=>(x.kejuaraan||'')&&((x.namaSiswa||'')+' '+(x.kejuaraan||'')).toLowerCase().includes(q));
- c.innerHTML=a.length?a.map(p=>`<div class="bg-gradient-to-br from-amber-50 to-white rounded-xl shadow-sm border border-amber-100 p-5"><div class="flex gap-4"><div class="bg-amber-100 text-amber-600 p-3 rounded-full text-2xl h-fit"><i class="fa-solid fa-medal"></i></div><div class="flex-1"><h4 class="font-bold text-gray-800">${escHtml(p.kejuaraan)}</h4><p class="text-sm font-semibold text-pramuka-700">${escHtml(p.namaSiswa)}</p><p class="text-xs text-gray-500 mt-2">${escHtml(p.tingkat||'')} ${escHtml(p.tanggal||'')}</p>${p.ket?`<p class="text-xs text-gray-600 mt-2">${escHtml(p.ket)}</p>`:''}</div></div>${userRole==='pembina'?`<div class="flex gap-2 mt-4 pt-3 border-t border-amber-100"><button onclick="editPrestasi('${escJs(p.id)}')" class="flex-1 py-2 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold">Edit</button><button onclick="hapusPrestasi('${escJs(p.id)}')" class="flex-1 py-2 bg-red-50 text-red-700 rounded-lg text-xs font-bold">Hapus</button></div>`:''}</div>`).join(''):`<div class="col-span-full bg-white p-8 rounded-xl text-center text-gray-400">Belum ada data prestasi.</div>`;
-}
-
-async function simpanInformasi(){
- const judul=document.getElementById('input-judul-info').value.trim(), tanggal=document.getElementById('input-tanggal-info').value, isi=document.getElementById('input-isi-info').value.trim();
- if(!judul||!tanggal||!isi){showToast('Mohon lengkapi semua isian.','warning');return;}
- try{ if(editingInformasiId){await apiAction('editInformasi',{id:editingInformasiId,judul,tanggal,isi});editingInformasiId=null;} else await apiAction('tambahInformasi',{judul,tanggal,isi});
- if(typeof closeModalInformasi==='function')closeModalInformasi(); await refreshCrudData();showToast('Informasi berhasil disimpan.','success');}catch(e){showToast(e.message,'error');}
-}
-function editInformasi(id){const d=(informasiList||[]).find(x=>String(x.id)===String(id));if(!d)return;editingInformasiId=id;document.getElementById('input-judul-info').value=d.judul||'';document.getElementById('input-tanggal-info').value=d.tanggal||'';document.getElementById('input-isi-info').value=d.isi||'';bukaModalInformasi();}
-async function hapusInformasi(id){if(!confirm('Hapus informasi ini?'))return;try{await apiAction('hapusInformasi',{id});await refreshCrudData();showToast('Informasi berhasil dihapus.','success');}catch(e){showToast(e.message,'error');}}
-function renderInformasi(){const c=document.getElementById('informasi-container');if(!c)return;const a=(informasiList||[]).filter(x=>x&&(x.judul||x.isi));c.innerHTML=a.length?a.map(i=>`<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 relative overflow-hidden"><div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div><div class="ml-2"><div class="flex justify-between gap-4"><h4 class="font-bold text-lg text-gray-800">${escHtml(i.judul)}</h4><span class="text-[11px] text-gray-500">${escHtml(i.tanggal)}</span></div><p class="text-sm text-gray-600 whitespace-pre-wrap">${escHtml(i.isi)}</p>${userRole==='pembina'?`<div class="flex gap-2 mt-4 pt-3 border-t"><button onclick="editInformasi('${escJs(i.id)}')" class="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold">Edit</button><button onclick="hapusInformasi('${escJs(i.id)}')" class="px-4 py-2 bg-red-50 text-red-700 rounded-lg text-xs font-bold">Hapus</button></div>`:''}</div></div>`).join(''):`<div class="bg-white p-8 rounded-xl text-center text-gray-400">Belum ada informasi.</div>`;}
-
-function openFotoFullscreen(url,ket=''){const m=document.createElement('div');m.id='foto-fullscreen-modal';m.className='fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center p-4';m.innerHTML=`<div class="w-full max-w-5xl flex flex-col items-center"><button class="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/15 text-white text-2xl" onclick="document.getElementById('foto-fullscreen-modal').remove()">&times;</button><img src="${escHtml(url)}" class="max-w-full max-h-[75vh] object-contain rounded-lg"><div class="mt-4 bg-white rounded-xl px-5 py-3 max-w-2xl w-full text-center">${escHtml(ket)}</div></div>`;m.onclick=e=>{if(e.target===m)m.remove()};document.body.appendChild(m);}
-function editDokumentasi(id){const d=(dokumentasiList||[]).find(x=>String(x.id)===String(id));if(!d)return;editingDokumentasiId=id;document.getElementById('input-ket-dok').value=d.ket||d.keterangan||'';bukaModalDokumentasi();}
-async function hapusDokumentasi(id){if(!confirm('Hapus dokumentasi ini? Foto di Google Drive juga akan dipindahkan ke Sampah.'))return;try{await apiAction('hapusDokumentasi',{id});await refreshCrudData();showToast('Dokumentasi berhasil dihapus.','success');}catch(e){showToast(e.message,'error');}}
-
+    </script>
+<script>
+// Patch sinkron input Prestasi/Informasi + CRUD tanpa mengubah struktur kolom
+let _editPrestasi=-1,_editInfo=-1;
+async function _api(a,d){if(!appsScriptUrl)await loadAppsScriptUrlFromC2();if(!appsScriptUrl)throw Error('URL Apps Script C2 belum tersedia');let r=await fetch(appsScriptUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action:a},d||{}))});let j=await r.json();if(!j.success)throw Error(j.error||'Gagal');return j;}
+async function simpanPrestasi(){let names=Array.from(document.getElementById('select-siswa-prestasi').selectedOptions).map(x=>x.value),kejuaraan=document.getElementById('input-nama-prestasi').value.trim(),tingkat=document.getElementById('input-tingkat-prestasi').value.trim(),tanggal=document.getElementById('input-tanggal-prestasi').value,ket=document.getElementById('input-ket-prestasi').value.trim();if(!names.length||!kejuaraan||!tanggal)return showToast('Lengkapi data prestasi!','warning');try{if(_editPrestasi>=0)await _api('editPrestasi',{index:_editPrestasi,namaSiswa:names[0],kejuaraan,tingkat,tanggal,ket});else for(const namaSiswa of names)await _api('tambahPrestasi',{namaSiswa,kejuaraan,tingkat,tanggal,ket});await loadAllData(true);closeModalPrestasi();showToast('Prestasi tersimpan ke Spreadsheet!','success')}catch(e){showToast('Gagal: '+e.message,'error')}}
+async function simpanInformasi(){let judul=document.getElementById('input-judul-info').value.trim(),tanggal=document.getElementById('input-tanggal-info').value,isi=document.getElementById('input-isi-info').value.trim();if(!judul||!tanggal||!isi)return showToast('Lengkapi informasi!','warning');try{await _api(_editInfo>=0?'editInformasi':'tambahInformasi',_editInfo>=0?{index:_editInfo,judul,tanggal,isi}:{judul,tanggal,isi});await loadAllData(true);closeModalInformasi();showToast('Informasi tersimpan ke Spreadsheet!','success')}catch(e){showToast('Gagal: '+e.message,'error')}}
+function editPrestasi(i){let p=prestasiList[i];if(!p)return;_editPrestasi=i;bukaModalPrestasi();document.getElementById('input-nama-prestasi').value=p.kejuaraan||'';document.getElementById('input-tingkat-prestasi').value=p.tingkat||'';document.getElementById('input-tanggal-prestasi').value=p.tanggal||'';document.getElementById('input-ket-prestasi').value=p.ket||'';Array.from(document.getElementById('select-siswa-prestasi').options).forEach(o=>o.selected=o.value===p.namaSiswa)}
+async function hapusPrestasi(i){if(confirm('Hapus prestasi ini?')){await _api('hapusPrestasi',{index:i});await loadAllData(true)}}
+function editInformasi(i){let x=informasiList[i];if(!x)return;_editInfo=i;bukaModalInformasi();document.getElementById('input-judul-info').value=x.judul||'';document.getElementById('input-tanggal-info').value=x.tanggal||'';document.getElementById('input-isi-info').value=x.isi||''}
+async function hapusInformasi(i){if(confirm('Hapus informasi ini?')){await _api('hapusInformasi',{index:i});await loadAllData(true)}}
+function openFotoFullscreen(url,ket=''){let m=document.createElement('div');m.id='foto-fullscreen-modal';m.className='fixed inset-0 z-[9999] bg-black/95 flex flex-col items-center justify-center p-4';m.innerHTML=`<button class="absolute top-4 right-4 text-white text-3xl" onclick="document.getElementById('foto-fullscreen-modal').remove()">&times;</button><img src="${url}" class="max-w-full max-h-[75vh] object-contain rounded-lg"><div class="mt-3 bg-white rounded-xl px-5 py-3 max-w-2xl text-center text-sm">${ket}</div>`;m.onclick=e=>{if(e.target===m)m.remove()};document.body.appendChild(m)}
 </script>
 </body>
 </html>
