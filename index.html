@@ -2821,6 +2821,42 @@
             }, 5000);
         });
     </script>
+
+<script>
+/* FINAL VISIBLE EDIT/HAPUS PATCH */
+(function(){
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function addButtons(containerId,listName,editFn,delFn,key){
+ const c=document.getElementById(containerId), list=window[listName]||[]; if(!c)return;
+ [...c.children].forEach((card,i)=>{
+   if(card.querySelector('.crud-visible'))return;
+   const item=list[i]; if(!item || !card.querySelector('img') && containerId==='dokumentasi-container'){}
+   if(window.userRole!=='pembina')return;
+   const id=key?item[key]:i;
+   const bar=document.createElement('div');bar.className='crud-visible flex gap-2 mt-3 pt-3 border-t border-gray-100';
+   bar.innerHTML=`<button class="px-4 py-2 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold">✏️ Edit</button><button class="px-4 py-2 rounded-lg bg-red-50 text-red-700 text-xs font-bold">🗑️ Hapus</button>`;
+   bar.children[0].onclick=()=>window[editFn](id);
+   bar.children[1].onclick=()=>window[delFn](id);
+   card.appendChild(bar);
+ });
+}
+const oldRP=window.renderPrestasi, oldRI=window.renderInformasi, oldRD=window.renderDokumentasi;
+if(oldRP)window.renderPrestasi=function(){oldRP.apply(this,arguments);setTimeout(()=>addButtons('prestasi-container','prestasiList','editPrestasi','hapusPrestasi'),0)}
+if(oldRI)window.renderInformasi=function(){oldRI.apply(this,arguments);setTimeout(()=>addButtons('informasi-container','informasiList','editInformasi','hapusInformasi'),0)}
+if(oldRD)window.renderDokumentasi=function(){oldRD.apply(this,arguments);setTimeout(()=>addButtons('dokumentasi-container','dokumentasiList','editDokumentasi','hapusDokumentasi','id'),0)}
+window.bukaFotoDenganKeterangan=function(url,ket){
+ const m=document.createElement('div');m.className='fixed inset-0 z-[9999] bg-black/95 flex flex-col items-center justify-center p-4';
+ m.innerHTML=`<button class="absolute top-4 right-5 text-white text-3xl">&times;</button><img src="${esc(url)}" class="max-w-full max-h-[75vh] object-contain rounded-lg"><div class="mt-4 bg-white rounded-xl px-5 py-3 max-w-2xl w-full text-center text-sm">${esc(ket||'Tidak ada keterangan')}</div>`;
+ m.querySelector('button').onclick=()=>m.remove();m.onclick=e=>{if(e.target===m)m.remove()};document.body.appendChild(m);
+};
+document.addEventListener('click',e=>{
+ const img=e.target.closest('#dokumentasi-container img');if(!img)return;
+ const cards=[...document.querySelectorAll('#dokumentasi-container > *')],i=cards.indexOf(img.closest('#dokumentasi-container > *'));
+ const d=(window.dokumentasiList||[])[i];if(d){e.preventDefault();e.stopImmediatePropagation();window.bukaFotoDenganKeterangan(d.url||img.src,d.ket||d.keterangan||'');}
+},true);
+})();
+</script>
+
 </body>
 </html>
 <script>
