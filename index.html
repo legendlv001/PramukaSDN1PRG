@@ -1959,8 +1959,7 @@
             // Jangan buang data pertama. Header hanya dilewati bila benar-benar terdeteksi sebagai header.
             const prestasiRows = getDataRows(rowsPrestasi, ['Nama Siswa','Prestasi','Tingkat','Tanggal','Keterangan']);
             prestasiList = prestasiRows.map((r,i)=>({
-                id:'prestasi_'+i,
-                _sheetRow:i + dataStartIndex(rowsPrestasi, ['Nama Siswa','Prestasi','Tingkat','Tanggal','Keterangan']) + 1,
+                id:i+1,
                 namaSiswa:String(cell(r,0)||''),
                 kejuaraan:String(cell(r,1)||''),
                 tingkat:String(cell(r,2)||''),
@@ -1970,8 +1969,7 @@
 
             const informasiRows = getDataRows(rowsInformasi, ['Tanggal','Judul','Isi']);
             informasiList = informasiRows.map((r,i)=>({
-                id:'informasi_'+i,
-                _sheetRow:i + dataStartIndex(rowsInformasi, ['Tanggal','Judul','Isi']) + 1,
+                id:i+1,
                 tanggal:String(cell(r,0)||''),
                 judul:String(cell(r,1)||''),
                 isi:String(cell(r,2)||'')
@@ -2825,159 +2823,69 @@
     </script>
 
 <script>
-/* ===== FIX CRUD: gunakan isi baris asli, bukan ID nomor urut ===== */
+/* ===== CRUD FINAL: No Urut hanya di Spreadsheet ===== */
 (function(){
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-
-async function crudMatch(action,sheet,match,values){
- if(!appsScriptUrl) await loadAppsScriptUrlFromC2();
- if(!appsScriptUrl) throw Error('URL Apps Script belum tersedia.');
- const r=await fetch(appsScriptUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,sheet,match,values})});
- const j=await r.json(); if(!j||j.success===false) throw Error(j?.error||'Proses gagal.'); return j;
-}
-function matchOf(type,x){
- if(type==='prestasi') return x._match||[x.namaSiswa||'',x.kejuaraan||'',x.tingkat||'',x.tanggal||'',x.ket||''];
- if(type==='informasi') return x._match||[x.tanggal||'',x.judul||'',x.isi||''];
- return x._match||[x.timestamp||'',x.namaFile||'',x.fileId||x.id||'',x.url||'',x.ket||x.keterangan||'',x.driveUrl||''];
-}
-function addCrudButtons(){
- if(userRole==='tamu')return;
- document.querySelectorAll('#prestasi-container [data-pidx]').forEach(el=>{
-  const p=prestasiList[Number(el.dataset.pidx)]; if(!p)return;
-  el.insertAdjacentHTML('beforeend',`<div class="flex gap-2 mt-3"><button class="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 text-xs" onclick="editPrestasi('${p.id}')">Edit</button><button class="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 text-xs" onclick="hapusItem('prestasi','${p.id}')">Hapus</button></div>`);
- });
- document.querySelectorAll('#informasi-container [data-iidx]').forEach(el=>{
-  const x=informasiList[Number(el.dataset.iidx)];if(!x)return;
-  el.insertAdjacentHTML('beforeend',`<div class="flex gap-2 mt-3"><button class="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 text-xs" onclick="editInformasi('${x.id}')">Edit</button><button class="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 text-xs" onclick="hapusItem('informasi','${x.id}')">Hapus</button></div>`);
- });
- document.querySelectorAll('#dokumentasi-container [data-didx]').forEach(el=>{
-  const d=dokumentasiList[Number(el.dataset.didx)];if(!d)return;
-  el.insertAdjacentHTML('beforeend',`<div class="flex gap-2 mt-3"><button class="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 text-xs" onclick="editDokumentasi('${d.id}')">Edit</button><button class="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 text-xs" onclick="hapusItem('dokumentasi','${d.id}')">Hapus</button></div>`);
- });
-}
-const oldRP=renderPrestasi;
-window.renderPrestasi=function(){
- oldRP();
- const cards=[...document.querySelectorAll('#prestasi-container > div')];
- const valid=(prestasiList||[]).filter(p=>p&&String(p.kejuaraan||'').trim()!=='');
- cards.forEach(card=>{
-   const title=card.querySelector('h4')?.textContent?.trim(), name=card.querySelector('p')?.textContent?.trim();
-   const p=valid.find(x=>x.kejuaraan===title&&x.namaSiswa===name&&!x.__marked);
-   if(p){p.__marked=true;card.dataset.pidx=prestasiList.indexOf(p);}
- }); valid.forEach(x=>delete x.__marked); addCrudButtons();
-};
-const oldRI=renderInformasi;
-window.renderInformasi=function(){
- oldRI();
- const cards=[...document.querySelectorAll('#informasi-container > div')];
- cards.forEach(card=>{const title=card.querySelector('h4')?.textContent?.trim();const x=informasiList.find(y=>y.judul===title&&!y.__marked);if(x){x.__marked=true;card.dataset.iidx=informasiList.indexOf(x);}});
- informasiList.forEach(x=>delete x.__marked); addCrudButtons();
-};
-const oldRD=renderDokumentasi;
-window.renderDokumentasi=function(){
- oldRD();
- [...document.querySelectorAll('#dokumentasi-container > div')].forEach((card,i)=>{card.dataset.didx=i;});
- addCrudButtons();
- // Always pass the exact displayed caption into fullscreen.
- document.querySelectorAll('#dokumentasi-container .cursor-pointer').forEach(box=>{
-   const img=box.querySelector('img');if(!img)return;
-   const d=dokumentasiList.find(x=>String(x.url||'')===String(img.getAttribute('src')||''));
-   if(d)box.onclick=()=>openFotoFullscreen(d.url,d.ket||d.keterangan||'');
- });
-};
-window.openFotoFullscreen=function(url,ket){
- const old=document.getElementById('foto-fullscreen-modal');if(old)old.remove();
- const m=document.createElement('div');m.id='foto-fullscreen-modal';m.className='fixed inset-0 z-[9999] bg-black/95 flex flex-col items-center justify-center p-4 gap-4';
- m.innerHTML=`<button type="button" class="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/15 text-white text-2xl">&times;</button><img src="${esc(url)}" class="max-w-full max-h-[75vh] object-contain rounded-xl"><div class="max-w-2xl w-full text-center text-white text-sm bg-white/10 rounded-xl p-3">${esc(ket)||'Tidak ada keterangan foto.'}</div>`;
- m.querySelector('button').onclick=()=>m.remove();m.onclick=e=>{if(e.target===m)m.remove()};document.body.appendChild(m);
-};
-window.hapusItem=async function(type,id){
- if(!confirm('Yakin ingin menghapus data ini?'))return;
- const list=type==='prestasi'?prestasiList:type==='informasi'?informasiList:dokumentasiList;
- const x=list.find(v=>String(v.id)===String(id));if(!x)return showToast('Data lokal tidak ditemukan.','error');
- const sheet=type==='prestasi'?'Prestasi':type==='informasi'?'Informasi':'Dokumentasi';
- try{
-   await crudMatch('deleteMatch',sheet,matchOf(type,x),[]);
-   const i=list.indexOf(x);list.splice(i,1);
-   if(type==='prestasi'){localStorage.setItem('pramuka_app_prestasi',JSON.stringify(list));renderPrestasi();}
-   else if(type==='informasi'){localStorage.setItem('pramuka_app_informasi',JSON.stringify(list));renderInformasi();}
-   else{localStorage.setItem('pramuka_app_dokumentasi',JSON.stringify(list));renderDokumentasi();}
-   showToast('Data berhasil dihapus dari Spreadsheet.','success');
- }catch(e){showToast(e.message,'error');}
-};
-window.editDokumentasi=function(id){
- const d=dokumentasiList.find(x=>String(x.id)===String(id));if(!d)return;
- const k=prompt('Keterangan foto:',d.ket||d.keterangan||'');if(k===null)return;
- const vals=[d.timestamp||'',d.namaFile||'',d.fileId||d.id||'',d.url||'',k,d.driveUrl||''];
- crudMatch('updateMatch','Dokumentasi',matchOf('dokumentasi',d),vals).then(()=>{
-  d.ket=k;d.keterangan=k;d._match=vals;localStorage.setItem('pramuka_app_dokumentasi',JSON.stringify(dokumentasiList));renderDokumentasi();showToast('Keterangan foto diperbarui.','success');
- }).catch(e=>showToast(e.message,'error'));
-};
-// Store exact sheet rows as match keys after each data load.
-const oldLoad=loadAllData;
-window.loadAllData=async function(isAuto=false){
- const result=await oldLoad(isAuto);
- prestasiList.forEach(x=>x._match=[x.namaSiswa||'',x.kejuaraan||'',x.tingkat||'',x.tanggal||'',x.ket||'']);
- informasiList.forEach(x=>x._match=[x.tanggal||'',x.judul||'',x.isi||'']);
- return result;
-};
-})();
-</script>
-
-
-<script>
-/* ===== FINAL FIX: nomor baris asli + tombol klik ===== */
-(function(){
- async function rowApi(action,sheet,row,values){
-  if(!appsScriptUrl) await loadAppsScriptUrlFromC2();
-  const r=await fetch(appsScriptUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,sheet,row,values})});
-  const j=await r.json(); if(!j||j.success===false) throw Error(j?.error||'Gagal'); return j;
+ let editPrestasiNo=null, editInformasiNo=null, editDokNo=null;
+ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ async function api(action,sheet,noUrut,values){
+   if(!appsScriptUrl) await loadAppsScriptUrlFromC2();
+   const r=await fetch(appsScriptUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,sheet,noUrut,values})});
+   const j=await r.json(); if(!j||j.success===false)throw Error(j?.error||'Gagal memproses data.'); return j;
  }
- function find(type,id){
-  const L=type==='prestasi'?prestasiList:type==='informasi'?informasiList:dokumentasiList;
-  return L.find(x=>String(x.id)===String(id));
- }
- window.hapusItem=async function(type,id){
-  const x=find(type,id); if(!x) return showToast('Data tidak ditemukan di halaman.','error');
-  if(!confirm('Yakin ingin menghapus?'))return;
-  const sheet=type==='prestasi'?'Prestasi':type==='informasi'?'Informasi':'Dokumentasi';
-  try{
-   if(!x._sheetRow) throw Error('Nomor baris sumber belum tersedia. Muat ulang halaman sekali.');
-   await rowApi('deleteRowFinal',sheet,x._sheetRow,[]);
-   if(type==='prestasi')prestasiList=prestasiList.filter(v=>v!==x);
-   else if(type==='informasi')informasiList=informasiList.filter(v=>v!==x);
-   else dokumentasiList=dokumentasiList.filter(v=>v!==x);
-   if(type==='prestasi')renderPrestasi(); else if(type==='informasi')renderInformasi(); else renderDokumentasi();
-   showToast('Data berhasil dihapus.','success');
-  }catch(e){showToast(e.message,'error');}
+
+ // Read No Urut from last column. Old rows without it get assigned once on next save/load cycle.
+ const oldLoad=loadAllData;
+ window.loadAllData=async function(isAuto=false){
+   await oldLoad(isAuto);
+   // Published sheet rows are already loaded by original code; enrich from their row cells.
+   try{
+     const rp=await fetchDataFromSheet('Prestasi',true), ri=await fetchDataFromSheet('Informasi',true);
+     const c=(r,n)=>r?.c?.[n]?.v!=null?String(r.c[n].v):'';
+     const pr=getDataRows(rp,['Nama Siswa','Prestasi','Tingkat','Tanggal','Keterangan']);
+     const ir=getDataRows(ri,['Tanggal','Judul','Isi']);
+     prestasiList.forEach((x,i)=>x.noUrut=c(pr[i],5)||'');
+     informasiList.forEach((x,i)=>x.noUrut=c(ir[i],3)||'');
+   }catch(e){}
  };
- // Use event delegation so Edit/Hapus remain clickable even if cards are rerendered.
- document.addEventListener('click',function(e){
-  const b=e.target.closest('button[data-final-crud]'); if(!b)return;
-  e.preventDefault(); e.stopPropagation();
-  const type=b.dataset.type,id=b.dataset.id,act=b.dataset.act;
-  if(act==='delete') window.hapusItem(type,id);
-  else if(type==='prestasi') window.editPrestasi(id);
-  else if(type==='informasi') window.editInformasi(id);
-  else window.editDokumentasi(id);
- },true);
- function inject(){
-  if(userRole==='tamu')return;
-  [['prestasi','#prestasi-container',prestasiList],['informasi','#informasi-container',informasiList],['dokumentasi','#dokumentasi-container',dokumentasiList]].forEach(([type,sel,list])=>{
-   const cards=document.querySelectorAll(sel+' > div');
-   cards.forEach((card,i)=>{
-    if(card.querySelector('[data-final-crud]')||!list[i])return;
-    const id=String(list[i].id).replace(/"/g,'&quot;');
-    const box=document.createElement('div');box.className='flex gap-2 mt-3';
-    box.innerHTML=`<button type="button" data-final-crud data-act="edit" data-type="${type}" data-id="${id}" class="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 text-xs">Edit</button><button type="button" data-final-crud data-act="delete" data-type="${type}" data-id="${id}" class="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 text-xs">Hapus</button>`;
-    card.appendChild(box);
-   });
-  });
- }
- ['renderPrestasi','renderInformasi','renderDokumentasi'].forEach(n=>{
-  const old=window[n]; if(typeof old==='function')window[n]=function(){const z=old.apply(this,arguments);setTimeout(inject,0);return z;};
- });
- setTimeout(inject,500);
+
+ window.renderPrestasi=function(){
+   const c=document.getElementById('prestasi-container');if(!c)return;c.innerHTML='';
+   const valid=(prestasiList||[]).filter(p=>p&&String(p.kejuaraan||'').trim()!=='');
+   const search=(document.getElementById('search-prestasi')?.value||'').toLowerCase();
+   valid.filter(p=>{const s=siswaList.find(x=>x.nama===p.namaSiswa);return (!s||isActiveClass(s.kelas))&&(p.namaSiswa.toLowerCase().includes(search)||p.kejuaraan.toLowerCase().includes(search));})
+   .forEach(p=>{let d=new Date(p.tanggal),dt=isNaN(d)?p.tanggal:d.getFullYear();c.innerHTML+=`<div class="bg-gradient-to-br from-amber-50 to-white rounded-xl shadow-sm border border-amber-100 p-5 flex items-start gap-4"><div class="bg-amber-100 text-amber-600 p-3 rounded-full text-2xl"><i class="fa-solid fa-medal"></i></div><div class="space-y-1 w-full"><div class="flex justify-between"><h4 class="font-bold">${esc(p.kejuaraan)}</h4><span class="text-[10px]">${esc(dt)}</span></div><p class="text-sm font-semibold">${esc(p.namaSiswa)}</p>${p.tingkat?`<p class="text-xs">${esc(p.tingkat)}</p>`:''}${p.ket?`<p class="text-xs italic">${esc(p.ket)}</p>`:''}${userRole!=='tamu'?`<div class="flex gap-2 pt-2"><button type="button" onclick="editPrestasiFinal('${p.noUrut}')" class="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 text-xs">Edit</button><button type="button" onclick="hapusFinal('Prestasi','${p.noUrut}')" class="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 text-xs">Hapus</button></div>`:''}</div></div>`;});
+ };
+
+ window.renderInformasi=function(){
+   const c=document.getElementById('informasi-container');if(!c)return;c.innerHTML='';
+   (informasiList||[]).filter(x=>x&&(x.judul||x.isi)).forEach(x=>{c.innerHTML+=`<div class="bg-white rounded-xl shadow-sm border p-5"><div class="flex justify-between gap-3"><h4 class="font-bold text-lg">${esc(x.judul)}</h4><span class="text-xs">${esc(x.tanggal)}</span></div><p class="text-sm mt-3 whitespace-pre-wrap">${esc(x.isi)}</p>${userRole!=='tamu'?`<div class="flex gap-2 mt-3"><button type="button" onclick="editInformasiFinal('${x.noUrut}')" class="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 text-xs">Edit</button><button type="button" onclick="hapusFinal('Informasi','${x.noUrut}')" class="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 text-xs">Hapus</button></div>`:''}</div>`;});
+ };
+
+ window.editPrestasiFinal=function(no){const p=prestasiList.find(x=>String(x.noUrut)===String(no));if(!p)return;editPrestasiNo=no;bukaModalPrestasi();setTimeout(()=>{[...document.getElementById('select-siswa-prestasi').options].forEach(o=>o.selected=o.value===p.namaSiswa);document.getElementById('input-nama-prestasi').value=p.kejuaraan||'';document.getElementById('input-tingkat-prestasi').value=p.tingkat||'';document.getElementById('input-tanggal-prestasi').value=(p.tanggal||'').slice(0,10);document.getElementById('input-ket-prestasi').value=p.ket||'';},0);};
+ window.editInformasiFinal=function(no){const x=informasiList.find(x=>String(x.noUrut)===String(no));if(!x)return;editInformasiNo=no;document.getElementById('input-judul-info').value=x.judul||'';document.getElementById('input-tanggal-info').value=(x.tanggal||'').slice(0,10);document.getElementById('input-isi-info').value=x.isi||'';const m=document.getElementById('modal-tambah-informasi');m.classList.remove('hidden');m.classList.add('flex');};
+ window.hapusFinal=async function(sheet,no){if(!no)return showToast('No Urut belum tersedia. Muat ulang setelah kode GS baru dipasang.','warning');if(!confirm('Yakin ingin menghapus data ini?'))return;try{await api('deleteByNo',sheet,no,[]);if(sheet==='Prestasi')prestasiList=prestasiList.filter(x=>String(x.noUrut)!==String(no));else if(sheet==='Informasi')informasiList=informasiList.filter(x=>String(x.noUrut)!==String(no));else dokumentasiList=dokumentasiList.filter(x=>String(x.noUrut)!==String(no));sheet==='Prestasi'?renderPrestasi():sheet==='Informasi'?renderInformasi():renderDokumentasi();showToast('Data berhasil dihapus.','success');}catch(e){showToast(e.message,'error');}};
+
+ const oldSP=simpanPrestasi;
+ window.simpanPrestasi=async function(){
+   if(!editPrestasiNo){
+     const selected=[...document.getElementById('select-siswa-prestasi').selectedOptions];
+     const namaPrestasi=document.getElementById('input-nama-prestasi').value.trim(),tingkat=document.getElementById('input-tingkat-prestasi').value.trim(),tgl=document.getElementById('input-tanggal-prestasi').value,ket=document.getElementById('input-ket-prestasi').value.trim();
+     if(!selected.length||!namaPrestasi||!tgl)return showToast('Mohon lengkapi data!','warning');
+     try{for(const o of selected){const res=await api('createRecord','Prestasi',null,[o.value,namaPrestasi,tingkat,tgl,ket]);prestasiList.unshift({id:'p_'+res.data.noUrut,noUrut:String(res.data.noUrut),namaSiswa:o.value,kejuaraan:namaPrestasi,tingkat,tanggal:tgl,ket});}renderPrestasi();closeModalPrestasi();showToast('Prestasi berhasil disimpan.','success');}catch(e){showToast(e.message,'error');}return;
+   }
+   const p=prestasiList.find(x=>String(x.noUrut)===String(editPrestasiNo)),nama=[...document.getElementById('select-siswa-prestasi').selectedOptions].map(o=>o.value).join(', '),v=[nama,document.getElementById('input-nama-prestasi').value.trim(),document.getElementById('input-tingkat-prestasi').value.trim(),document.getElementById('input-tanggal-prestasi').value,document.getElementById('input-ket-prestasi').value.trim()];
+   await api('updateByNo','Prestasi',editPrestasiNo,v);Object.assign(p,{namaSiswa:v[0],kejuaraan:v[1],tingkat:v[2],tanggal:v[3],ket:v[4]});editPrestasiNo=null;renderPrestasi();closeModalPrestasi();showToast('Prestasi diperbarui.','success');
+ };
+
+ const oldSI=simpanInformasi;
+ window.simpanInformasi=async function(){
+   if(!editInformasiNo){const judul=document.getElementById('input-judul-info').value.trim(),tgl=document.getElementById('input-tanggal-info').value,isi=document.getElementById('input-isi-info').value.trim();if(!judul||!tgl||!isi)return showToast('Mohon lengkapi semua isian!','warning');try{const res=await api('createRecord','Informasi',null,[tgl,judul,isi]);informasiList.unshift({id:'i_'+res.data.noUrut,noUrut:String(res.data.noUrut),tanggal:tgl,judul,isi});renderInformasi();closeModalInformasi();showToast('Informasi berhasil disimpan.','success');}catch(e){showToast(e.message,'error');}return;}
+   const x=informasiList.find(x=>String(x.noUrut)===String(editInformasiNo)),v=[document.getElementById('input-tanggal-info').value,document.getElementById('input-judul-info').value.trim(),document.getElementById('input-isi-info').value.trim()];await api('updateByNo','Informasi',editInformasiNo,v);Object.assign(x,{tanggal:v[0],judul:v[1],isi:v[2]});editInformasiNo=null;renderInformasi();closeModalInformasi();showToast('Informasi diperbarui.','success');
+ };
+
+ // Documentation: keep original visual layout, add exactly one action row and same caption in fullscreen.
+ const oldRD=renderDokumentasi;
+ window.renderDokumentasi=function(){oldRD();setTimeout(()=>{const c=document.getElementById('dokumentasi-container');if(!c)return;[...c.children].forEach((card,i)=>{const d=dokumentasiList[i];if(!d||card.querySelector('.final-doc-actions'))return;const img=card.querySelector('img');if(img){img.closest('div')?.addEventListener('click',()=>openFotoFullscreen(d.url,d.ket||d.keterangan||''));}if(userRole!=='tamu'){const box=document.createElement('div');box.className='final-doc-actions flex gap-2 mt-3 px-3 pb-3';box.innerHTML=`<button type="button" class="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 text-xs">Edit</button><button type="button" class="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 text-xs">Hapus</button>`;box.children[0].onclick=()=>{const k=prompt('Keterangan foto:',d.ket||d.keterangan||'');if(k===null)return;api('updateByNo','Dokumentasi',d.noUrut,[d.timestamp||'',d.namaFile||'',d.fileId||d.id||'',d.url||'',k,d.driveUrl||'']).then(()=>{d.ket=k;d.keterangan=k;renderDokumentasi();});};box.children[1].onclick=()=>hapusFinal('Dokumentasi',d.noUrut);card.appendChild(box);}});},0);};
 })();
 </script>
 
