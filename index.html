@@ -1959,7 +1959,8 @@
             // Jangan buang data pertama. Header hanya dilewati bila benar-benar terdeteksi sebagai header.
             const prestasiRows = getDataRows(rowsPrestasi, ['Nama Siswa','Prestasi','Tingkat','Tanggal','Keterangan']);
             prestasiList = prestasiRows.map((r,i)=>({
-                id:i+1,
+                id:'prestasi_'+i,
+                _sheetRow:i + dataStartIndex(rowsPrestasi, ['Nama Siswa','Prestasi','Tingkat','Tanggal','Keterangan']) + 1,
                 namaSiswa:String(cell(r,0)||''),
                 kejuaraan:String(cell(r,1)||''),
                 tingkat:String(cell(r,2)||''),
@@ -1969,7 +1970,8 @@
 
             const informasiRows = getDataRows(rowsInformasi, ['Tanggal','Judul','Isi']);
             informasiList = informasiRows.map((r,i)=>({
-                id:i+1,
+                id:'informasi_'+i,
+                _sheetRow:i + dataStartIndex(rowsInformasi, ['Tanggal','Judul','Isi']) + 1,
                 tanggal:String(cell(r,0)||''),
                 judul:String(cell(r,1)||''),
                 isi:String(cell(r,2)||'')
@@ -2919,6 +2921,63 @@ window.loadAllData=async function(isAuto=false){
  informasiList.forEach(x=>x._match=[x.tanggal||'',x.judul||'',x.isi||'']);
  return result;
 };
+})();
+</script>
+
+
+<script>
+/* ===== FINAL FIX: nomor baris asli + tombol klik ===== */
+(function(){
+ async function rowApi(action,sheet,row,values){
+  if(!appsScriptUrl) await loadAppsScriptUrlFromC2();
+  const r=await fetch(appsScriptUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,sheet,row,values})});
+  const j=await r.json(); if(!j||j.success===false) throw Error(j?.error||'Gagal'); return j;
+ }
+ function find(type,id){
+  const L=type==='prestasi'?prestasiList:type==='informasi'?informasiList:dokumentasiList;
+  return L.find(x=>String(x.id)===String(id));
+ }
+ window.hapusItem=async function(type,id){
+  const x=find(type,id); if(!x) return showToast('Data tidak ditemukan di halaman.','error');
+  if(!confirm('Yakin ingin menghapus?'))return;
+  const sheet=type==='prestasi'?'Prestasi':type==='informasi'?'Informasi':'Dokumentasi';
+  try{
+   if(!x._sheetRow) throw Error('Nomor baris sumber belum tersedia. Muat ulang halaman sekali.');
+   await rowApi('deleteRowFinal',sheet,x._sheetRow,[]);
+   if(type==='prestasi')prestasiList=prestasiList.filter(v=>v!==x);
+   else if(type==='informasi')informasiList=informasiList.filter(v=>v!==x);
+   else dokumentasiList=dokumentasiList.filter(v=>v!==x);
+   if(type==='prestasi')renderPrestasi(); else if(type==='informasi')renderInformasi(); else renderDokumentasi();
+   showToast('Data berhasil dihapus.','success');
+  }catch(e){showToast(e.message,'error');}
+ };
+ // Use event delegation so Edit/Hapus remain clickable even if cards are rerendered.
+ document.addEventListener('click',function(e){
+  const b=e.target.closest('button[data-final-crud]'); if(!b)return;
+  e.preventDefault(); e.stopPropagation();
+  const type=b.dataset.type,id=b.dataset.id,act=b.dataset.act;
+  if(act==='delete') window.hapusItem(type,id);
+  else if(type==='prestasi') window.editPrestasi(id);
+  else if(type==='informasi') window.editInformasi(id);
+  else window.editDokumentasi(id);
+ },true);
+ function inject(){
+  if(userRole==='tamu')return;
+  [['prestasi','#prestasi-container',prestasiList],['informasi','#informasi-container',informasiList],['dokumentasi','#dokumentasi-container',dokumentasiList]].forEach(([type,sel,list])=>{
+   const cards=document.querySelectorAll(sel+' > div');
+   cards.forEach((card,i)=>{
+    if(card.querySelector('[data-final-crud]')||!list[i])return;
+    const id=String(list[i].id).replace(/"/g,'&quot;');
+    const box=document.createElement('div');box.className='flex gap-2 mt-3';
+    box.innerHTML=`<button type="button" data-final-crud data-act="edit" data-type="${type}" data-id="${id}" class="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 text-xs">Edit</button><button type="button" data-final-crud data-act="delete" data-type="${type}" data-id="${id}" class="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 text-xs">Hapus</button>`;
+    card.appendChild(box);
+   });
+  });
+ }
+ ['renderPrestasi','renderInformasi','renderDokumentasi'].forEach(n=>{
+  const old=window[n]; if(typeof old==='function')window[n]=function(){const z=old.apply(this,arguments);setTimeout(inject,0);return z;};
+ });
+ setTimeout(inject,500);
 })();
 </script>
 
