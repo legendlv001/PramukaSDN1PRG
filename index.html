@@ -2950,5 +2950,164 @@
  };
 })();
 </script>
+
+
+<script>
+/* ===== FINAL PRESTASI A:F ===== */
+(function(){
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let editNo=null;
+
+  async function api(action,noUrut,values){
+    if(!appsScriptUrl) await loadAppsScriptUrlFromC2();
+    if(!appsScriptUrl) throw new Error('URL Apps Script belum tersedia.');
+    const r=await fetch(appsScriptUrl,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action, sheet:'Prestasi', noUrut, values})
+    });
+    const j=await r.json();
+    if(!j||j.success===false)throw new Error(j?.error||'Gagal memproses Prestasi.');
+    return j;
+  }
+
+  // Render hanya data, tidak pernah header.
+  window.renderPrestasi=function(){
+    const box=document.getElementById('prestasi-container');
+    if(!box)return;
+    box.innerHTML='';
+
+    const q=(document.getElementById('search-prestasi')?.value||'').toLowerCase();
+    const list=(prestasiList||[]).filter(p=>{
+      const nama=String(p.namaSiswa||p.nama||'').trim();
+      const prestasi=String(p.kejuaraan||p.prestasi||'').trim();
+      // buang header atau baris kosong
+      if(!nama || !prestasi) return false;
+      if(nama.toLowerCase()==='nama' || nama.toLowerCase()==='nama siswa') return false;
+      if(prestasi.toLowerCase()==='prestasi' || prestasi.toLowerCase()==='nama prestasi') return false;
+      return nama.toLowerCase().includes(q)||prestasi.toLowerCase().includes(q);
+    });
+
+    list.forEach(p=>{
+      const nama=p.namaSiswa||p.nama||'';
+      const prestasi=p.kejuaraan||p.prestasi||'';
+      const no=String(p.noUrut||'');
+      const tingkat=p.tingkat||'';
+      const tanggal=p.tanggal||'';
+      const ket=p.ket||p.keterangan||'';
+
+      box.insertAdjacentHTML('beforeend',`
+        <div class="bg-gradient-to-br from-amber-50 to-white rounded-xl shadow-sm border border-amber-100 p-5 flex items-start gap-4">
+          <div class="bg-amber-100 text-amber-600 p-3 rounded-full text-2xl"><i class="fa-solid fa-medal"></i></div>
+          <div class="space-y-1 w-full">
+            <div class="flex justify-between gap-3">
+              <h4 class="font-bold">${esc(prestasi)}</h4>
+              <span class="text-[10px]">${esc(tanggal)}</span>
+            </div>
+            <p class="text-sm font-semibold">${esc(nama)}</p>
+            ${tingkat?`<p class="text-xs">${esc(tingkat)}</p>`:''}
+            ${ket?`<p class="text-xs italic">${esc(ket)}</p>`:''}
+            ${userRole!=='tamu'?`
+              <div class="flex gap-2 pt-2">
+                <button type="button" onclick="editPrestasiAF('${esc(no)}')" class="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 text-xs">Edit</button>
+                <button type="button" onclick="hapusPrestasiAF('${esc(no)}')" class="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 text-xs">Hapus</button>
+              </div>`:''}
+          </div>
+        </div>`);
+    });
+  };
+
+  window.editPrestasiAF=function(no){
+    const p=prestasiList.find(x=>String(x.noUrut)===String(no));
+    if(!p)return showToast('Data Prestasi tidak ditemukan.','error');
+    editNo=no;
+    bukaModalPrestasi();
+    setTimeout(()=>{
+      const nama=p.namaSiswa||p.nama||'';
+      [...document.getElementById('select-siswa-prestasi').options].forEach(o=>o.selected===false);
+      [...document.getElementById('select-siswa-prestasi').options].forEach(o=>{o.selected=o.value===nama;});
+      document.getElementById('input-nama-prestasi').value=p.kejuaraan||p.prestasi||'';
+      document.getElementById('input-tingkat-prestasi').value=p.tingkat||'';
+      document.getElementById('input-tanggal-prestasi').value=String(p.tanggal||'').slice(0,10);
+      document.getElementById('input-ket-prestasi').value=p.ket||p.keterangan||'';
+    },0);
+  };
+
+  window.hapusPrestasiAF=async function(no){
+    if(!no)return showToast('No Urut tidak tersedia. Refresh halaman setelah deploy kode baru.','warning');
+    if(!confirm('Yakin ingin menghapus data Prestasi ini?'))return;
+    try{
+      await api('deleteByNo',no,[]);
+      prestasiList=prestasiList.filter(x=>String(x.noUrut)!==String(no));
+      renderPrestasi();
+      showToast('Prestasi berhasil dihapus.','success');
+    }catch(e){showToast(e.message,'error');}
+  };
+
+  window.simpanPrestasi=async function(){
+    const selected=[...document.getElementById('select-siswa-prestasi').selectedOptions];
+    const prestasi=document.getElementById('input-nama-prestasi').value.trim();
+    const tingkat=document.getElementById('input-tingkat-prestasi').value.trim();
+    const tanggal=document.getElementById('input-tanggal-prestasi').value;
+    const ket=document.getElementById('input-ket-prestasi').value.trim();
+
+    if(!selected.length||!prestasi||!tanggal){
+      return showToast('Mohon lengkapi Nama, Prestasi, dan Tanggal!','warning');
+    }
+
+    try{
+      if(editNo!==null){
+        const nama=selected[0].value;
+        await api('updateByNo',editNo,[nama,prestasi,tingkat,tanggal,ket]);
+        const p=prestasiList.find(x=>String(x.noUrut)===String(editNo));
+        if(p)Object.assign(p,{namaSiswa:nama,nama,kejuaraan:prestasi,prestasi,tingkat,tanggal,ket,keterangan:ket});
+        editNo=null;
+        renderPrestasi();
+        closeModalPrestasi();
+        showToast('Prestasi berhasil diperbarui.','success');
+        return;
+      }
+
+      // Jika memilih beberapa siswa, setiap siswa mendapat satu data dan satu No Urut.
+      for(const option of selected){
+        const nama=option.value;
+        const res=await api('createRecord',null,[nama,prestasi,tingkat,tanggal,ket]);
+        prestasiList.unshift({
+          id:'prestasi_'+res.data.noUrut,
+          noUrut:String(res.data.noUrut),
+          namaSiswa:nama,
+          nama,
+          kejuaraan:prestasi,
+          prestasi,
+          tingkat,
+          tanggal,
+          ket,
+          keterangan:ket
+        });
+      }
+      renderPrestasi();
+      closeModalPrestasi();
+      showToast('Prestasi berhasil disimpan ke Spreadsheet.','success');
+    }catch(e){
+      showToast('Gagal menyimpan Prestasi: '+e.message,'error');
+    }
+  };
+
+  // Saat load, pastikan header tidak ikut masuk dan nomor urut dipetakan dari data row.
+  const oldLoad=window.loadAllData;
+  window.loadAllData=async function(isAuto=false){
+    const result=await oldLoad(isAuto);
+    prestasiList=(prestasiList||[]).filter(p=>{
+      const a=String(p.namaSiswa||p.nama||'').trim().toLowerCase();
+      const b=String(p.kejuaraan||p.prestasi||'').trim().toLowerCase();
+      return a && b && a!=='nama' && a!=='nama siswa' && b!=='prestasi' && b!=='nama prestasi';
+    });
+    return result;
+  };
+
+  setTimeout(()=>{try{renderPrestasi();}catch(e){}},800);
+})();
+</script>
+
 </body>
 </html>
