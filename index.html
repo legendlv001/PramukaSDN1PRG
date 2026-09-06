@@ -1956,24 +1956,43 @@
 
             const hasilRows = getDataRows(rowsHasil, ['ID Peserta','Nama Siswa','Kelas','Regu','Skor']);
             hasilSheetList=hasilRows.map(r=>({id:String(cell(r,0)),nama:cell(r,1),kelas:cell(r,2),regu:cell(r,3),skor:cell(r,4)})).filter(x=>x.id);
-            // Jangan buang data pertama. Header hanya dilewati bila benar-benar terdeteksi sebagai header.
-            const prestasiRows = getDataRows(rowsPrestasi, ['Nama Siswa','Prestasi','Tingkat','Tanggal','Keterangan']);
-            prestasiList = prestasiRows.map((r,i)=>({
-                id:i+1,
-                namaSiswa:String(cell(r,0)||''),
-                kejuaraan:String(cell(r,1)||''),
-                tingkat:String(cell(r,2)||''),
-                tanggal:String(cell(r,3)||''),
-                ket:String(cell(r,4)||'')
-            })).filter(x=>x.namaSiswa.trim()!=='' || x.kejuaraan.trim()!=='' || x.tingkat.trim()!=='' || x.tanggal.trim()!=='' || x.ket.trim()!=='');
+            // Baca Prestasi dan Informasi berdasarkan nama header agar No Urut tidak menggeser kolom.
+            function normalizeHeader(v){return String(v||'').trim().toLowerCase().replace(/\s+/g,' ');}
+            function findHeaderMap(rows,required){
+                for(let r=0;r<Math.min(5,rows.length);r++){
+                    const map={};
+                    for(let c=0;c<(rows[r]?.c?.length||0);c++){const h=normalizeHeader(cell(rows[r],c));if(h)map[h]=c;}
+                    if(required.every(h=>map[normalizeHeader(h)]!==undefined))return {row:r,map};
+                }
+                return null;
+            }
+            function headerValue(row,map,name,fallback=''){
+                const col=map[normalizeHeader(name)];
+                return col===undefined?fallback:String(cell(row,col)||'');
+            }
+            const ph=findHeaderMap(rowsPrestasi,['Nama Siswa','Prestasi','Tingkat','Tanggal','Keterangan']);
+            const pRows=ph?rowsPrestasi.slice(ph.row+1):getDataRows(rowsPrestasi,['Nama Siswa','Prestasi','Tingkat','Tanggal','Keterangan']);
+            const pm=ph?.map||{'nama siswa':0,'prestasi':1,'tingkat':2,'tanggal':3,'keterangan':4};
+            prestasiList=pRows.map((r,i)=>({
+                id:'prestasi_'+i,
+                noUrut:headerValue(r,pm,'No Urut',''),
+                namaSiswa:headerValue(r,pm,'Nama Siswa'),
+                kejuaraan:headerValue(r,pm,'Prestasi'),
+                tingkat:headerValue(r,pm,'Tingkat'),
+                tanggal:headerValue(r,pm,'Tanggal'),
+                ket:headerValue(r,pm,'Keterangan')
+            })).filter(x=>x.namaSiswa.trim()||x.kejuaraan.trim()||x.tingkat.trim()||x.tanggal.trim()||x.ket.trim());
 
-            const informasiRows = getDataRows(rowsInformasi, ['Tanggal','Judul','Isi']);
-            informasiList = informasiRows.map((r,i)=>({
-                id:i+1,
-                tanggal:String(cell(r,0)||''),
-                judul:String(cell(r,1)||''),
-                isi:String(cell(r,2)||'')
-            })).filter(x=>x.tanggal.trim()!=='' || x.judul.trim()!=='' || x.isi.trim()!=='');
+            const ih=findHeaderMap(rowsInformasi,['Tanggal','Judul','Isi']);
+            const iRows=ih?rowsInformasi.slice(ih.row+1):getDataRows(rowsInformasi,['Tanggal','Judul','Isi']);
+            const im=ih?.map||{'tanggal':0,'judul':1,'isi':2};
+            informasiList=iRows.map((r,i)=>({
+                id:'informasi_'+i,
+                noUrut:headerValue(r,im,'No Urut',''),
+                tanggal:headerValue(r,im,'Tanggal'),
+                judul:headerValue(r,im,'Judul'),
+                isi:headerValue(r,im,'Isi')
+            })).filter(x=>x.tanggal.trim()||x.judul.trim()||x.isi.trim());
 
             localStorage.setItem('pramuka_app_siswa',JSON.stringify(siswaList));
             localStorage.setItem('pramuka_app_pertemuan',JSON.stringify(pertemuanList));
@@ -2888,43 +2907,5 @@
  window.renderDokumentasi=function(){oldRD();setTimeout(()=>{const c=document.getElementById('dokumentasi-container');if(!c)return;[...c.children].forEach((card,i)=>{const d=dokumentasiList[i];if(!d||card.querySelector('.final-doc-actions'))return;const img=card.querySelector('img');if(img){img.closest('div')?.addEventListener('click',()=>openFotoFullscreen(d.url,d.ket||d.keterangan||''));}if(userRole!=='tamu'){const box=document.createElement('div');box.className='final-doc-actions flex gap-2 mt-3 px-3 pb-3';box.innerHTML=`<button type="button" class="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 text-xs">Edit</button><button type="button" class="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 text-xs">Hapus</button>`;box.children[0].onclick=()=>{const k=prompt('Keterangan foto:',d.ket||d.keterangan||'');if(k===null)return;api('updateByNo','Dokumentasi',d.noUrut,[d.timestamp||'',d.namaFile||'',d.fileId||d.id||'',d.url||'',k,d.driveUrl||'']).then(()=>{d.ket=k;d.keterangan=k;renderDokumentasi();});};box.children[1].onclick=()=>hapusFinal('Dokumentasi',d.noUrut);card.appendChild(box);}});},0);};
 })();
 </script>
-
-
-<script>
-/* ===== FIX DATA LAMA: BACKFILL NO URUT OTOMATIS ===== */
-(function(){
- async function backfill(sheet){
-   if(!appsScriptUrl) await loadAppsScriptUrlFromC2();
-   if(!appsScriptUrl) throw Error('URL Apps Script belum tersedia.');
-   const r=await fetch(appsScriptUrl,{
-     method:'POST',
-     headers:{'Content-Type':'text/plain;charset=utf-8'},
-     body:JSON.stringify({action:'ensureNoUrut',sheet})
-   });
-   const j=await r.json();
-   if(!j||j.success===false)throw Error(j?.error||'Gagal menyiapkan No Urut.');
-   return j;
- }
- const oldLoad=window.loadAllData;
- window.loadAllData=async function(isAuto=false){
-   try{await Promise.all(['Prestasi','Informasi','Dokumentasi'].map(backfill));}
-   catch(e){console.warn('Backfill No Urut gagal:',e.message);}
-   const result=await oldLoad(isAuto);
-   // Legacy loader may not return the hidden last column.
-   // Assign the same sequence used by the backfill for old records.
-   prestasiList.forEach((x,i)=>{if(x.noUrut===undefined||x.noUrut==='')x.noUrut=String(i+1);});
-   informasiList.forEach((x,i)=>{if(x.noUrut===undefined||x.noUrut==='')x.noUrut=String(i+1);});
-   dokumentasiList.forEach((x,i)=>{if(x.noUrut===undefined||x.noUrut==='')x.noUrut=String(i+1);});
-   return result;
- };
- // Also fix already-loaded data without requiring the user to manually recreate anything.
- setTimeout(()=>{
-   prestasiList?.forEach((x,i)=>{if(x.noUrut===undefined||x.noUrut==='')x.noUrut=String(i+1);});
-   informasiList?.forEach((x,i)=>{if(x.noUrut===undefined||x.noUrut==='')x.noUrut=String(i+1);});
-   dokumentasiList?.forEach((x,i)=>{if(x.noUrut===undefined||x.noUrut==='')x.noUrut=String(i+1);});
- },1200);
-})();
-</script>
-
 </body>
 </html>
