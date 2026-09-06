@@ -2889,5 +2889,42 @@
 })();
 </script>
 
+
+<script>
+/* ===== FIX DATA LAMA: BACKFILL NO URUT OTOMATIS ===== */
+(function(){
+ async function backfill(sheet){
+   if(!appsScriptUrl) await loadAppsScriptUrlFromC2();
+   if(!appsScriptUrl) throw Error('URL Apps Script belum tersedia.');
+   const r=await fetch(appsScriptUrl,{
+     method:'POST',
+     headers:{'Content-Type':'text/plain;charset=utf-8'},
+     body:JSON.stringify({action:'ensureNoUrut',sheet})
+   });
+   const j=await r.json();
+   if(!j||j.success===false)throw Error(j?.error||'Gagal menyiapkan No Urut.');
+   return j;
+ }
+ const oldLoad=window.loadAllData;
+ window.loadAllData=async function(isAuto=false){
+   try{await Promise.all(['Prestasi','Informasi','Dokumentasi'].map(backfill));}
+   catch(e){console.warn('Backfill No Urut gagal:',e.message);}
+   const result=await oldLoad(isAuto);
+   // Legacy loader may not return the hidden last column.
+   // Assign the same sequence used by the backfill for old records.
+   prestasiList.forEach((x,i)=>{if(x.noUrut===undefined||x.noUrut==='')x.noUrut=String(i+1);});
+   informasiList.forEach((x,i)=>{if(x.noUrut===undefined||x.noUrut==='')x.noUrut=String(i+1);});
+   dokumentasiList.forEach((x,i)=>{if(x.noUrut===undefined||x.noUrut==='')x.noUrut=String(i+1);});
+   return result;
+ };
+ // Also fix already-loaded data without requiring the user to manually recreate anything.
+ setTimeout(()=>{
+   prestasiList?.forEach((x,i)=>{if(x.noUrut===undefined||x.noUrut==='')x.noUrut=String(i+1);});
+   informasiList?.forEach((x,i)=>{if(x.noUrut===undefined||x.noUrut==='')x.noUrut=String(i+1);});
+   dokumentasiList?.forEach((x,i)=>{if(x.noUrut===undefined||x.noUrut==='')x.noUrut=String(i+1);});
+ },1200);
+})();
+</script>
+
 </body>
 </html>
