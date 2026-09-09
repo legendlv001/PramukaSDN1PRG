@@ -3109,5 +3109,265 @@
 })();
 </script>
 
+
+<script>
+/* ===== TAMBAHAN MENU STRUKTUR PRAMUKA =====
+   Kode lama tidak diubah. Fitur ini ditambahkan sebagai lapisan tambahan.
+   Sumber data: Google Spreadsheet -> sheet "Struktur".
+*/
+(function(){
+    let strukturList = [];
+
+    function strukturCell(row, index) {
+        return String(row?.c?.[index]?.v ?? row?.c?.[index]?.f ?? '').trim();
+    }
+
+    function normalizeText(v) {
+        return String(v || '').trim().toLowerCase()
+            .replace(/\s+/g, ' ')
+            .replace(/[._-]+/g, ' ');
+    }
+
+    function getStrukturValue(row, headers, candidates) {
+        const normalizedHeaders = headers.map(normalizeText);
+        for (const candidate of candidates) {
+            const idx = normalizedHeaders.indexOf(normalizeText(candidate));
+            if (idx >= 0) return strukturCell(row, idx);
+        }
+        return '';
+    }
+
+    function parseStrukturRows(rows) {
+        if (!Array.isArray(rows) || rows.length === 0) return [];
+
+        // Header bisa dikirim oleh GVIZ atau tidak.
+        const first = rows[0];
+        const firstValues = (first?.c || []).map(c => String(c?.v ?? c?.f ?? '').trim());
+        const headerWords = firstValues.map(normalizeText);
+
+        const hasHeader = headerWords.some(h =>
+            ['jabatan','posisi','kedudukan','peran','nama','nama lengkap','anggota'].includes(h)
+        );
+
+        const headers = hasHeader
+            ? firstValues
+            : ['Jabatan','Nama','Keterangan'];
+
+        const dataRows = hasHeader ? rows.slice(1) : rows;
+
+        return dataRows.map(row => {
+            let jabatan = getStrukturValue(row, headers, [
+                'Jabatan','Posisi','Kedudukan','Peran','Struktur'
+            ]);
+            let nama = getStrukturValue(row, headers, [
+                'Nama','Nama Lengkap','Nama Anggota','Personil','Orang'
+            ]);
+            let keterangan = getStrukturValue(row, headers, [
+                'Keterangan','Ket','Keterangan Tambahan'
+            ]);
+
+            // Fallback untuk sheet Struktur dengan format sederhana:
+            // Kolom A = Jabatan, Kolom B = Nama, Kolom C = Keterangan.
+            if (!jabatan) jabatan = strukturCell(row, 0);
+            if (!nama) nama = strukturCell(row, 1);
+            if (!keterangan) keterangan = strukturCell(row, 2);
+
+            return { jabatan, nama, keterangan };
+        }).filter(x => x.jabatan || x.nama || x.keterangan);
+    }
+
+    function jabatanUrutan(jabatan) {
+        const j = normalizeText(jabatan);
+        if (j === 'kepala sekolah') return 1;
+        if (j.includes('kepala') && j.includes('pembina')) return 2;
+        if (j === 'pembina pramuka' || (j.includes('pembina') && !j.includes('kepala'))) return 3;
+        if (j === 'anggota') return 4;
+        return 5;
+    }
+
+    function renderStrukturPramuka() {
+        const container = document.getElementById('struktur-pramuka-container');
+        if (!container) return;
+
+        if (!strukturList.length) {
+            container.innerHTML = `
+                <div class="bg-white p-8 rounded-2xl border border-gray-100 text-center">
+                    <div class="bg-pramuka-50 text-pramuka-700 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+                        <i class="fa-solid fa-users-gear"></i>
+                    </div>
+                    <p class="font-bold text-gray-700">Data Struktur Pramuka belum tersedia.</p>
+                    <p class="text-xs text-gray-400 mt-1">Pastikan sheet "Struktur" pada Spreadsheet sudah berisi data.</p>
+                </div>`;
+            return;
+        }
+
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        }[c]));
+
+        const sorted = [...strukturList].sort((a,b) =>
+            jabatanUrutan(a.jabatan) - jabatanUrutan(b.jabatan)
+        );
+
+        container.innerHTML = sorted.map((item, index) => {
+            const jabatan = esc(item.jabatan);
+            const nama = esc(item.nama || '-');
+            const ket = item.keterangan ? `<p class="text-xs text-gray-400 mt-1">${esc(item.keterangan)}</p>` : '';
+
+            let icon = 'fa-user';
+            if (jabatanUrutan(item.jabatan) === 1) icon = 'fa-school';
+            else if (jabatanUrutan(item.jabatan) === 2) icon = 'fa-user-tie';
+            else if (jabatanUrutan(item.jabatan) === 3) icon = 'fa-compass';
+            else if (jabatanUrutan(item.jabatan) === 4) icon = 'fa-users';
+
+            return `
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition">
+                    <div class="p-4 sm:p-5 flex items-center gap-4">
+                        <div class="w-12 h-12 shrink-0 rounded-xl bg-pramuka-100 text-pramuka-700 flex items-center justify-center text-lg">
+                            <i class="fa-solid ${icon}"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-[11px] uppercase tracking-wider font-bold text-pramuka-600">${jabatan}</p>
+                            <h3 class="font-bold text-gray-800 text-base sm:text-lg break-words">${nama}</h3>
+                            ${ket}
+                        </div>
+                        <div class="text-xs font-bold text-gray-300">${index + 1}</div>
+                    </div>
+                </div>`;
+        }).join('');
+    }
+
+    async function loadStrukturPramuka() {
+        try {
+            const rows = await fetchDataFromSheet('Struktur', true);
+            strukturList = parseStrukturRows(rows);
+            renderStrukturPramuka();
+        } catch (e) {
+            console.warn('Gagal mengambil Struktur Pramuka:', e);
+            strukturList = [];
+            renderStrukturPramuka();
+        }
+    }
+
+    function addDesktopMenu() {
+        const nav = document.getElementById('desktop-nav');
+        if (!nav || document.getElementById('nav-btn-struktur')) return;
+
+        const btn = document.createElement('button');
+        btn.id = 'nav-btn-struktur';
+        btn.className = 'nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2';
+        btn.setAttribute('onclick', "switchTab('struktur')");
+        btn.innerHTML = '<i class="fa-solid fa-sitemap"></i> <span>Struktur Pramuka</span>';
+
+        const auth = document.getElementById('desktop-auth-btn');
+        nav.insertBefore(btn, auth || null);
+    }
+
+    function addMobileMenu() {
+        const menu = document.getElementById('mobile-menu');
+        if (!menu || document.getElementById('mobile-nav-btn-struktur')) return;
+
+        const btn = document.createElement('button');
+        btn.id = 'mobile-nav-btn-struktur';
+        btn.className = 'w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3';
+        btn.setAttribute('onclick', "switchTab('struktur'); toggleMobileMenu()");
+        btn.innerHTML = '<i class="fa-solid fa-sitemap w-5"></i> <span>Struktur Pramuka</span>';
+
+        const settingsBtn = [...menu.querySelectorAll('button')].find(b =>
+            String(b.getAttribute('onclick') || '').includes("switchTab('settings')")
+        );
+        menu.querySelector('div.space-y-1')?.insertBefore(btn, settingsBtn || null);
+    }
+
+    function addQuickMenu() {
+        const grid = document.getElementById('quick-menu-grid');
+        if (!grid || document.getElementById('quick-struktur-pramuka')) return;
+
+        const btn = document.createElement('button');
+        btn.id = 'quick-struktur-pramuka';
+        btn.className = 'p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 text-xs sm:text-sm';
+        btn.setAttribute('onclick', "switchTab('struktur')");
+        btn.innerHTML = '<i class="fa-solid fa-sitemap text-base"></i><span>Struktur Pramuka</span>';
+
+        const wa = grid.querySelector('a');
+        grid.insertBefore(btn, wa || null);
+    }
+
+    function addStrukturTab() {
+        if (document.getElementById('tab-struktur')) return;
+
+        const main = document.querySelector('main');
+        if (!main) return;
+
+        const section = document.createElement('section');
+        section.id = 'tab-struktur';
+        section.className = 'tab-content hidden space-y-6';
+        section.innerHTML = `
+            <div class="bg-gradient-to-r from-pramuka-700 to-pramuka-800 text-white p-6 sm:p-8 rounded-2xl shadow-md">
+                <div class="flex items-center gap-4">
+                    <div class="bg-white/15 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl">
+                        <i class="fa-solid fa-sitemap"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-extrabold">Struktur Pramuka</h2>
+                        <p class="text-pramuka-100 text-sm mt-1">Struktur organisasi Pramuka berdasarkan data pada Spreadsheet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="struktur-pramuka-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        `;
+
+        // Letakkan sebelum Pengaturan agar menu tambahan tetap menyatu dengan halaman utama.
+        const settings = document.getElementById('tab-settings');
+        main.insertBefore(section, settings || null);
+    }
+
+    function updateNavActive() {
+        const originalSwitchTab = window.switchTab;
+        if (!originalSwitchTab || originalSwitchTab.__strukturWrapped) return;
+
+        const wrapped = function(tabId) {
+            originalSwitchTab(tabId);
+
+            setTimeout(() => {
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('bg-pramuka-800');
+                });
+                const active = document.getElementById('nav-btn-' + tabId);
+                if (active) active.classList.add('bg-pramuka-800');
+
+                if (tabId === 'struktur') renderStrukturPramuka();
+            }, 0);
+        };
+
+        wrapped.__strukturWrapped = true;
+        window.switchTab = wrapped;
+    }
+
+    const oldLoadAllData = window.loadAllData;
+    window.loadAllData = async function(isAuto = false) {
+        const result = oldLoadAllData ? await oldLoadAllData(isAuto) : null;
+        await loadStrukturPramuka();
+        return result;
+    };
+
+    function initStrukturPramuka() {
+        addDesktopMenu();
+        addMobileMenu();
+        addQuickMenu();
+        addStrukturTab();
+        updateNavActive();
+        renderStrukturPramuka();
+        loadStrukturPramuka();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initStrukturPramuka);
+    } else {
+        initStrukturPramuka();
+    }
+})();
+</script>
 </body>
 </html>
