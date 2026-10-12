@@ -40,6 +40,15 @@
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
 
+    <!-- Loading awal saat aplikasi mengambil data dari Google Sheets -->
+    <div id="initial-data-loader" class="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-white" role="status" aria-live="polite">
+        <img id="initial-data-loader-gif" src="https://lh3.googleusercontent.com/d/1wXGT5FNfmCUlE3h-CnQPRH9lZHuBwsQL" alt="Memuat data..." class="max-w-[220px] max-h-[220px] object-contain" onerror="if(!this.dataset.triedFallback){this.dataset.triedFallback='1';this.src='https://drive.google.com/uc?export=view&amp;id=1wXGT5FNfmCUlE3h-CnQPRH9lZHuBwsQL';}else{this.style.display='none';document.getElementById('initial-data-loader-fallback').classList.remove('hidden');}">
+        <div id="initial-data-loader-fallback" class="hidden mt-3" aria-hidden="true">
+            <div class="h-10 w-10 rounded-full border-4 border-green-200 border-t-green-700 animate-spin"></div>
+        </div>
+        <p class="mt-4 text-base font-semibold text-green-800">Memuat data, mohon tunggu...</p>
+    </div>
+
     <header class="bg-pramuka-700 text-white shadow-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
             <div onclick="switchTab('dashboard')" class="flex items-center space-x-3 cursor-pointer group">
@@ -68,7 +77,7 @@
                     <i class="fa-solid fa-clipboard-user"></i> <span>Absen</span>
                 </button>
                 <button onclick="switchTab('nilai')" id="nav-btn-nilai" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2 nav-pembina-only">
-                    <i class="fa-solid fa-award"></i> <span>Penilaian</span>
+                    <i class="fa-solid fa-award"></i> <span>Input Nilai</span>
                 </button>
                 <button onclick="switchTab('hasil-rekap')" id="nav-btn-hasil-rekap" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-600 transition flex items-center space-x-2">
                     <i class="fa-solid fa-chart-column"></i> <span>Hasil Rekap</span>
@@ -106,7 +115,7 @@
                     <i class="fa-solid fa-clipboard-user w-5"></i> <span>Absen Pramuka</span>
                 </button>
                 <button onclick="switchTab('nilai'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3 nav-pembina-only">
-                    <i class="fa-solid fa-award w-5"></i> <span>Penilaian Latihan</span>
+                    <i class="fa-solid fa-award w-5"></i> <span>Input Nilai</span>
                 </button>
                 <button onclick="switchTab('hasil-rekap'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-pramuka-700 flex items-center space-x-3">
                     <i class="fa-solid fa-chart-column w-5"></i> <span>Hasil Rekap</span>
@@ -498,7 +507,7 @@
                     </button>
                     <button onclick="switchTab('nilai')" class="quick-pembina-only p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 text-xs sm:text-sm">
                         <i class="fa-solid fa-award text-base"></i>
-                        <span>Penilaian Materi</span>
+                        <span>Input Nilai</span>
                     </button>
                     <button onclick="switchTab('hasil-rekap')" class="p-4 bg-pramuka-50 hover:bg-pramuka-100 text-pramuka-800 rounded-xl flex items-center justify-center space-x-2 font-medium transition active:scale-95 text-xs sm:text-sm">
                         <i class="fa-solid fa-chart-column text-base"></i>
@@ -617,68 +626,51 @@
             </div>
         </section>
 
-        <!-- PENILAIAN TAB -->
+        <!-- INPUT NILAI TAB -->
         <section id="tab-nilai" class="tab-content hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
-                        <h2 class="text-xl font-bold text-gray-800">Penilaian Berdasarkan Materi</h2>
-                        <p class="text-sm text-gray-500">Masukkan nama materi latihan terlebih dahulu (Awal: Nilai E).</p>
+                        <h2 class="text-xl font-bold text-gray-800">Input Nilai Pramuka</h2>
+                        <p class="text-sm text-gray-500">Ketik nama materi latihan, lalu pilih nilai setiap siswa dari A sampai E. Materi yang sudah dinilai bisa diklik untuk diedit.</p>
                     </div>
                     <button onclick="bukaCekMateri()" class="bg-amber-500 hover:bg-amber-600 text-gray-900 px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition flex items-center space-x-2 active:scale-95">
-                        <i class="fa-solid fa-award"></i>
-                        <span>Cek Materi Dinilai</span>
+                        <i class="fa-solid fa-list-check"></i>
+                        <span>Cek Materi Nilai</span>
                     </button>
                 </div>
                 <div class="flex flex-col md:flex-row gap-3">
-                    <input type="text" id="input-materi-uji" placeholder="Contoh: Tali-Temali / PBB / Semaphore" class="flex-grow px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pramuka-600 text-sm">
+                    <input type="text" id="input-materi-uji" placeholder="Ketik materi, contoh: Tali-Temali / PBB / Semaphore" class="flex-grow px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pramuka-600 text-sm" maxlength="200">
                     <button onclick="mulaiPenilaianMateri()" class="bg-pramuka-700 hover:bg-pramuka-800 text-white px-6 py-3 rounded-xl font-medium shadow-sm transition flex items-center justify-center space-x-2 active:scale-95">
                         <i class="fa-solid fa-play"></i>
-                        <span>Mulai Beri Nilai</span>
+                        <span>Mulai Input Nilai</span>
                     </button>
                 </div>
                 <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-xs text-amber-900 flex flex-wrap items-center gap-x-4 gap-y-1 font-semibold">
-                    <span class="text-amber-800 font-bold"><i class="fa-solid fa-circle-info mr-1"></i> Rentang Nilai:</span>
-                    <span>A = 100-71</span>
-                    <span>B = 70-41</span>
-                    <span>C = 40-11</span>
-                    <span>D = 10-1</span>
-                    <span>E = 0</span>
+                    <span class="text-amber-800 font-bold"><i class="fa-solid fa-circle-info mr-1"></i> Urutan Nilai:</span>
+                    <span>A = Tertinggi</span><span>B = Baik</span><span>C = Cukup</span><span>D = Kurang</span><span>E = Terendah</span>
                 </div>
             </div>
 
             <div id="section-tabel-nilai" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hidden">
                 <div class="p-6 bg-pramuka-50 border-b border-gray-100 space-y-3">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                        <div>
-                            <span class="text-xs font-bold uppercase text-gray-500">Materi Aktif:</span>
-                            <h3 id="display-nama-materi" class="text-lg font-bold text-pramuka-800"></h3>
-                        </div>
-                        <div>
-                            <span class="text-xs font-bold uppercase text-gray-500 block">Tanggal Input:</span>
-                            <p id="display-tanggal-input" class="text-sm font-bold text-gray-700"></p>
-                        </div>
+                    <div>
+                        <span class="text-xs font-bold uppercase text-gray-500">Materi Aktif:</span>
+                        <h3 id="display-nama-materi" class="text-lg font-bold text-pramuka-800"></h3>
                     </div>
+                    <p class="text-xs text-gray-500">Pilih nilai untuk setiap siswa. Nilai sebelumnya untuk materi ini akan ditampilkan saat mengedit.</p>
                 </div>
-
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-100 text-gray-600 text-xs uppercase tracking-wider">
-                                <th class="p-4 font-semibold">Nama Siswa</th>
-                                <th class="p-4 font-semibold text-center">Kelas</th>
-                                <th class="p-4 font-semibold text-center">Regu</th>
-                                <th class="p-4 font-semibold text-center">Nilai (A - E)</th>
-                            </tr>
-                        </thead>
+                        <thead><tr class="bg-gray-100 text-gray-600 text-xs uppercase tracking-wider">
+                            <th class="p-4 font-semibold">Nama Siswa</th><th class="p-4 font-semibold text-center">Kelas</th><th class="p-4 font-semibold text-center">Regu</th><th class="p-4 font-semibold text-center">Nilai (A–E)</th>
+                        </tr></thead>
                         <tbody id="nilai-table-body" class="divide-y divide-gray-100 text-sm"></tbody>
                     </table>
                 </div>
-
                 <div id="container-simpan-nilai" class="p-4 bg-gray-50 border-t border-gray-100 flex justify-end">
                     <button onclick="simpanDataNilai()" class="w-full sm:w-auto bg-pramuka-700 hover:bg-pramuka-800 text-white px-6 py-3 rounded-xl font-medium shadow-sm transition active:scale-95 flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-floppy-disk"></i>
-                        <span>Simpan & Kirim Rekap Nilai</span>
+                        <i class="fa-solid fa-floppy-disk"></i><span>Simpan Nilai</span>
                     </button>
                 </div>
             </div>
@@ -1228,7 +1220,7 @@
                     applyRoleUI();
                     showToast('Login berhasil! Masuk ke Mode Pembina.', 'success');
                     if(!document.getElementById('section-tabel-absen').classList.contains('hidden')) mulaiAbsen();
-                    if(!document.getElementById('section-tabel-nilai').classList.contains('hidden')) mulaiPenilaianMateri();
+                    const sectionNilai = document.getElementById('section-tabel-nilai'); if(sectionNilai && !sectionNilai.classList.contains('hidden')) mulaiPenilaianMateri();
                 } else {
                     showToast('Password salah! Silakan coba lagi.', 'error');
                     document.getElementById('input-password').value = '';
@@ -1318,8 +1310,20 @@
             const tglArray = Array.from(new Set(cloudTanggalList)).filter(t => /^\d{4}-\d{2}-\d{2}$/.test(String(t).trim())).sort((a,b) => new Date(b)-new Date(a));
             document.getElementById('cek-absen-total').textContent = `Total Pertemuan: ${tglArray.length}`;
             if(tglArray.length === 0) tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-gray-400">Belum ada catatan tanggal kegiatan absen.</td></tr>`;
-            else tglArray.forEach((tgl,idx)=>{ const d=new Date(tgl+'T00:00:00'); const display=!isNaN(d)?d.toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'}):tgl; tbody.innerHTML += `<tr><td class="p-3">${idx+1}</td><td class="p-3 font-bold">${display}</td><td class="p-3 text-center"><span class="px-2.5 py-1 bg-green-100 text-green-800 rounded-full text-[11px] font-bold">Tercatat Aktif</span></td></tr>`; });
+            else tglArray.forEach((tgl,idx)=>{ const d=new Date(tgl+'T00:00:00'); const display=!isNaN(d)?d.toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'}):tgl; tbody.innerHTML += `<tr class="hover:bg-amber-50 transition"><td class="p-3">${idx+1}</td><td class="p-3 font-bold"><button type="button" onclick="pilihTanggalAbsen('${tgl}')" class="text-left text-pramuka-700 hover:text-amber-700 hover:underline" title="Klik untuk melihat dan mengedit absen tanggal ini">${display}</button></td><td class="p-3 text-center"><span class="px-2.5 py-1 bg-green-100 text-green-800 rounded-full text-[11px] font-bold">Klik untuk edit</span></td></tr>`; });
             const modal=document.getElementById('modal-cek-absen'); modal.classList.remove('hidden'); modal.classList.add('flex');
+        }
+
+        function pilihTanggalAbsen(tgl) {
+            if (userRole === 'tamu') {
+                closeCekAbsenModal();
+                showToast('Login sebagai Pembina untuk mengedit absensi.', 'warning');
+                return;
+            }
+            document.getElementById('tanggal-sabtu').value = tgl;
+            closeCekAbsenModal();
+            switchTab('absen');
+            mulaiAbsen();
         }
 
         function closeCekAbsenModal() {
@@ -1333,7 +1337,11 @@
             const materiArray=Object.entries(cloudMateriMap).sort((a,b)=>a[0].localeCompare(b[0],'id'));
             document.getElementById('cek-materi-total').textContent=`Total Materi: ${materiArray.length}`;
             if(materiArray.length===0) tbody.innerHTML=`<tr><td colspan="3" class="p-4 text-center text-gray-400">Belum ada materi latihan yang dinilai.</td></tr>`;
-            else materiArray.forEach(([mat,count],idx)=>tbody.innerHTML += `<tr><td class="p-3">${idx+1}</td><td class="p-3 font-bold">${mat}</td><td class="p-3 text-center"><span class="px-2.5 py-1 bg-pramuka-100 text-pramuka-800 rounded-full text-[11px] font-bold">${count} Siswa</span></td></tr>`);
+            else materiArray.forEach(([mat,count],idx)=>{
+                const safeMat=String(mat).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                tbody.innerHTML += `<tr class="hover:bg-amber-50 transition"><td class="p-3">${idx+1}</td><td class="p-3 font-bold"><button type="button" class="cek-materi-pilih text-left text-pramuka-700 hover:text-amber-700 hover:underline" data-materi="${safeMat}" title="Klik untuk melihat dan mengedit nilai materi ini">${safeMat}</button></td><td class="p-3 text-center"><span class="px-2.5 py-1 bg-pramuka-100 text-pramuka-800 rounded-full text-[11px] font-bold">${count} Siswa</span></td></tr>`;
+            });
+            tbody.querySelectorAll('.cek-materi-pilih').forEach(btn=>btn.addEventListener('click',()=>pilihMateriPenilaian(btn.dataset.materi)));
             const modal=document.getElementById('modal-cek-materi'); modal.classList.remove('hidden'); modal.classList.add('flex');
         }
 
@@ -1341,6 +1349,17 @@
             const modal = document.getElementById('modal-cek-materi');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+        }
+
+        function pilihMateriPenilaian(materi) {
+            if (userRole === 'tamu') {
+                showToast('Login sebagai Pembina untuk mengedit nilai.', 'warning');
+                return;
+            }
+            closeCekMateriModal();
+            switchTab('nilai');
+            document.getElementById('input-materi-uji').value = String(materi || '');
+            mulaiPenilaianMateri();
         }
 
         // FUNGSI MODAL DOKUMENTASI - UPLOAD LANGSUNG KE GOOGLE DRIVE
@@ -1933,6 +1952,8 @@
                 const r=nilaiDetailRows[i], id=String(cell(r,1)).trim(), materi=String(cell(r,2)).trim(), val=cell(r,6)||'E';
                 if(id && materi){ (logNilaiMap[id] ||= {})[materi]=val; remoteMateriSet.add(materi); }
             }
+            cloudMateriMap = {};
+            Object.values(logNilaiMap).forEach(riwayat => Object.keys(riwayat).forEach(materi => { cloudMateriMap[materi] = (cloudMateriMap[materi] || 0) + 1; }));
             pertemuanList=[...tempPertemuanSet].sort(); cloudTanggalList=[...pertemuanList];
             remotePertemuanList=[...pertemuanList]; remoteMateriList=[...remoteMateriSet];
 
@@ -2338,7 +2359,6 @@
             });
 
             document.getElementById('display-nama-materi').textContent = materiInput;
-            document.getElementById('display-tanggal-input').textContent = formatTanggalIndo(new Date().toISOString().split('T')[0]);
             document.getElementById('section-tabel-nilai').classList.remove('hidden');
             renderTabelNilai(activeSiswa);
         }
@@ -2417,7 +2437,8 @@
             
             let logPayloads = [];
 
-            getFilteredSiswaList().forEach(s => {
+            const siswaDinilai = getFilteredSiswaList();
+            siswaDinilai.forEach(s => {
                 s.riwayatNilai[materiInput] = s.nilai;
                 let grades = Object.values(s.riwayatNilai);
                 s.nilai = calculateAverageGrade(grades);
@@ -2427,6 +2448,7 @@
                     values: [timestamp, s.id, materiInput, s.nama, s.kelas, s.regu, s.riwayatNilai[materiInput]]
                 });
             });
+            cloudMateriMap[materiInput] = siswaDinilai.length;
 
             localStorage.setItem('pramuka_app_siswa', JSON.stringify(siswaList));
             
@@ -2871,7 +2893,7 @@
      const selected=[...document.getElementById('select-siswa-prestasi').selectedOptions];
      const namaPrestasi=document.getElementById('input-nama-prestasi').value.trim(),tingkat=document.getElementById('input-tingkat-prestasi').value.trim(),tgl=document.getElementById('input-tanggal-prestasi').value,ket=document.getElementById('input-ket-prestasi').value.trim();
      if(!selected.length||!namaPrestasi||!tgl)return showToast('Mohon lengkapi data!','warning');
-     try{for(const o of selected){const res=const siswa=siswaList.find(x=>x.nama===o.value); const idPeserta=siswa?.id||siswa?.idPeserta||''; await api('createRecord','Prestasi',null,[idPeserta,o.value,namaPrestasi,tingkat,tgl,ket]);prestasiList.unshift({id:'p_'+res.data.noUrut,noUrut:String(res.data.noUrut),namaSiswa:o.value,kejuaraan:namaPrestasi,tingkat,tanggal:tgl,ket});}renderPrestasi();closeModalPrestasi();showToast('Prestasi berhasil disimpan.','success');}catch(e){showToast(e.message,'error');}return;
+     try{for(const o of selected){const siswa=siswaList.find(x=>x.nama===o.value); const idPeserta=siswa?.id||siswa?.idPeserta||''; const res=await api('createRecord','Prestasi',null,[idPeserta,o.value,namaPrestasi,tingkat,tgl,ket]);prestasiList.unshift({id:'p_'+res.data.noUrut,noUrut:String(res.data.noUrut),namaSiswa:o.value,kejuaraan:namaPrestasi,tingkat,tanggal:tgl,ket});}renderPrestasi();closeModalPrestasi();showToast('Prestasi berhasil disimpan.','success');}catch(e){showToast(e.message,'error');}return;
    }
    const p=prestasiList.find(x=>String(x.noUrut)===String(editPrestasiNo)),sel=[...document.getElementById('select-siswa-prestasi').selectedOptions],nama=sel.map(o=>o.value).join(', '),siswa=sel[0]?siswaList.find(x=>x.nama===sel[0].value):null,idPeserta=siswa?.id||siswa?.idPeserta||p?.idSiswa||'',v=[idPeserta,nama,document.getElementById('input-nama-prestasi').value.trim(),document.getElementById('input-tingkat-prestasi').value.trim(),document.getElementById('input-tanggal-prestasi').value,document.getElementById('input-ket-prestasi').value.trim()];
    await api('updateByNo','Prestasi',editPrestasiNo,v);Object.assign(p,{idSiswa:v[0],namaSiswa:v[1],kejuaraan:v[2],tingkat:v[3],tanggal:v[4],ket:v[5]});editPrestasiNo=null;renderPrestasi();closeModalPrestasi();showToast('Prestasi diperbarui.','success');
@@ -3367,6 +3389,35 @@
     } else {
         initStrukturPramuka();
     }
+})();
+</script>
+
+<script>
+/* Loading hanya saat pemuatan data pertama kali; semua fungsi dan data lama tetap dipertahankan. */
+(function () {
+    const loader = document.getElementById('initial-data-loader');
+    const originalLoadAllData = window.loadAllData;
+    let firstLoadHandled = false;
+    if (typeof originalLoadAllData === 'function') {
+        window.loadAllData = async function (isAuto = false) {
+            const shouldShow = !firstLoadHandled && !isAuto;
+            if (shouldShow && loader) loader.classList.remove('hidden');
+            try {
+                return await originalLoadAllData.apply(this, arguments);
+            } finally {
+                if (shouldShow) {
+                    firstLoadHandled = true;
+                    if (loader) loader.classList.add('hidden');
+                }
+            }
+        };
+    }
+    // Jika aplikasi offline atau pemuatan awal tidak terpanggil, jangan menutup layar selamanya.
+    window.addEventListener('load', function () {
+        setTimeout(function () {
+            if (loader && !firstLoadHandled && !navigator.onLine) loader.classList.add('hidden');
+        }, 12000);
+    }, { once: true });
 })();
 </script>
 </body>
