@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pramuka SD Negeri 1 Parigi</title>
+    <!-- =========================================================
+         PENGATURAN UTAMA (TEMPEL URL APPS SCRIPT DI SINI)
+         ========================================================= -->
+    <script>
+        window.APP_CONFIG = {
+            SPREADSHEET_ID: "1Xw-_rPopukH0bWP5BF959A_oNE-3OsvctuMHYLMjPD8",
+            APPS_SCRIPT_URL: "Https://script.google.com/macros/s/AKfycby9qD6UnpwkPtsjCk_KOLcuOeJxfSgqLhUtkovNb0mEr2K6ySWNEFC1glvx5XlcpFVRog/exec"
+        };
+    </script>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -42,7 +51,7 @@
 
     <!-- Loading awal saat aplikasi mengambil data dari Google Sheets -->
     <div id="initial-data-loader" class="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-white" role="status" aria-live="polite">
-        <img id="initial-data-loader-gif" src="https://lh3.googleusercontent.com/d/1wXGT5FNfmCUlE3h-CnQPRH9lZHuBwsQL" alt="Memuat data..." class="max-w-[220px] max-h-[220px] object-contain" onerror="if(!this.dataset.triedFallback){this.dataset.triedFallback='1';this.src='https://drive.google.com/uc?export=view&amp;id=1wXGT5FNfmCUlE3h-CnQPRH9lZHuBwsQL';}else{this.style.display='none';document.getElementById('initial-data-loader-fallback').classList.remove('hidden');}">
+        <img id="initial-data-loader-gif" src="https://lh3.googleusercontent.com/d/1wXGT5FNfmCUlE3h-CnQPRH9lZHuBwsQL" alt="Memuat data..." class="w-[280px] h-[280px] max-w-[80vw] max-h-[80vw] object-contain" onerror="if(!this.dataset.triedFallback){this.dataset.triedFallback='1';this.src='https://drive.google.com/uc?export=view&amp;id=1wXGT5FNfmCUlE3h-CnQPRH9lZHuBwsQL';}else{this.style.display='none';document.getElementById('initial-data-loader-fallback').classList.remove('hidden');}">
         <div id="initial-data-loader-fallback" class="hidden mt-3" aria-hidden="true">
             <div class="h-10 w-10 rounded-full border-4 border-green-200 border-t-green-700 animate-spin"></div>
         </div>
@@ -632,7 +641,7 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
                         <h2 class="text-xl font-bold text-gray-800">Input Nilai Pramuka</h2>
-                        <p class="text-sm text-gray-500">Ketik nama materi latihan, lalu pilih nilai setiap siswa dari A sampai E. Materi yang sudah dinilai bisa diklik untuk diedit.</p>
+                        <p class="text-sm text-gray-500">Pilih tanggal kegiatan dan ketik keterangan/materi terlebih dahulu untuk menampilkan daftar nilai (Awal: E).</p>
                     </div>
                     <button onclick="bukaCekMateri()" class="bg-amber-500 hover:bg-amber-600 text-gray-900 px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition flex items-center space-x-2 active:scale-95">
                         <i class="fa-solid fa-list-check"></i>
@@ -640,7 +649,8 @@
                     </button>
                 </div>
                 <div class="flex flex-col md:flex-row gap-3">
-                    <input type="text" id="input-materi-uji" placeholder="Ketik materi, contoh: Tali-Temali / PBB / Semaphore" class="flex-grow px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pramuka-600 text-sm" maxlength="200">
+                    <input type="date" id="tanggal-nilai" class="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pramuka-600 text-sm font-bold text-pramuka-700">
+                    <input type="text" id="input-materi-uji" placeholder="Ketik keterangan / materi, contoh: Tali-Temali / PBB / Semaphore" class="flex-grow px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pramuka-600 text-sm" maxlength="200">
                     <button onclick="mulaiPenilaianMateri()" class="bg-pramuka-700 hover:bg-pramuka-800 text-white px-6 py-3 rounded-xl font-medium shadow-sm transition flex items-center justify-center space-x-2 active:scale-95">
                         <i class="fa-solid fa-play"></i>
                         <span>Mulai Input Nilai</span>
@@ -648,17 +658,24 @@
                 </div>
                 <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-xs text-amber-900 flex flex-wrap items-center gap-x-4 gap-y-1 font-semibold">
                     <span class="text-amber-800 font-bold"><i class="fa-solid fa-circle-info mr-1"></i> Urutan Nilai:</span>
-                    <span>A = Tertinggi</span><span>B = Baik</span><span>C = Cukup</span><span>D = Kurang</span><span>E = Terendah</span>
+                    <span>A = Tertinggi</span><span>B = Baik</span><span>C = Cukup</span><span>D = Kurang</span><span>E = Terendah (Default)</span>
                 </div>
             </div>
 
             <div id="section-tabel-nilai" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hidden">
-                <div class="p-6 bg-pramuka-50 border-b border-gray-100 space-y-3">
+                <div class="p-6 bg-pramuka-50 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <span class="text-xs font-bold uppercase text-gray-500">Materi Aktif:</span>
-                        <h3 id="display-nama-materi" class="text-lg font-bold text-pramuka-800"></h3>
+                        <span class="text-xs font-bold uppercase text-gray-500 block">Tanggal & Keterangan / Materi:</span>
+                        <h3 id="display-tanggal-nilai" class="text-base font-bold text-pramuka-700"></h3>
+                        <h4 id="display-nama-materi" class="text-lg font-extrabold text-pramuka-900"></h4>
                     </div>
-                    <p class="text-xs text-gray-500">Pilih nilai untuk setiap siswa. Nilai sebelumnya untuk materi ini akan ditampilkan saat mengedit.</p>
+                    <div class="flex flex-wrap items-center gap-2 sm:gap-3 bg-white px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm text-xs font-bold text-gray-700">
+                        <span class="text-pramuka-700">A: <strong id="count-nilai-a">0</strong></span>
+                        <span class="text-pramuka-600">B: <strong id="count-nilai-b">0</strong></span>
+                        <span class="text-amber-600">C: <strong id="count-nilai-c">0</strong></span>
+                        <span class="text-orange-600">D: <strong id="count-nilai-d">0</strong></span>
+                        <span class="text-red-600">E: <strong id="count-nilai-e">0</strong></span>
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
@@ -670,7 +687,7 @@
                 </div>
                 <div id="container-simpan-nilai" class="p-4 bg-gray-50 border-t border-gray-100 flex justify-end">
                     <button onclick="simpanDataNilai()" class="w-full sm:w-auto bg-pramuka-700 hover:bg-pramuka-800 text-white px-6 py-3 rounded-xl font-medium shadow-sm transition active:scale-95 flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-floppy-disk"></i><span>Simpan Nilai</span>
+                        <i class="fa-solid fa-floppy-disk"></i><span>Simpan & Kirim Nilai</span>
                     </button>
                 </div>
             </div>
@@ -995,8 +1012,10 @@
     </footer>
 
     <script>
-        let spreadsheetId = "1Xw-_rPopukH0bWP5BF959A_oNE-3OsvctuMHYLMjPD8";
-        let appsScriptUrl = "";
+        let spreadsheetId = (window.APP_CONFIG && window.APP_CONFIG.SPREADSHEET_ID) || "1Xw-_rPopukH0bWP5BF959A_oNE-3OsvctuMHYLMjPD8";
+        let appsScriptUrl = (window.APP_CONFIG && /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/i.test(window.APP_CONFIG.APPS_SCRIPT_URL))
+            ? window.APP_CONFIG.APPS_SCRIPT_URL.trim()
+            : "";
         let cloudTanggalList = [];
         let cloudMateriMap = {};
         
@@ -1358,7 +1377,14 @@
             }
             closeCekMateriModal();
             switchTab('nilai');
-            document.getElementById('input-materi-uji').value = String(materi || '');
+            let raw = String(materi || '').trim();
+            const match = raw.match(/^(.*?)\s*\((\d{2})\/(\d{2})\/(\d{4})\)$/);
+            if (match) {
+                raw = match[1].trim();
+                const tglEl = document.getElementById('tanggal-nilai');
+                if (tglEl) tglEl.value = `${match[4]}-${match[3]}-${match[2]}`;
+            }
+            document.getElementById('input-materi-uji').value = raw;
             mulaiPenilaianMateri();
         }
 
@@ -1715,6 +1741,9 @@
             return d;
         }
         document.getElementById('tanggal-sabtu').valueAsDate = getNextSaturday();
+        if (document.getElementById('tanggal-nilai')) {
+            document.getElementById('tanggal-nilai').valueAsDate = getNextSaturday();
+        }
 
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
         const mobileMenu = document.getElementById('mobile-menu');
@@ -2283,7 +2312,17 @@
             const tbody = document.getElementById('nilai-table-body');
             tbody.innerHTML = '';
 
+            let countA = 0, countB = 0, countC = 0, countD = 0, countE = 0;
+
             listSiswa.forEach(s => {
+                const grade = ['A', 'B', 'C', 'D', 'E'].includes(s.nilai) ? s.nilai : 'E';
+                s.nilai = grade;
+                if (grade === 'A') countA++;
+                else if (grade === 'B') countB++;
+                else if (grade === 'C') countC++;
+                else if (grade === 'D') countD++;
+                else countE++;
+
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50 transition">
                         <td class="p-4 font-semibold text-gray-800">${s.nama}</td>
@@ -2291,16 +2330,22 @@
                         <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-[11px] font-semibold">${s.regu}</span></td>
                         <td class="p-4">
                             <div class="flex justify-center bg-gray-100 rounded-xl p-1 w-max mx-auto shadow-inner">
-                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'A')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${s.nilai === 'A' ? 'bg-pramuka-600 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">A</button>
-                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'B')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${s.nilai === 'B' ? 'bg-pramuka-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">B</button>
-                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'C')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${s.nilai === 'C' ? 'bg-amber-400 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">C</button>
-                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'D')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${s.nilai === 'D' ? 'bg-orange-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">D</button>
-                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'E')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${s.nilai === 'E' ? 'bg-red-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">E</button>
+                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'A')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${grade === 'A' ? 'bg-pramuka-600 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">A</button>
+                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'B')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${grade === 'B' ? 'bg-pramuka-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">B</button>
+                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'C')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${grade === 'C' ? 'bg-amber-400 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">C</button>
+                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'D')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${grade === 'D' ? 'bg-orange-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">D</button>
+                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'E')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${grade === 'E' ? 'bg-red-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">E</button>
                             </div>
                         </td>
                     </tr>
                 `;
             });
+
+            if (document.getElementById('count-nilai-a')) document.getElementById('count-nilai-a').textContent = countA;
+            if (document.getElementById('count-nilai-b')) document.getElementById('count-nilai-b').textContent = countB;
+            if (document.getElementById('count-nilai-c')) document.getElementById('count-nilai-c').textContent = countC;
+            if (document.getElementById('count-nilai-d')) document.getElementById('count-nilai-d').textContent = countD;
+            if (document.getElementById('count-nilai-e')) document.getElementById('count-nilai-e').textContent = countE;
         }
 
         function formatTanggalIndo(dateStr) {
@@ -2336,15 +2381,29 @@
             renderTabelAbsen(activeSiswa);
         }
 
+        function getMateriKeyWithTanggal(tglInput, materiInput) {
+            if (!tglInput) return materiInput;
+            const d = new Date(tglInput + 'T00:00:00');
+            const tglShort = isNaN(d) ? tglInput : d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            if (materiInput.includes(`(${tglShort})`)) return materiInput;
+            return `${materiInput} (${tglShort})`;
+        }
+
         function mulaiPenilaianMateri() {
             if (userRole === 'tamu') {
                 showToast('Login sebagai Pembina untuk memulai penilaian.', 'warning');
                 return;
             }
 
+            const tglInput = document.getElementById('tanggal-nilai')?.value;
+            if (!tglInput) {
+                showToast('Pilih tanggal kegiatan terlebih dahulu!', 'warning');
+                return;
+            }
+
             const materiInput = document.getElementById('input-materi-uji').value.trim();
             if (!materiInput) {
-                showToast('Ketik nama materi latihan terlebih dahulu!', 'warning');
+                showToast('Ketik keterangan / materi terlebih dahulu!', 'warning');
                 return;
             }
 
@@ -2354,10 +2413,16 @@
                 return;
             }
 
+            const materiKey = getMateriKeyWithTanggal(tglInput, materiInput);
+
             activeSiswa.forEach(s => {
-                s.nilai = s.riwayatNilai[materiInput] || 'E';
+                const existing = s.riwayatNilai[materiKey] ?? s.riwayatNilai[materiInput];
+                s.nilai = ['A', 'B', 'C', 'D', 'E'].includes(existing) ? existing : 'E';
             });
 
+            if (document.getElementById('display-tanggal-nilai')) {
+                document.getElementById('display-tanggal-nilai').textContent = formatTanggalIndo(tglInput);
+            }
             document.getElementById('display-nama-materi').textContent = materiInput;
             document.getElementById('section-tabel-nilai').classList.remove('hidden');
             renderTabelNilai(activeSiswa);
@@ -2432,23 +2497,36 @@
         async function simpanDataNilai() {
             if (userRole === 'tamu') return;
             
+            const tglInput = document.getElementById('tanggal-nilai')?.value || '';
             const materiInput = document.getElementById('input-materi-uji').value.trim();
+            if (!tglInput || !materiInput) {
+                showToast('Pilih tanggal dan isi keterangan/materi terlebih dahulu!', 'warning');
+                return;
+            }
+            const materiKey = getMateriKeyWithTanggal(tglInput, materiInput);
             const timestamp = new Date().toLocaleString('id-ID');
             
             let logPayloads = [];
 
             const siswaDinilai = getFilteredSiswaList();
             siswaDinilai.forEach(s => {
-                s.riwayatNilai[materiInput] = s.nilai;
+                const chosenGrade = ['A', 'B', 'C', 'D', 'E'].includes(s.nilai) ? s.nilai : 'E';
+                if (materiKey !== materiInput && s.riwayatNilai[materiInput] !== undefined) {
+                    delete s.riwayatNilai[materiInput];
+                }
+                s.riwayatNilai[materiKey] = chosenGrade;
                 let grades = Object.values(s.riwayatNilai);
                 s.nilai = calculateAverageGrade(grades);
                 
                 logPayloads.push({
                     sheet: 'Nilai',
-                    values: [timestamp, s.id, materiInput, s.nama, s.kelas, s.regu, s.riwayatNilai[materiInput]]
+                    values: [timestamp, s.id, materiKey, s.nama, s.kelas, s.regu, chosenGrade, tglInput]
                 });
             });
-            cloudMateriMap[materiInput] = siswaDinilai.length;
+            if (materiKey !== materiInput && cloudMateriMap[materiInput]) {
+                delete cloudMateriMap[materiInput];
+            }
+            cloudMateriMap[materiKey] = siswaDinilai.length;
 
             localStorage.setItem('pramuka_app_siswa', JSON.stringify(siswaList));
             
@@ -2458,7 +2536,7 @@
             }));
 
             renderRekapNilai();
-            showToast(`Nilai materi ${materiInput} berhasil disimpan!`, 'success');
+            showToast(`Nilai ${materiKey} berhasil disimpan!`, 'success');
             document.getElementById('section-tabel-nilai').classList.add('hidden');
             document.getElementById('input-materi-uji').value = '';
 
