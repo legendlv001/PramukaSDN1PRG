@@ -10,7 +10,7 @@
     <script>
         window.APP_CONFIG = {
             SPREADSHEET_ID: "1Xw-_rPopukH0bWP5BF959A_oNE-3OsvctuMHYLMjPD8",
-            APPS_SCRIPT_URL: "Https://script.google.com/macros/s/AKfycby9qD6UnpwkPtsjCk_KOLcuOeJxfSgqLhUtkovNb0mEr2K6ySWNEFC1glvx5XlcpFVRog/exec"
+            APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycby9qD6UnpwkPtsjCk_KOLcuOeJxfSgqLhUtkovNb0mEr2K6ySWNEFC1glvx5XlcpFVRog/exec"
         };
     </script>
     <!-- Tailwind CSS -->
@@ -1978,8 +1978,10 @@
             }
             const nilaiDetailRows = getDataRows(rowsNilaiDetail, ['Timestamp','ID Peserta','Materi','Nama Siswa','Kelas','Regu','Nilai']);
             for(let i=0;i<nilaiDetailRows.length;i++){
-                const r=nilaiDetailRows[i], id=String(cell(r,1)).trim(), materi=String(cell(r,2)).trim(), val=cell(r,6)||'E';
-                if(id && materi){ (logNilaiMap[id] ||= {})[materi]=val; remoteMateriSet.add(materi); }
+                const r=nilaiDetailRows[i], id=String(cell(r,1)).trim(), materi=String(cell(r,2)).trim(), val=String(cell(r,6)||'E').trim();
+                if(!id || !materi) continue;
+                if(id.toLowerCase()==='id peserta' || materi.toLowerCase()==='materi' || materi.toLowerCase()==='nama siswa') continue;
+                (logNilaiMap[id] ||= {})[materi]=val; remoteMateriSet.add(materi);
             }
             cloudMateriMap = {};
             Object.values(logNilaiMap).forEach(riwayat => Object.keys(riwayat).forEach(materi => { cloudMateriMap[materi] = (cloudMateriMap[materi] || 0) + 1; }));
@@ -2255,7 +2257,7 @@
                 showToast('Login sebagai Pembina untuk mengubah absen.', 'warning');
                 return;
             }
-            const siswa = siswaList.find(s => s.id === id);
+            const siswa = siswaList.find(s => String(s.id) === String(id));
             if (siswa) {
                 siswa.absen = status;
                 renderTabelAbsen(getFilteredSiswaList());
@@ -2267,7 +2269,7 @@
                 showToast('Login sebagai Pembina untuk mengubah nilai.', 'warning');
                 return;
             }
-            const siswa = siswaList.find(s => s.id === id);
+            const siswa = siswaList.find(s => String(s.id) === String(id));
             if (siswa) {
                 siswa.nilai = nilai;
                 renderTabelNilai(getFilteredSiswaList());
@@ -2294,9 +2296,9 @@
                         <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-[11px] font-semibold">${s.regu}</span></td>
                         <td class="p-4">
                             <div class="flex justify-center bg-gray-100 rounded-xl p-1 w-max mx-auto shadow-inner">
-                                <button onclick="updateAbsen(${JSON.stringify(String(s.id))}, 'Hadir')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${s.absen === 'Hadir' ? 'bg-green-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">Hadir</button>
-                                <button onclick="updateAbsen(${JSON.stringify(String(s.id))}, 'Sakit')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${s.absen === 'Sakit' ? 'bg-amber-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">Skt/Izn</button>
-                                <button onclick="updateAbsen(${JSON.stringify(String(s.id))}, 'Alpa')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${s.absen === 'Alpa' ? 'bg-red-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">Alpa</button>
+                                <button onclick='updateAbsen(${JSON.stringify(String(s.id))}, "Hadir")' class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${s.absen === 'Hadir' ? 'bg-green-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">Hadir</button>
+                                <button onclick='updateAbsen(${JSON.stringify(String(s.id))}, "Sakit")' class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${s.absen === 'Sakit' ? 'bg-amber-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">Skt/Izn</button>
+                                <button onclick='updateAbsen(${JSON.stringify(String(s.id))}, "Alpa")' class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${s.absen === 'Alpa' ? 'bg-red-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">Alpa</button>
                             </div>
                         </td>
                     </tr>
@@ -2330,11 +2332,11 @@
                         <td class="p-4 text-center"><span class="px-3 py-1 bg-pramuka-50 text-pramuka-800 rounded-full text-[11px] font-semibold">${s.regu}</span></td>
                         <td class="p-4">
                             <div class="flex justify-center bg-gray-100 rounded-xl p-1 w-max mx-auto shadow-inner">
-                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'A')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${grade === 'A' ? 'bg-pramuka-600 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">A</button>
-                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'B')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${grade === 'B' ? 'bg-pramuka-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">B</button>
-                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'C')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${grade === 'C' ? 'bg-amber-400 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">C</button>
-                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'D')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${grade === 'D' ? 'bg-orange-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">D</button>
-                                <button onclick="updateNilai(${JSON.stringify(String(s.id))}, 'E')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${grade === 'E' ? 'bg-red-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">E</button>
+                                <button onclick='updateNilai(${JSON.stringify(String(s.id))}, "A")' class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${grade === 'A' ? 'bg-pramuka-600 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">A</button>
+                                <button onclick='updateNilai(${JSON.stringify(String(s.id))}, "B")' class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${grade === 'B' ? 'bg-pramuka-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">B</button>
+                                <button onclick='updateNilai(${JSON.stringify(String(s.id))}, "C")' class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${grade === 'C' ? 'bg-amber-400 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">C</button>
+                                <button onclick='updateNilai(${JSON.stringify(String(s.id))}, "D")' class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${grade === 'D' ? 'bg-orange-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">D</button>
+                                <button onclick='updateNilai(${JSON.stringify(String(s.id))}, "E")' class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${grade === 'E' ? 'bg-red-500 text-white shadow' : 'text-gray-500 hover:bg-gray-200'}">E</button>
                             </div>
                         </td>
                     </tr>
