@@ -426,7 +426,7 @@
                         <tr>
                             <th class="p-3">No</th>
                             <th class="p-3">Nama Materi Latihan</th>
-                            <th class="p-3 text-center">Jumlah Siswa Dinilai</th>
+                            <th class="p-3 text-center">Status Data</th>
                         </tr>
                     </thead>
                     <tbody id="cek-materi-tbody" class="divide-y divide-gray-100 text-xs"></tbody>
@@ -1358,7 +1358,7 @@
             if(materiArray.length===0) tbody.innerHTML=`<tr><td colspan="3" class="p-4 text-center text-gray-400">Belum ada materi latihan yang dinilai.</td></tr>`;
             else materiArray.forEach(([mat,count],idx)=>{
                 const safeMat=String(mat).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-                tbody.innerHTML += `<tr class="hover:bg-amber-50 transition"><td class="p-3">${idx+1}</td><td class="p-3 font-bold"><button type="button" class="cek-materi-pilih text-left text-pramuka-700 hover:text-amber-700 hover:underline" data-materi="${safeMat}" title="Klik untuk melihat dan mengedit nilai materi ini">${safeMat}</button></td><td class="p-3 text-center"><span class="px-2.5 py-1 bg-pramuka-100 text-pramuka-800 rounded-full text-[11px] font-bold">${count} Siswa</span></td></tr>`;
+                tbody.innerHTML += `<tr class="hover:bg-amber-50 transition"><td class="p-3">${idx+1}</td><td class="p-3 font-bold"><button type="button" class="cek-materi-pilih text-left text-pramuka-700 hover:text-amber-700 hover:underline" data-materi="${safeMat}" title="Klik untuk melihat dan mengedit nilai materi ini">${safeMat}</button></td><td class="p-3 text-center"><button type="button" class="cek-materi-pilih px-2.5 py-1 bg-green-100 hover:bg-green-200 text-green-800 rounded-full text-[11px] font-bold transition" data-materi="${safeMat}" title="Klik untuk melihat dan mengedit nilai materi ini">Klik untuk edit</button></td></tr>`;
             });
             tbody.querySelectorAll('.cek-materi-pilih').forEach(btn=>btn.addEventListener('click',()=>pilihMateriPenilaian(btn.dataset.materi)));
             const modal=document.getElementById('modal-cek-materi'); modal.classList.remove('hidden'); modal.classList.add('flex');
